@@ -1,0 +1,90 @@
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+
+  html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+    background: var(--color-surface-base);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background: var(--color-surface-base);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin-top: 0;
+  }
+
+  ::selection {
+    background: var(--color-action-accent-soft);
+    color: var(--color-fg-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-action-accent);
+    outline-offset: 3px;
+  }
+
+  /* Global scrollbar — thin green. Override per-container với .app-scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-accent-hover) var(--color-surface-sunken);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface-sunken);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-accent-hover);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-action-accent);
+  }
+}

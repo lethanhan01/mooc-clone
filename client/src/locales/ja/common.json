@@ -1,0 +1,266 @@
+{
+  "button": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "view": "表示",
+    "viewDetail": "詳細を見る",
+    "viewAll": "すべて見る",
+    "back": "戻る",
+    "confirm": "確認",
+    "close": "閉じる",
+    "add": "追加",
+    "create": "作成",
+    "submit": "送信",
+    "search": "検索",
+    "filter": "絞り込み",
+    "export": "エクスポート",
+    "start": "開始",
+    "complete": "完了",
+    "approve": "承認",
+    "reject": "拒否",
+    "retry": "再試行"
+  },
+  "nav": {
+    "dashboard": "ホーム",
+    "profile": "プロフィール",
+    "logout": "ログアウト",
+    "closeMenu": "メニューを閉じる",
+    "openMenu": "メニューを開く",
+    "workout": "トレーニング",
+    "subscription": "プラン",
+    "students": "受講生",
+    "sessions": "スケジュール",
+    "members": "会員",
+    "checkIn": "チェックイン",
+    "staff": "スタッフ",
+    "reports": "レポート"
+  },
+  "status": {
+    "active": "アクティブ",
+    "inactive": "非アクティブ",
+    "pending": "有効化待ち",
+    "expired": "期限切れ",
+    "completed": "完了",
+    "cancelled": "キャンセル済み",
+    "working": "勤務中",
+    "notCheckedIn": "本日未出勤",
+    "scheduled": "予定済み",
+    "inProgress": "進行中",
+    "pendingVerification": "認証待ち",
+    "draft": "下書き",
+    "archived": "アーカイブ済み",
+    "replaced": "置換済み",
+    "realtime": "デバイス",
+    "manual": "手動",
+    "qr": "QR",
+    "available": "利用可能",
+    "broken": "故障",
+    "repairing": "修理中",
+    "reported": "報告済み",
+    "resolved": "対応済み",
+    "suspended": "停止中",
+    "retired": "廃止",
+    "deleted": "削除済み",
+    "locked": "ロック済み",
+    "maintenance": "メンテナンス",
+    "unknown": "不明"
+  },
+  "error": {
+    "network": "接続できません。ネットワークを確認して再試行してください。",
+    "unknown": "エラーが発生しました。再試行してください。",
+    "notFound": "データが見つかりません。",
+    "loadFailed": "データを読み込めません。",
+    "api": {
+      "EMAIL_IN_USE": "このメールアドレスは既に使用されています",
+      "LINE_AUTH_FAILED": "LINEで認証できません。LIFFを開き直して再試行してください。",
+      "LINE_LOGIN_MEMBER_ONLY": "LINEログインは会員のみ利用できます。",
+      "EMAIL_NOT_VERIFIED": "LINEでログインする前にメールアドレスを認証してください。",
+      "ACCOUNT_LOCKED": "アカウントはロックされています。ジムにお問い合わせください。"
+    }
+  },
+  "date": {
+    "notAvailable": "未設定",
+    "invalid": "無効"
+  },
+  "paymentMethod": {
+    "cash": "現金",
+    "bankCard": "銀行振込",
+    "ewallet": "電子ウォレット",
+    "cashShort": "現金",
+    "bankCardShort": "銀行振込",
+    "ewalletShort": "電子ウォレット"
+  },
+  "shift": {
+    "morning": "午前シフト (07:00–12:00)",
+    "afternoon": "午後シフト (12:00–17:00)",
+    "evening": "夜間シフト (17:00–22:00)"
+  },
+  "search": {
+    "placeholder": "検索...",
+    "clear": "検索をクリア"
+  },
+  "filter": {
+    "title": "フィルター"
+  },
+  "pagination": {
+    "prev": "前へ",
+    "next": "次へ",
+    "pageOf": "{{page}} / {{totalPages}} ページ"
+  },
+  "dateRange": {
+    "from": "開始日",
+    "to": "終了日",
+    "load": "レポートを読み込む"
+  },
+  "datePicker": {
+    "open": "カレンダーを開く",
+    "placeholder": "日時を選択",
+    "time": "時刻"
+  },
+  "calendar": {
+    "prevMonth": "前の月",
+    "nextMonth": "次の月",
+    "emptySelectionTitle": "日付を選択してスケジュールを確認",
+    "emptySelectionDescription": "左のカレンダーの日付をクリック",
+    "emptyDayMessage": "この日のシフトはありません。",
+    "emptyShiftMessage": "シフトなし"
+  },
+  "notification": {
+    "ariaLabel": "通知",
+    "title": "通知",
+    "unread": "未読 {{count}} 件",
+    "allRead": "すべて既読",
+    "markAllRead": "すべて既読にする",
+    "loadError": "通知を読み込めません",
+    "loading": "読み込み中",
+    "empty": "通知はありません",
+    "toastMany": "{{count}} 件の新しい通知があります",
+    "time": {
+      "justNow": "たった今",
+      "minutesAgo": "{{count}} 分前",
+      "hoursAgo": "{{count}} 時間前",
+      "daysAgo": "{{count}} 日前"
+    },
+    "templates": {
+      "training": {
+        "created": {
+          "title": "新しいトレーニング予定",
+          "memberMessage": "PT {{trainerName}} とのトレーニング予定があります。",
+          "trainerMessage": "会員 {{memberName}} との新しいトレーニング予定があります。"
+        },
+        "updated": {
+          "title": "トレーニング予定が更新されました",
+          "memberMessage": "PT {{trainerName}} とのトレーニング予定が更新されました。",
+          "trainerMessage": "会員 {{memberName}} とのトレーニング予定が更新されました。"
+        },
+        "cancelled": {
+          "title": "トレーニング予定がキャンセルされました",
+          "memberMessage": "PT {{trainerName}} とのトレーニング予定がキャンセルされました。",
+          "trainerMessage": "会員 {{memberName}} とのトレーニング予定がキャンセルされました。"
+        },
+        "completed": {
+          "title": "トレーニングが完了しました",
+          "memberMessage": "PT {{trainerName}} とのトレーニングが完了として記録されました。"
+        },
+        "reminder": {
+          "title": "トレーニング開始間近",
+          "memberMessage": "PT {{trainerName}} とのトレーニングはあと{{reminderMinutes}}分で始まります。",
+          "genericMessage": "トレーニングがまもなく始まります。"
+        },
+        "starting": {
+          "title": "トレーニング開始時間です",
+          "memberMessage": "PT {{trainerName}} とのトレーニングは今始まります。",
+          "genericMessage": "トレーニングが今始まります。"
+        }
+      },
+      "attendance": {
+        "checkin": {
+          "title": "チェックイン完了",
+          "memberMessage": "チェックインが完了しました。",
+          "trainerMessage": "会員 {{memberName}} がチェックインしました。"
+        }
+      },
+      "payment": {
+        "success": {
+          "title": "支払い完了",
+          "pendingTitle": "支払いを受け付けました",
+          "activatedMessage": "支払いが完了し、プラン {{packageName}} が有効化されました。",
+          "pendingMessage": "プラン {{packageName}} の支払いを受け付け、有効化待ちです。"
+        },
+        "failed": {
+          "title": "支払い失敗",
+          "message": "プラン {{packageName}} の支払いに失敗しました。"
+        },
+        "successAdmin": {
+          "title": "新しい支払い",
+          "message": "新しい支払い取引があります。"
+        },
+        "failedAdmin": {
+          "title": "支払い失敗",
+          "message": "失敗した支払い取引があります。"
+        }
+      },
+      "subscription": {
+        "created": {
+          "title": "プラン登録リクエストを作成しました",
+          "message": "プラン {{packageName}} の登録リクエストを作成し、支払い待ちです。"
+        },
+        "createdAdmin": {
+          "title": "新しいプラン登録",
+          "message": "処理待ちの新しいプラン登録リクエストがあります。"
+        },
+        "renewed": {
+          "title": "プラン更新完了",
+          "message": "プラン {{packageName}} が正常に更新されました。"
+        },
+        "renewedAdmin": {
+          "title": "プランが更新されました",
+          "message": "プランが正常に更新されました。"
+        },
+        "cancelled": {
+          "title": "プランがキャンセルされました",
+          "message": "プラン {{packageName}} がキャンセルされました。"
+        },
+        "cancelledAdmin": {
+          "title": "プランがキャンセルされました",
+          "message": "プランがキャンセルされました。"
+        }
+      },
+      "feedback": {
+        "created": {
+          "title": "新しいフィードバック",
+          "message": "会員から新しいフィードバックがあります。"
+        },
+        "assigned": {
+          "title": "フィードバック対応が割り当てられました",
+          "message": "フィードバック対応があなたに割り当てられました。"
+        },
+        "resolved": {
+          "title": "フィードバックが対応済みになりました",
+          "message": "あなたのフィードバックは対応済みになりました。"
+        },
+        "rejected": {
+          "title": "フィードバックが却下されました",
+          "message": "あなたのフィードバックは却下されました。"
+        }
+      }
+    }
+  },
+  "loading": "読み込み中...",
+  "noData": "データなし",
+  "ok": "OK",
+  "yes": "はい",
+  "no": "いいえ",
+  "theme": {
+    "title": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "switchToLight": "ライトモードに切り替え",
+    "switchToDark": "ダークモードに切り替え",
+    "appearanceTitle": "外観と表示設定",
+    "appearanceDesc": "ライト、ダーク、またはシステム設定に合わせた自動切り替えを選択できます。"
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "description": "RoGym Semantic Design System — WCAG 2.1 AA Contrast Pairs Matrix (Dual-Theme)",
+  "version": "2.0.0",
+  "standard": "WCAG 2.1 AA (Normal text >= 4.5:1, Large text & UI components >= 3.0:1)",
+  "pairs": [
+    {
+      "id": "dark-body-text-base",
+      "name": "[Dark] Body Text on Default Background",
+      "theme": "dark",
+      "fgToken": "--color-fg-primary",
+      "bgToken": "--color-surface-base",
+      "fg": "#ffffff",
+      "bg": "#080e0b",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-card-text",
+      "name": "[Dark] Card Text on Card Background",
+      "theme": "dark",
+      "fgToken": "--color-fg-primary",
+      "bgToken": "--color-surface-card",
+      "fg": "#ffffff",
+      "bg": "#0f1c16",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-card-secondary-text",
+      "name": "[Dark] Secondary Text on Card Background",
+      "theme": "dark",
+      "fgToken": "--color-fg-secondary",
+      "bgToken": "--color-surface-card",
+      "fg": "#bbcabf",
+      "bg": "#0f1c16",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-card-muted-text",
+      "name": "[Dark] Muted Text on Card Background",
+      "theme": "dark",
+      "fgToken": "--color-fg-muted",
+      "bgToken": "--color-surface-card",
+      "fg": "#8ab89c",
+      "bg": "#0f1c16",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-primary-button-fg",
+      "name": "[Dark] Primary Button Text on Primary Solid",
+      "theme": "dark",
+      "fgToken": "--color-action-primary-fg",
+      "bgToken": "--color-action-primary",
+      "fg": "#00492f",
+      "bg": "#06c384",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-success",
+      "name": "[Dark] Status Success FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-success-fg",
+      "bgToken": "--color-status-success-bg",
+      "fg": "#b6f4d7",
+      "bg": "#06c38421",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-warning",
+      "name": "[Dark] Status Warning FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-warning-fg",
+      "bgToken": "--color-status-warning-bg",
+      "fg": "#fcd34d",
+      "bg": "#f59e0b14",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-danger",
+      "name": "[Dark] Status Danger FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-danger-fg",
+      "bgToken": "--color-status-danger-bg",
+      "fg": "#ff6b6b",
+      "bg": "#ef444421",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-info",
+      "name": "[Dark] Status Info FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-info-fg",
+      "bgToken": "--color-status-info-bg",
+      "fg": "#93c5fd",
+      "bg": "#3b82f621",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-neutral",
+      "name": "[Dark] Status Neutral FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-neutral-fg",
+      "bgToken": "--color-status-neutral-bg",
+      "fg": "#9ca3af",
+      "bg": "#6b728021",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-status-accent",
+      "name": "[Dark] Status Accent FG on BG",
+      "theme": "dark",
+      "fgToken": "--color-status-accent-fg",
+      "bgToken": "--color-status-accent-bg",
+      "fg": "#c4b5fd",
+      "bg": "#8b5cf621",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "dark-danger-button",
+      "name": "[Dark] Danger Solid Button Text",
+      "theme": "dark",
+      "fgToken": "--color-fg-on-solid",
+      "bgToken": "--color-status-danger-solid",
+      "fg": "#ffffff",
+      "bg": "#ef4444",
+      "level": "AA_LARGE",
+      "minRatio": 3.0
+    },
+    {
+      "id": "dark-focus-ring",
+      "name": "[Dark] Focus Ring on Base Background",
+      "theme": "dark",
+      "fgToken": "--color-line-focus",
+      "bgToken": "--color-surface-base",
+      "fg": "#42e09e",
+      "bg": "#080e0b",
+      "level": "AA_LARGE",
+      "minRatio": 3.0
+    },
+
+    {
+      "id": "light-body-text-base",
+      "name": "[Light] Body Text on Default Background",
+      "theme": "light",
+      "fgToken": "--color-fg-primary",
+      "bgToken": "--color-surface-base",
+      "fg": "#0f172a",
+      "bg": "#f8fafc",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-card-text",
+      "name": "[Light] Card Text on Card Background",
+      "theme": "light",
+      "fgToken": "--color-fg-primary",
+      "bgToken": "--color-surface-card",
+      "fg": "#0f172a",
+      "bg": "#ffffff",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-card-secondary-text",
+      "name": "[Light] Secondary Text on Card Background",
+      "theme": "light",
+      "fgToken": "--color-fg-secondary",
+      "bgToken": "--color-surface-card",
+      "fg": "#334155",
+      "bg": "#ffffff",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-card-muted-text",
+      "name": "[Light] Muted Text on Card Background",
+      "theme": "light",
+      "fgToken": "--color-fg-muted",
+      "bgToken": "--color-surface-card",
+      "fg": "#64748b",
+      "bg": "#ffffff",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-primary-button-fg",
+      "name": "[Light] Primary Button Text on Primary Solid",
+      "theme": "light",
+      "fgToken": "--color-action-primary-fg",
+      "bgToken": "--color-action-primary",
+      "fg": "#ffffff",
+      "bg": "#047857",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-success",
+      "name": "[Light] Status Success FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-success-fg",
+      "bgToken": "--color-status-success-bg",
+      "fg": "#065f46",
+      "bg": "#ecfdf5",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-warning",
+      "name": "[Light] Status Warning FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-warning-fg",
+      "bgToken": "--color-status-warning-bg",
+      "fg": "#92400e",
+      "bg": "#fffbeb",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-danger",
+      "name": "[Light] Status Danger FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-danger-fg",
+      "bgToken": "--color-status-danger-bg",
+      "fg": "#991b1b",
+      "bg": "#fef2f2",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-info",
+      "name": "[Light] Status Info FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-info-fg",
+      "bgToken": "--color-status-info-bg",
+      "fg": "#1e40af",
+      "bg": "#eff6ff",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-neutral",
+      "name": "[Light] Status Neutral FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-neutral-fg",
+      "bgToken": "--color-status-neutral-bg",
+      "fg": "#374151",
+      "bg": "#f3f4f6",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-status-accent",
+      "name": "[Light] Status Accent FG on BG",
+      "theme": "light",
+      "fgToken": "--color-status-accent-fg",
+      "bgToken": "--color-status-accent-bg",
+      "fg": "#5b21b6",
+      "bg": "#f5f3ff",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-danger-button",
+      "name": "[Light] Danger Solid Button Text",
+      "theme": "light",
+      "fgToken": "--color-fg-on-solid",
+      "bgToken": "--color-status-danger-solid",
+      "fg": "#ffffff",
+      "bg": "#dc2626",
+      "level": "AA_NORMAL",
+      "minRatio": 4.5
+    },
+    {
+      "id": "light-focus-ring",
+      "name": "[Light] Focus Ring on Base Background",
+      "theme": "light",
+      "fgToken": "--color-line-focus",
+      "bgToken": "--color-surface-base",
+      "fg": "#0d9488",
+      "bg": "#f8fafc",
+      "level": "AA_LARGE",
+      "minRatio": 3.0
+    }
+  ]
+}

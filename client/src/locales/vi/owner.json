@@ -1,0 +1,660 @@
+{
+  "nav": {
+    "sectionStaff": "Nhân sự",
+    "sectionBusiness": "Kinh doanh",
+    "sectionFacility": "Cơ sở vật chất",
+    "sectionSystem": "Hệ thống",
+    "staff": "Danh sách nhân sự",
+    "addStaff": "Thêm nhân sự",
+    "schedules": "Lịch phân công",
+    "packages": "Gói tập",
+    "feedback": "Phản hồi",
+    "reports": "Báo cáo",
+    "revenue": "Doanh thu",
+    "invoices": "Hóa đơn giao dịch",
+    "performance": "Hiệu suất nhân viên",
+    "equipment": "Thiết bị",
+    "rbac": "Phân quyền",
+    "rbacGroups": "Nhóm quyền",
+    "rbacPermissions": "Quyền hạn",
+    "modeBack": "Quay về Owner",
+    "modeOperation": "Chế độ vận hành"
+  },
+  "dashboard": {
+    "title": "Owner workspace",
+    "greeting": "Xin chào, {{name}}",
+    "subtitle": "Đây là tổng quan toàn bộ hệ thống phòng gym.",
+    "staffManagement": "Quản lý nhân sự",
+    "permissions": "Phân quyền & nhóm",
+    "packages": "Cấu hình gói tập",
+    "reports": "Báo cáo thống kê",
+    "viewReports": "Xem báo cáo",
+    "equipmentAlert": "Cảnh báo thiết bị",
+    "totalMembers": "Tổng hội viên",
+    "systemWide": "Toàn bộ hệ thống",
+    "activePackages": "Gói tập đang bán",
+    "activeStatus": "Trạng thái active",
+    "membersAndPackages": "Hội viên & Gói tập",
+    "pendingFeedback": "Phản hồi cần xử lý",
+    "noNewFeedback": "Không có phản hồi mới",
+    "viewDetail": "Xem chi tiết",
+    "allFeedback": "Tất cả phản hồi",
+    "membersInSystem": "Hội viên trong hệ thống",
+    "activePackagesInSystem": "Gói active trên hệ thống",
+    "needsAttention": "Cần xử lý sớm",
+    "allHandled": "Tất cả đã xử lý",
+    "equipmentBrokenRepairing": "Thiết bị hỏng / đang sửa",
+    "brokenCount": "{{count}} hỏng,",
+    "repairingCount": "{{count}} đang sửa",
+    "allEquipmentOk": "Tất cả thiết bị hoạt động tốt",
+    "equipmentAlertDetails": "{{broken}} hỏng, {{repairing}} đang sửa chữa",
+    "feedbackPending": "Phản hồi chờ xử lý",
+    "severity": {
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "high": "Cao"
+    },
+    "feedbackType": {
+      "staff": "Nhân viên",
+      "equipment": "Thiết bị",
+      "service": "Dịch vụ"
+    }
+  },
+  "packages": {
+    "title": "Quản lý gói tập",
+    "eyebrow": "Cấu hình",
+    "totalCount": "{{total}} gói tập trên hệ thống",
+    "createNew": "Tạo gói mới",
+    "searchPlaceholder": "Tìm theo tên, mã gói...",
+    "notFound": "Không có gói tập nào",
+    "notFoundDesc": "Thử thay đổi bộ lọc hoặc tạo gói mới.",
+    "loadFailed": "Không thể tải danh sách gói tập.",
+    "daysCount": "{{days}} ngày",
+    "deleted": "Đã xóa",
+    "noActions": "Không có thao tác",
+    "deactivate": "Ngừng",
+    "status": {
+      "active": "Đang bán",
+      "inactive": "Ngừng bán"
+    },
+    "table": {
+      "code": "Mã gói",
+      "name": "Tên gói",
+      "duration": "Thời hạn",
+      "price": "Giá",
+      "status": "Trạng thái",
+      "actions": "Hành động"
+    },
+    "modal": {
+      "editTitle": "Sửa gói tập",
+      "createTitle": "Tạo gói tập mới",
+      "saveChanges": "Lưu thay đổi",
+      "createBtn": "Tạo gói tập"
+    },
+    "form": {
+      "includesPt": "Bao gồm Personal Trainer",
+      "withPt": "Có HLV",
+      "withoutPt": "Không có HLV",
+      "name": "Tên gói tập *",
+      "namePlaceholder": "Standard 1 tháng",
+      "duration": "Thời hạn (ngày) *",
+      "price": "Giá (VNĐ) *",
+      "benefits": "Quyền lợi",
+      "benefitsPlaceholder": "Truy cập phòng tập, locker, voucher...",
+      "status": "Trạng thái",
+      "fillRequired": "Vui lòng điền đầy đủ thông tin hợp lệ.",
+      "saveFailed": "Lưu thất bại."
+    },
+    "deleteModal": {
+      "title": "Xác nhận",
+      "deactivateMsg": "Ngừng bán gói \"{{name}}\"? Hội viên đang sử dụng sẽ không bị ảnh hưởng.",
+      "deleteMsg": "Xóa vĩnh viễn gói \"{{name}}\"? Hành động không thể hoàn tác.",
+      "deactivateBtn": "Ngừng bán",
+      "conflictError": "Không thể xóa: gói tập đang có hội viên sử dụng.",
+      "deleteFailed": "Xóa thất bại."
+    }
+  },
+  "equipment": {
+    "title": "Quản lý thiết bị",
+    "eyebrow": "Cơ sở vật chất",
+    "totalCount": "{{count}} thiết bị trong hệ thống.",
+    "addEquipment": "Thêm thiết bị",
+    "searchPlaceholder": "Tìm theo tên thiết bị hoặc mã",
+    "filterByStatus": "Lọc theo trạng thái",
+    "notFound": "Không tìm thấy thiết bị",
+    "notFoundDesc": "Thử thay đổi bộ lọc hoặc thêm thiết bị mới.",
+    "noRoom": "Chưa phân phòng",
+    "loadFailed": "Không thể tải danh sách thiết bị.",
+    "saveFailed": "Không thể lưu thiết bị.",
+    "editTitle": "Chỉnh sửa: {{name}}",
+    "createTitle": "Thêm thiết bị mới",
+    "saveChanges": "Lưu thay đổi",
+    "deleting": "Đang xóa...",
+    "deleteBtn": "Xóa thiết bị",
+    "deleteConfirmTitle": "Xác nhận xóa thiết bị",
+    "deleteConfirmMsg": "Bạn có chắc muốn xóa thiết bị {{name}} ({{code}})? Hành động này không thể hoàn tác.",
+    "deleteFailed": "Không thể xóa thiết bị.",
+    "table": {
+      "code": "Mã",
+      "name": "Tên thiết bị",
+      "room": "Phòng",
+      "importDate": "Ngày mua",
+      "warrantyUntil": "Hết bảo hành",
+      "status": "Trạng thái",
+      "actions": "Hành động"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau",
+      "page": "Trang {{page}}/{{total}}"
+    },
+    "form": {
+      "name": "Tên thiết bị *",
+      "namePlaceholder": "VD: Máy chạy bộ Technogym",
+      "room": "Phòng *",
+      "importDate": "Ngày mua",
+      "warrantyUntil": "Hết bảo hành",
+      "status": "Trạng thái",
+      "selectRoom": "-- Chọn phòng --"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "repairing": "Đang sửa chữa",
+      "broken": "Hỏng",
+      "retired": "Ngừng sử dụng",
+      "all": "Mọi trạng thái"
+    }
+  },
+  "reports": {
+    "revenue": {
+      "title": "Báo cáo doanh thu",
+      "eyebrow": "Tài chính",
+      "tabs": {
+        "week": "Tuần",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "custom": "Tùy chỉnh"
+      },
+      "filter": {
+        "year": "Năm",
+        "week": "Tuần",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "from": "Từ ngày",
+        "to": "Đến ngày",
+        "method": "Phương thức thanh toán"
+      },
+      "kpi": {
+        "totalRevenue": "Tổng doanh thu",
+        "newMembers": "Hội viên mới",
+        "renewalRate": "Tỷ lệ gia hạn",
+        "vsLastPeriod": "So với kỳ trước"
+      },
+      "gridEmpty": "Trống",
+      "legend": {
+        "less": "Ít hơn",
+        "more": "Nhiều hơn"
+      },
+      "monthLabel": "Tháng {{month}}",
+      "chartTitle": "Doanh thu theo thời gian",
+      "topPackages": "Top gói tập bán chạy",
+      "packageSalesCount": "{{count}} lượt",
+      "packageDurationPrice": "{{days}} ngày · {{price}}",
+      "collapse": "Thu gọn",
+      "showMore": "Xem thêm ({{count}} gói)",
+      "transactionDays": "{{count}} ngày có giao dịch",
+      "newSubscriptions": "Đăng ký trong kỳ",
+      "prevPeriod": "Kỳ trước: {{amount}}",
+      "partialNote": "Tạm tính từ {{from}} đến {{to}}",
+      "subtitle": "Theo dõi doanh thu, cơ cấu và hiệu suất bán hàng.",
+      "renewalHint": "{{renewed}} gia hạn · {{churned}} rời bỏ",
+      "noDataYet": "Chưa có dữ liệu",
+      "tryOtherPeriod": "Thử chọn khoảng thời gian khác.",
+      "noData": "Không có doanh thu trong khoảng này",
+      "viewReport": "Xem báo cáo",
+      "loadFailed": "Không thể tải doanh thu.",
+      "paymentMethod": {
+        "all": "Tất cả",
+        "cash": "Tiền mặt",
+        "transfer": "Chuyển khoản",
+        "card": "Thẻ"
+      },
+      "quarters": {
+        "q1": "Q1 (T1-T3)",
+        "q2": "Q2 (T4-T6)",
+        "q3": "Q3 (T7-T9)",
+        "q4": "Q4 (T10-T12)"
+      }
+    },
+    "performance": {
+      "title": "Hiệu suất nhân viên",
+      "eyebrow": "Báo cáo",
+      "tabs": {
+        "month": "Tháng",
+        "quarter": "Quý",
+        "custom": "Tùy chỉnh"
+      },
+      "filter": {
+        "year": "Năm",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "from": "Từ ngày",
+        "to": "Đến ngày",
+        "view": "Xem báo cáo"
+      },
+      "viewDetail": "Xem chi tiết",
+      "actual": "Thực tế:",
+      "expected": "Kỳ vọng:",
+      "hoursValue": "{{hours}} giờ",
+      "legend": {
+        "good": "1.0–1.5: Tốt",
+        "average": "1.5–2.5: Trung bình",
+        "needsImprovement": "2.5–3.0: Cần cải thiện"
+      },
+      "detailModal": "Chi tiết hiệu suất — {{name}}",
+      "attendanceSectionTitle": "Danh sách chấm công",
+      "scheduleSectionTitle": "Danh sách ca làm việc",
+      "attendanceTable": {
+        "date": "Ngày",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "hours": "Thời gian (h)"
+      },
+      "scheduleTable": {
+        "date": "Ngày",
+        "shift": "Ca"
+      },
+      "remaining": "Còn lại",
+      "subtitle": "Hiệu suất làm việc theo thời gian thực tế / kỳ vọng của từng nhân viên",
+      "noDataTitle": "Không có dữ liệu",
+      "noStaff": "Không có nhân viên nào trong khoảng thời gian này.",
+      "noAttendance": "Không có dữ liệu chấm công.",
+      "noSchedule": "Không có ca làm việc nào.",
+      "loadFailed": "Không thể tải báo cáo.",
+      "shifts": {
+        "morning": "Ca sáng",
+        "afternoon": "Ca chiều",
+        "evening": "Ca tối",
+        "night": "Ca đêm"
+      }
+    },
+    "invoices": {
+      "title": "Danh sách hóa đơn giao dịch",
+      "eyebrow": "Báo cáo",
+      "kpi": {
+        "totalTransactions": "Tổng giao dịch",
+        "pageTotal": "Tổng tiền trang này",
+        "refundable": "Có thể hoàn tiền"
+      },
+      "filter": {
+        "from": "Từ ngày",
+        "to": "Đến ngày",
+        "method": "Phương thức",
+        "status": "Trạng thái",
+        "sort": "Sắp xếp",
+        "reload": "Tải lại"
+      },
+      "table": {
+        "id": "Mã giao dịch",
+        "date": "Ngày thanh toán",
+        "member": "Hội viên",
+        "staff": "Nhân viên phụ trách",
+        "package": "Dịch vụ/gói",
+        "method": "Phương thức",
+        "amount": "Số tiền",
+        "status": "Trạng thái",
+        "detail": "Hành động"
+      },
+      "status": {
+        "success": "Thành công",
+        "failed": "Thất bại"
+      },
+      "unassigned": "Chưa phân công",
+      "memberFallback": "Hội viên #{{id}}",
+      "pageTransactionsHint": "{{count}} giao dịch đang hiển thị",
+      "packageReference": "Gói {{code}}",
+      "viewDetailAria": "Xem chi tiết giao dịch {{code}}",
+      "subscriptionLabel": "Đăng ký",
+      "detailModal": {
+        "title": "Chi tiết giao dịch"
+      },
+      "exportBtn": "Xuất danh sách hóa đơn",
+      "exportFailed": "Không thể xuất danh sách hóa đơn.",
+      "sort": {
+        "newest": "Mới nhất",
+        "oldest": "Cũ nhất",
+        "amountDesc": "Số tiền giảm dần",
+        "amountAsc": "Số tiền tăng dần"
+      },
+      "filterStatus": {
+        "all": "Mọi trạng thái",
+        "success": "Thành công",
+        "failed": "Thất bại"
+      },
+      "methodBankCard": "Thẻ ngân hàng",
+      "methodEwallet": "Ví điện tử",
+      "loadFailed": "Không thể tải danh sách giao dịch.",
+      "subtitle": "Theo dõi chi tiết thanh toán, xuất hóa đơn và kiểm tra điều kiện hoàn tiền.",
+      "byCurrentFilter": "Theo bộ lọc hiện tại",
+      "successInPage": "Giao dịch thành công trong trang này",
+      "noTransactions": "Không có giao dịch",
+      "tryOtherFilter": "Thử thay đổi khoảng ngày, phương thức hoặc trạng thái thanh toán.",
+      "noMatchingInvoices": "Không có hóa đơn nào phù hợp với bộ lọc hiện tại.",
+      "exportSheetTitle": "Danh sách hóa đơn giao dịch",
+      "export": {
+        "colDate": "Ngày thanh toán",
+        "colId": "Mã giao dịch",
+        "colMember": "Hội viên",
+        "colPackage": "Dịch vụ/gói",
+        "colAmount": "Số tiền",
+        "colMethod": "Phương thức",
+        "colStatus": "Trạng thái",
+        "colStaff": "Nhân viên phụ trách",
+        "filterFrom": "Từ ngày: {{value}}",
+        "filterTo": "Đến ngày: {{value}}",
+        "filterMethod": "Phương thức: {{value}}",
+        "filterStatus": "Trạng thái: {{value}}",
+        "filterSort": "Sắp xếp: {{value}}",
+        "worksheetName": "Hóa đơn giao dịch"
+      }
+    }
+  },
+  "staffManagement": {
+    "users": {
+      "title": "Quản lý nhân sự",
+      "eyebrow": "Nhân sự",
+      "totalCount": "{{total}} nhân viên trong hệ thống",
+      "addBtn": "Thêm nhân viên",
+      "searchPlaceholder": "Tìm theo tên, email, mã nhân viên...",
+      "positions": {
+        "all": "Tất cả vị trí",
+        "staff": "Nhân viên",
+        "trainer": "Huấn luyện viên",
+        "pt": "Personal Trainer",
+        "owner": "Quản lý"
+      },
+      "statusFilter": {
+        "all": "Tất cả trạng thái",
+        "working": "Đang làm việc",
+        "resigned": "Đã nghỉ việc"
+      },
+      "table": {
+        "code": "Mã NV",
+        "name": "Họ tên",
+        "email": "Email",
+        "position": "Vị trí",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "scheduleBtn": "Lịch phân công",
+      "detailBtn": "Chi tiết",
+      "notFound": "Không có nhân viên nào",
+      "notFoundDesc": "Thử thay đổi bộ lọc hoặc thêm nhân viên mới.",
+      "deleteFailed": "Không thể xóa nhân viên này.",
+      "loadFailed": "Không thể tải danh sách nhân viên."
+    },
+    "detail": {
+      "eyebrow": "Nhân sự",
+      "createTitle": "Thêm nhân viên mới",
+      "editTitle": "Chỉnh sửa: {{name}}",
+      "createDesc": "Tạo tài khoản và hồ sơ nhân viên mới.",
+      "editDesc": "Mã: {{code}}",
+      "newInfoTitle": "Thông tin nhân viên mới",
+      "editInfoTitle": "Chỉnh sửa thông tin",
+      "form": {
+        "name": "Họ tên *",
+        "namePlaceholder": "Nguyễn Văn A",
+        "email": "Email *",
+        "phone": "Số điện thoại",
+        "position": "Vị trí *"
+      },
+      "positions": {
+        "staff": "Nhân viên",
+        "trainer": "Huấn luyện viên",
+        "pt": "Personal Trainer",
+        "owner": "Quản lý"
+      },
+      "createBtn": "Tạo nhân viên",
+      "scheduleTitle": "Lịch làm việc",
+      "noSchedule": "Nhân viên chưa có lịch làm việc.",
+      "noShifts": "Không tìm thấy ca làm việc nào.",
+      "shifts": {
+        "morning": "Ca sáng",
+        "afternoon": "Ca chiều",
+        "evening": "Ca tối",
+        "night": "Ca đêm"
+      },
+      "actions": "Hành động",
+      "terminate": "Cho thôi việc",
+      "terminateConfirm": "Xác nhận cho nhân viên {{name}} thôi việc? Hành động không thể hoàn tác.",
+      "terminateConfirmBtn": "Xác nhận",
+      "loadFailed": "Không thể tải thông tin nhân viên.",
+      "saveFailed": "Lưu thất bại.",
+      "terminateFailed": "Xóa thất bại.",
+      "validation": {
+        "nameRequired": "Vui lòng điền đầy đủ thông tin.",
+        "emailRequired": "Email là bắt buộc",
+        "positionRequired": "Vị trí không được trống."
+      },
+      "createSuccess": "Thêm nhân viên thành công",
+      "updateSuccess": "Cập nhật thông tin thành công",
+      "terminateSuccess": "Xóa nhân viên thành công"
+    },
+    "schedule": {
+      "title": "Lịch phân công",
+      "eyebrow": "Quản lý nhân sự",
+      "description": "Xem và phân ca làm việc cho nhân viên theo tháng.",
+      "modalTitle": "Thêm nhân viên - {{date}}",
+      "addStaffBtn": "Thêm nhân viên",
+      "allAssigned": "Tất cả nhân viên đã được phân ca này trong ngày đã chọn.",
+      "shiftLabel": "Ca làm việc",
+      "staffLabel": "Nhân viên",
+      "selectStaff": "-- Chọn nhân viên --",
+      "detailEyebrow": "Nhân sự ngày",
+      "emptyDayMessage": "Chưa có nhân viên nào trong ngày này.",
+      "emptyShiftMessage": "Chưa có nhân viên",
+      "removeAriaLabel": "Xóa {{name}}",
+      "loadFailed": "Không thể tải lịch làm việc.",
+      "saveFailed": "Không thể thêm lịch.",
+      "deleteFailed": "Không thể xóa lịch."
+    }
+  },
+  "rbac": {
+    "groups": {
+      "title": "Nhóm quyền",
+      "eyebrow": "Phân quyền",
+      "totalCount": "{{total}} nhóm quyền trong hệ thống",
+      "searchPlaceholder": "Tìm nhóm...",
+      "notFound": "Không có nhóm quyền nào",
+      "notFoundDesc": "Chưa có nhóm quyền nào trong hệ thống.",
+      "systemBadge": "hệ thống",
+      "assignedPermissions": "Quyền được gán",
+      "morePermissions": "+{{count}} khác",
+      "noPermissions": "Chưa có quyền nào.",
+      "memberCount": "{{count}} thành viên",
+      "permissionCount": "{{count}} quyền",
+      "ownerNote": "Quyền cao nhất trong hệ thống, không cần phân quyền.",
+      "assignBtn": "Phân quyền",
+      "deleteConflict": "Nhóm đang có thành viên, không thể xóa.",
+      "deleteFailed": "Xóa thất bại.",
+      "loadFailed": "Không thể tải danh sách nhóm quyền.",
+      "permissionsLoadFailed": "Không thể tải quyền của nhóm.",
+      "editModal": {
+        "title": "Sửa nhóm quyền",
+        "groupName": "Tên nhóm *",
+        "description": "Mô tả *",
+        "descPlaceholder": "Mô tả chức năng nhóm...",
+        "saveChanges": "Lưu thay đổi",
+        "fillRequired": "Vui lòng điền đầy đủ.",
+        "descTooShort": "Mô tả phải ít nhất 10 ký tự.",
+        "saveFailed": "Lưu thất bại."
+      },
+      "permsModal": {
+        "title": "Phân quyền: {{name}}",
+        "saveBtn": "Lưu phân quyền",
+        "saveFailed": "Lưu quyền thất bại."
+      }
+    },
+    "permissions": {
+      "title": "Quyền hạn",
+      "eyebrow": "Phân quyền",
+      "catalogTitle": "Danh mục quyền",
+      "totalCount": "{{count}} quyền trong hệ thống — chỉ đọc",
+      "searchPlaceholder": "Tìm theo mã, tên, mô tả...",
+      "notFound": "Không tìm thấy quyền nào",
+      "notFoundDesc": "Thử thay đổi bộ lọc.",
+      "sectionCount": "{{count}} quyền",
+      "readonlyNote": "Danh mục quyền chỉ đọc — quyền được quản lý bởi hệ thống. Việc thêm/sửa/xóa quyền cần cập nhật database seed và khởi động lại server.",
+      "loadFailed": "Không thể tải danh sách quyền.",
+      "resources": {
+        "all": "Tất cả",
+        "user": "Người dùng",
+        "member": "Hội viên",
+        "staff": "Nhân viên",
+        "package": "Gói tập",
+        "subscription": "Đăng ký",
+        "payment": "Thanh toán",
+        "room": "Phòng tập",
+        "equipment": "Thiết bị",
+        "maintenance": "Bảo trì",
+        "session": "Buổi tập",
+        "attendance": "Điểm danh",
+        "progress": "Tiến độ",
+        "feedback": "Phản hồi",
+        "schedule": "Lịch làm việc",
+        "report": "Báo cáo",
+        "rbac": "Phân quyền"
+      },
+      "actions": {
+        "read": "Xem",
+        "create": "Tạo",
+        "update": "Sửa",
+        "delete": "Xóa",
+        "manage": "Quản lý",
+        "view": "Xem",
+        "handle": "Xử lý",
+        "checkin": "Check-in",
+        "report": "Báo cáo",
+        "resolve": "Giải quyết"
+      }
+    }
+  },
+  "usersOverview": {
+    "eyebrow": "Quản lý",
+    "title": "Danh sách người dùng",
+    "notFound": "Không tìm thấy người dùng",
+    "notFoundDesc": "Thử thay đổi từ khóa hoặc bộ lọc.",
+    "noPackage": "Chưa có gói",
+    "description": "{{total}} {{type}} trong hệ thống.",
+    "pageLabel": "Trang {{page}}/{{totalPages}}",
+    "expiresOn": "Hết hạn {{date}}",
+    "tabs": {
+      "members": "Hội viên",
+      "staff": "Nhân viên & PT"
+    },
+    "filter": {
+      "searchMember": "Tìm theo tên, email hoặc mã hội viên",
+      "searchStaff": "Tìm theo tên, email hoặc mã nhân viên",
+      "packageStatus": "Trạng thái gói",
+      "staffStatus": "Trạng thái nhân viên",
+      "position": "Mọi chức vụ"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau"
+    },
+    "memberTable": {
+      "name": "Hội viên",
+      "package": "Gói tập",
+      "expiry": "Hết hạn",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "staffTable": {
+      "name": "Nhân viên",
+      "position": "Chức vụ",
+      "contact": "Liên hệ",
+      "status": "Trạng thái"
+    },
+    "positions": {
+      "trainer": "Huấn luyện viên",
+      "pt": "Personal Trainer",
+      "staff": "Nhân viên",
+      "owner": "Chủ gym"
+    },
+    "packageStatus": {
+      "all": "Mọi trạng thái gói",
+      "active": "Gói đang hoạt động",
+      "expired": "Gói đã hết hạn",
+      "none": "Chưa có gói"
+    },
+    "staffStatus": {
+      "all": "Mọi trạng thái",
+      "working": "Đang làm việc",
+      "resigned": "Đã nghỉ việc"
+    },
+    "memberStatus": {
+      "all": "Mọi trạng thái",
+      "active": "Đang hoạt động",
+      "pendingVerification": "Chờ xác thực",
+      "locked": "Đã khóa"
+    },
+    "userStatus": {
+      "active": "Hoạt động",
+      "pendingVerification": "Chờ xác thực",
+      "locked": "Bị khóa",
+      "deleted": "Đã xóa"
+    }
+  },
+  "status": {
+    "active": "Đang hoạt động",
+    "scheduled": "Đã lên lịch",
+    "inProgress": "Đang diễn ra",
+    "completed": "Hoàn thành",
+    "cancelled": "Đã hủy",
+    "expired": "Hết hạn",
+    "pending": "Chờ xử lý",
+    "pendingVerification": "Chờ xác thực",
+    "draft": "Bản nháp",
+    "archived": "Lưu trữ",
+    "replaced": "Đã thay thế",
+    "realtime": "Thiết bị",
+    "manual": "Thủ công",
+    "qr": "QR",
+    "available": "Sẵn sàng",
+    "broken": "Hỏng",
+    "repairing": "Đang sửa",
+    "reported": "Đã báo cáo",
+    "resolved": "Đã xử lý",
+    "inactive": "Không hoạt động",
+    "suspended": "Đình chỉ",
+    "retired": "Đã nghỉ",
+    "deleted": "Đã xóa",
+    "locked": "Bị khóa",
+    "maintenance": "Bảo trì",
+    "unknown": "Không xác định"
+  },
+  "profile": {
+    "title": "Hồ sơ",
+    "accountTitle": "Tài khoản Owner",
+    "subtitle": "Quản lý thông tin cá nhân và bảo mật.",
+    "personalInfo": "Thông tin cá nhân",
+    "fullName": "Họ tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "role": "Vai trò",
+    "roleOwner": "Chủ sở hữu",
+    "changePassword": "Đổi mật khẩu",
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "changePasswordBtn": "Đổi mật khẩu",
+    "nameRequired": "Họ tên không được trống.",
+    "saveFailed": "Lưu thất bại.",
+    "passwordMinLength": "Mật khẩu mới cần ít nhất 8 ký tự.",
+    "passwordMismatch": "Mật khẩu xác nhận không khớp.",
+    "changePasswordFailed": "Không thể đổi mật khẩu.",
+    "changePasswordSuccess": "Đổi mật khẩu thành công!",
+    "loadFailed": "Không thể tải hồ sơ."
+  }
+}

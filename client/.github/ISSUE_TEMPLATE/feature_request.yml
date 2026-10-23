@@ -1,0 +1,91 @@
+name: "Đề xuất tính năng (Feature Request)"
+description: Đề xuất một tính năng hoặc cải tiến mới cho hệ thống.
+title: "[Feature]: <tên tính năng>"
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã đóng góp ý tưởng! Hãy mô tả tính năng càng chi tiết càng tốt để cả team cùng đánh giá.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Kiểm tra trước
+      options:
+        - label: Tôi đã tìm trong [Issues](../issues?q=is%3Aissue) và chắc chắn rằng đề xuất này chưa từng được nêu.
+          required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Khu vực ảnh hưởng
+      multiple: true
+      options:
+        - Client (React/Vite)
+        - Server (Express/API)
+        - Database / Migration
+        - CI / GitHub Actions
+        - Tài liệu (docs/)
+        - Khác
+    validations:
+      required: true
+
+  - type: dropdown
+    id: actor
+    attributes:
+      label: Đối tượng sử dụng
+      description: Tính năng này phục vụ ai trong hệ thống?
+      multiple: true
+      options:
+        - Chủ phòng tập
+        - Nhân viên quản lý
+        - Huấn luyện viên cá nhân
+        - Hội viên
+        - Quản trị hệ thống (Dev/DevOps)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Vấn đề cần giải quyết
+      description: Tính năng này giải quyết nỗi đau (pain point) nào? Tại sao nó cần thiết?
+      placeholder: "Hiện tại nhân viên phải nhập tay từng buổi tập, dẫn tới..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Giải pháp đề xuất
+      description: Mô tả tính năng / hành vi mong muốn.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí chấp nhận (Acceptance Criteria)
+      description: Liệt kê các điều kiện để coi tính năng là "xong".
+      value: |
+        - [ ] ...
+        - [ ] ...
+        - [ ] ...
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Phương án thay thế đã cân nhắc
+      description: Có giải pháp/cách làm nào khác bạn đã nghĩ tới không?
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup / Wireframe / Tham khảo
+      description: Đính kèm ảnh, link Figma hoặc tham chiếu tới sản phẩm tương tự (nếu có).
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Thông tin bổ sung

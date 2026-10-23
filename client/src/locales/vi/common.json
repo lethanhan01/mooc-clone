@@ -1,0 +1,266 @@
+{
+  "button": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "view": "Xem",
+    "viewDetail": "Xem chi tiết",
+    "viewAll": "Xem tất cả",
+    "back": "Quay lại",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "add": "Thêm",
+    "create": "Tạo",
+    "submit": "Gửi",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "export": "Xuất",
+    "start": "Bắt đầu",
+    "complete": "Hoàn thành",
+    "approve": "Duyệt",
+    "reject": "Từ chối",
+    "retry": "Thử lại"
+  },
+  "nav": {
+    "dashboard": "Trang chủ",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "closeMenu": "Đóng menu",
+    "openMenu": "Mở menu",
+    "workout": "Luyện tập",
+    "subscription": "Gói tập",
+    "students": "Học viên",
+    "sessions": "Lịch học",
+    "members": "Hội viên",
+    "checkIn": "Check-in",
+    "staff": "Nhân viên",
+    "reports": "Báo cáo"
+  },
+  "status": {
+    "active": "Đang hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "pending": "Chờ kích hoạt",
+    "expired": "Đã hết hạn",
+    "completed": "Hoàn thành",
+    "cancelled": "Đã hủy",
+    "working": "Đang làm việc",
+    "notCheckedIn": "Chưa chấm công hôm nay",
+    "scheduled": "Đã lên lịch",
+    "inProgress": "Đang diễn ra",
+    "pendingVerification": "Chờ xác thực",
+    "draft": "Bản nháp",
+    "archived": "Lưu trữ",
+    "replaced": "Đã thay thế",
+    "realtime": "Thiết bị",
+    "manual": "Thủ công",
+    "qr": "QR",
+    "available": "Sẵn sàng",
+    "broken": "Hỏng",
+    "repairing": "Đang sửa",
+    "reported": "Đã báo cáo",
+    "resolved": "Đã xử lý",
+    "suspended": "Đình chỉ",
+    "retired": "Đã nghỉ",
+    "deleted": "Đã xóa",
+    "locked": "Bị khóa",
+    "maintenance": "Bảo trì",
+    "unknown": "Không xác định"
+  },
+  "error": {
+    "network": "Không thể kết nối. Kiểm tra mạng và thử lại.",
+    "unknown": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "notFound": "Không tìm thấy dữ liệu.",
+    "loadFailed": "Không thể tải dữ liệu.",
+    "api": {
+      "EMAIL_IN_USE": "Email này đã được sử dụng",
+      "LINE_AUTH_FAILED": "Không thể xác thực với LINE. Vui lòng mở lại LIFF và thử lại.",
+      "LINE_LOGIN_MEMBER_ONLY": "Đăng nhập LINE chỉ dành cho hội viên.",
+      "EMAIL_NOT_VERIFIED": "Vui lòng xác thực email trước khi đăng nhập LINE.",
+      "ACCOUNT_LOCKED": "Tài khoản đã bị khóa. Vui lòng liên hệ phòng tập."
+    }
+  },
+  "date": {
+    "notAvailable": "Chưa có",
+    "invalid": "Không hợp lệ"
+  },
+  "paymentMethod": {
+    "cash": "Tiền mặt",
+    "bankCard": "Thẻ ngân hàng",
+    "ewallet": "Ví điện tử",
+    "cashShort": "Tiền mặt",
+    "bankCardShort": "Thẻ NH",
+    "ewalletShort": "Ví điện tử"
+  },
+  "shift": {
+    "morning": "Ca sáng (07:00–12:00)",
+    "afternoon": "Ca chiều (12:00–17:00)",
+    "evening": "Ca tối (17:00–22:00)"
+  },
+  "search": {
+    "placeholder": "Tìm kiếm...",
+    "clear": "Xóa tìm kiếm"
+  },
+  "filter": {
+    "title": "Bộ lọc"
+  },
+  "pagination": {
+    "prev": "Trước",
+    "next": "Sau",
+    "pageOf": "Trang {{page}} / {{totalPages}}"
+  },
+  "dateRange": {
+    "from": "Từ ngày",
+    "to": "Đến ngày",
+    "load": "Tải báo cáo"
+  },
+  "datePicker": {
+    "open": "Mở lịch",
+    "placeholder": "Chọn ngày & giờ",
+    "time": "Thời gian"
+  },
+  "calendar": {
+    "prevMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "emptySelectionTitle": "Chọn ngày để xem lịch",
+    "emptySelectionDescription": "Bấm vào ô ngày bên trái",
+    "emptyDayMessage": "Chưa có ca làm việc trong ngày này.",
+    "emptyShiftMessage": "Chưa có ca"
+  },
+  "notification": {
+    "ariaLabel": "Thông báo",
+    "title": "Thông báo",
+    "unread": "{{count}} chưa đọc",
+    "allRead": "Đã đọc tất cả",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "loadError": "Không thể tải thông báo",
+    "loading": "Đang tải",
+    "empty": "Chưa có thông báo",
+    "toastMany": "Bạn có {{count}} thông báo mới",
+    "time": {
+      "justNow": "Vừa xong",
+      "minutesAgo": "{{count}} phút trước",
+      "hoursAgo": "{{count}} giờ trước",
+      "daysAgo": "{{count}} ngày trước"
+    },
+    "templates": {
+      "training": {
+        "created": {
+          "title": "Lịch tập mới",
+          "memberMessage": "Bạn có lịch tập với PT {{trainerName}}.",
+          "trainerMessage": "Bạn có lịch tập mới với hội viên {{memberName}}."
+        },
+        "updated": {
+          "title": "Lịch tập đã cập nhật",
+          "memberMessage": "Lịch tập với PT {{trainerName}} đã được cập nhật.",
+          "trainerMessage": "Lịch tập với hội viên {{memberName}} đã được cập nhật."
+        },
+        "cancelled": {
+          "title": "Lịch tập đã hủy",
+          "memberMessage": "Lịch tập với PT {{trainerName}} đã được hủy.",
+          "trainerMessage": "Lịch tập với hội viên {{memberName}} đã được hủy."
+        },
+        "completed": {
+          "title": "Buổi tập đã hoàn thành",
+          "memberMessage": "Buổi tập với PT {{trainerName}} đã được đánh dấu hoàn thành."
+        },
+        "reminder": {
+          "title": "Sắp đến giờ tập",
+          "memberMessage": "Buổi tập với PT {{trainerName}} sẽ bắt đầu sau {{reminderMinutes}} phút.",
+          "genericMessage": "Buổi tập của bạn sắp bắt đầu."
+        },
+        "starting": {
+          "title": "Đến giờ tập",
+          "memberMessage": "Buổi tập với PT {{trainerName}} bắt đầu ngay bây giờ.",
+          "genericMessage": "Buổi tập của bạn bắt đầu ngay bây giờ."
+        }
+      },
+      "attendance": {
+        "checkin": {
+          "title": "Check-in thành công",
+          "memberMessage": "Bạn đã check-in thành công.",
+          "trainerMessage": "Học viên {{memberName}} vừa check-in."
+        }
+      },
+      "payment": {
+        "success": {
+          "title": "Thanh toán thành công",
+          "pendingTitle": "Đã ghi nhận thanh toán",
+          "activatedMessage": "Thanh toán thành công, gói {{packageName}} đã được kích hoạt.",
+          "pendingMessage": "Thanh toán cho gói {{packageName}} đã được ghi nhận và đang chờ kích hoạt."
+        },
+        "failed": {
+          "title": "Thanh toán thất bại",
+          "message": "Thanh toán cho gói {{packageName}} không thành công."
+        },
+        "successAdmin": {
+          "title": "Thanh toán mới",
+          "message": "Có một giao dịch thanh toán mới."
+        },
+        "failedAdmin": {
+          "title": "Thanh toán thất bại",
+          "message": "Có một giao dịch thanh toán thất bại."
+        }
+      },
+      "subscription": {
+        "created": {
+          "title": "Đã tạo yêu cầu đăng ký gói",
+          "message": "Yêu cầu đăng ký gói {{packageName}} đã được tạo và đang chờ thanh toán."
+        },
+        "createdAdmin": {
+          "title": "Đăng ký gói mới",
+          "message": "Có một yêu cầu đăng ký gói mới đang chờ xử lý."
+        },
+        "renewed": {
+          "title": "Gia hạn gói thành công",
+          "message": "Gói {{packageName}} đã được gia hạn thành công."
+        },
+        "renewedAdmin": {
+          "title": "Gói tập được gia hạn",
+          "message": "Có một gói tập vừa được gia hạn thành công."
+        },
+        "cancelled": {
+          "title": "Gói tập đã hủy",
+          "message": "Gói {{packageName}} đã được hủy."
+        },
+        "cancelledAdmin": {
+          "title": "Gói tập đã hủy",
+          "message": "Có một gói tập vừa được hủy."
+        }
+      },
+      "feedback": {
+        "created": {
+          "title": "Phản hồi mới",
+          "message": "Có một phản hồi mới từ hội viên."
+        },
+        "assigned": {
+          "title": "Bạn được giao xử lý phản hồi",
+          "message": "Một phản hồi vừa được giao cho bạn xử lý."
+        },
+        "resolved": {
+          "title": "Phản hồi đã được xử lý",
+          "message": "Phản hồi của bạn đã được xử lý."
+        },
+        "rejected": {
+          "title": "Phản hồi đã bị từ chối",
+          "message": "Phản hồi của bạn đã bị từ chối."
+        }
+      }
+    }
+  },
+  "loading": "Đang tải...",
+  "noData": "Không có dữ liệu",
+  "ok": "Đồng ý",
+  "yes": "Có",
+  "no": "Không",
+  "theme": {
+    "title": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống",
+    "switchToLight": "Chuyển sang giao diện sáng",
+    "switchToDark": "Chuyển sang giao diện tối",
+    "appearanceTitle": "Giao diện & Hiển thị",
+    "appearanceDesc": "Tùy chỉnh chế độ sáng, tối hoặc tự động đồng bộ theo hệ điều hành."
+  }
+}

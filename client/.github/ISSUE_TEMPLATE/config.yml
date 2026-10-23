@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Thảo luận chung
+    url: https://github.com/An/gym-management-system/discussions
+    about: Đặt câu hỏi, trao đổi ý tưởng hoặc nhờ trợ giúp tại GitHub Discussions trước khi mở issue.
+  - name: README & Tài liệu thiết kế
+    url: https://github.com/An/gym-management-system#readme
+    about: Tham khảo README và thư mục docs/ để biết hướng dẫn cài đặt, kiến trúc, lược đồ DB.

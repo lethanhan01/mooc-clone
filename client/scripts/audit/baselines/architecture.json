@@ -1,0 +1,245 @@
+{
+  "src/components/ui/actions/BackButton.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/actions/button-utils.ts": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/actions/Button.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/accordion-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Accordion.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Avatar.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/badge-utils.ts": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Badge.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/card-addons.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/card-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Card.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Chip.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/DescriptionList.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Image.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/ResponsiveTable.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/StatCard.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/Table.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/data-display/VirtualDataTable.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/feedback/Alert.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/feedback/EmptyState.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/feedback/ProgressBar.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/feedback/Skeleton.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/checkbox-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Checkbox.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Combobox.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/date-picker-utils.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/DatePickerInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/DateTimePickerInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/file-upload-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/FileUpload.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/FilterBar.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/FilterDropdown.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Form.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/FormField.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/input-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/input-utils.ts": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Input.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Label.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/number-input-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/NumberInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/OtpInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/radio-card.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/radio-group-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/RadioGroup.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/search-input-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/SearchInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/SearchToolbar.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/select-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/switch-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Switch.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/TagInput.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/textarea-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/textarea-utils.ts": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/Textarea.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/forms/TimeSlotPicker.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/Box.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/Container.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/Flex.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/Grid.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/PageUI.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/layout/Separator.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/Breadcrumb.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/Pagination.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/SegmentedControl.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/Stepper.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/tabs-subcomponents.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/Tabs.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/ThemeSegmentedControl.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/navigation/ThemeToggle.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/overlay/DropdownMenu.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/overlay/Modal.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/overlay/Popover.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/overlay/Sheet.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/overlay/Tooltip.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/typography/Heading.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/typography/SanitizedHTML.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/components/ui/typography/Text.tsx": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/pages/dashboard/DashboardPage.tsx": {
+    "NO_UNLOCKED_TIMEZONE": 1
+  },
+  "src/services/auth.service.ts": {
+    "NO_BYPASS_ABORT_SIGNAL": 1
+  },
+  "src/utils/cn.ts": {
+    "NO_BARREL_IMPORT_UTILS": 1
+  },
+  "src/utils/formatters.ts": {
+    "NO_MUTABLE_UTILS": 2
+  }
+}

@@ -1,0 +1,46 @@
+@layer base {
+  :root {
+    /* ==========================================================================
+       Shadcn UI & Radix Compatibility Layer (Lớp tương thích lâu dài)
+       Ánh xạ toàn bộ biến quy ước của shadcn/Radix UI sang Semantic Tokens.
+       ========================================================================== */
+
+    --background: var(--color-surface-base);
+    --foreground: var(--color-fg-primary);
+
+    --card: var(--color-surface-card);
+    --card-foreground: var(--color-fg-primary);
+
+    --popover: var(--color-surface-elevated);
+    --popover-foreground: var(--color-fg-primary);
+
+    --primary: var(--color-action-primary);
+    --primary-foreground: var(--color-action-primary-fg);
+
+    --secondary: var(--color-surface-elevated);
+    --secondary-foreground: var(--color-fg-primary);
+
+    --muted: var(--color-surface-card);
+    --muted-foreground: var(--color-fg-muted);
+
+    --accent: var(--color-accent);
+    --accent-foreground: var(--color-surface-base);
+
+    --destructive: var(--color-status-danger-fg);
+
+    --border: var(--color-line-subtle);
+    --input: var(--color-line-default);
+    --ring: var(--color-focus-ring);
+    --radius: 0.75rem;
+
+    /* Sidebar tokens */
+    --sidebar: var(--color-surface-card);
+    --sidebar-foreground: var(--color-fg-primary);
+    --sidebar-primary: var(--color-action-primary);
+    --sidebar-primary-foreground: var(--color-action-primary-fg);
+    --sidebar-accent: var(--color-surface-card-hover);
+    --sidebar-accent-foreground: var(--color-fg-primary);
+    --sidebar-border: var(--color-line-accent-subtle);
+    --sidebar-ring: var(--color-focus-ring);
+  }
+}

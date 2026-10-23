@@ -1,0 +1,70 @@
+# ==============================================================================
+# mooc-clone Server .gitignore (Scoped for server/ Spring Boot app)
+# ==============================================================================
+
+HELP.md
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Keep maven wrapper if present
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Spring Boot secrets & properties
+**/application-secret.properties
+**/application-secret.yml
+**/application-secret.yaml
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+
+# Keystores & private keys
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# Logs & backups
+logs/
+*.log
+backups/
+uploads/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+
+### OS & Swap ###
+.DS_Store
+Thumbs.db
+*.swp

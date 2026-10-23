@@ -1,0 +1,53 @@
+@layer base {
+  :root {
+    /* ==========================================================================
+       RoGym Compatibility Layer (Lớp tương thích có thời hạn — Ratchet về 0)
+       Mọi biến --rogym-* cũ được chuyển thành alias @deprecated trỏ vào Semantic.
+       Tuyệt đối không sử dụng mới trong component/page; sẽ được xóa dần ở Phase 5-8.
+       ========================================================================== */
+
+    /* Brand & Actions Deprecated Aliases */
+    --rogym-green: var(--color-action-primary); /* @deprecated -> action-primary */
+    --rogym-green-hover: var(--color-action-primary-hover); /* @deprecated -> action-primary-hover */
+    --rogym-teal: var(--color-accent); /* @deprecated -> accent */
+    --rogym-green-dark: var(--color-action-primary-fg); /* @deprecated -> action-primary-fg */
+    --rogym-green-deeper: var(--color-action-primary-fg-strong); /* @deprecated -> action-primary-fg-strong */
+    --rogym-green-soft: var(--color-action-primary-soft); /* @deprecated -> action-primary-soft */
+    --rogym-green-soft-border: var(--color-action-primary-soft-border); /* @deprecated -> action-primary-soft-border */
+    --rogym-teal-soft: var(--color-action-accent-soft); /* @deprecated -> action-accent-soft */
+    --rogym-amber-soft: var(--color-status-warning-bg); /* @deprecated -> status-warning-bg */
+    --rogym-amber-soft-border: var(--color-status-warning-border); /* @deprecated -> status-warning-border */
+
+    /* Surfaces Deprecated Aliases */
+    --rogym-bg-base: var(--color-surface-base); /* @deprecated -> surface-base */
+    --rogym-bg-deep: var(--color-surface-sunken); /* @deprecated -> surface-sunken */
+    --rogym-bg-deep-alt: var(--color-surface-sunken-alt); /* @deprecated -> surface-sunken-alt */
+    --rogym-bg-card: var(--color-surface-card); /* @deprecated -> surface-card */
+    --rogym-bg-card-hover: var(--color-surface-card-hover); /* @deprecated -> surface-card-hover */
+    --rogym-bg-card-darker: var(--color-surface-card-inset); /* @deprecated -> surface-card-inset */
+    --rogym-bg-elevated: var(--color-surface-elevated); /* @deprecated -> surface-elevated */
+    --rogym-bg-elevated-green: var(--color-surface-elevated-accent); /* @deprecated -> surface-elevated-accent */
+    --rogym-bg-light: var(--color-surface-inverse); /* @deprecated -> surface-inverse */
+    --rogym-bg-glass: var(--color-surface-glass); /* @deprecated -> surface-glass */
+
+    /* Foregrounds & Text Deprecated Aliases */
+    --rogym-text-primary: var(--color-fg-primary); /* @deprecated -> fg-primary */
+    --rogym-text-secondary: var(--color-fg-secondary); /* @deprecated -> fg-secondary */
+    --rogym-text-muted: var(--color-fg-muted); /* @deprecated -> fg-muted */
+    --rogym-text-dim: var(--color-fg-subtle); /* @deprecated -> fg-subtle */
+    --rogym-text-faint: var(--color-fg-disabled); /* @deprecated -> fg-disabled */
+    --rogym-text-on-light: var(--color-fg-on-inverse); /* @deprecated -> fg-on-inverse */
+    --rogym-text-on-light-muted: var(--color-fg-on-inverse-muted); /* @deprecated -> fg-on-inverse-muted */
+    --rogym-error: var(--color-status-danger-fg); /* @deprecated -> status-danger-fg */
+
+    /* Lines & Borders Deprecated Aliases */
+    --rogym-border-subtle: var(--color-line-subtle); /* @deprecated -> line-subtle */
+    --rogym-border-section: var(--color-line-divider); /* @deprecated -> line-divider */
+    --rogym-border-white-dim: var(--color-line-default); /* @deprecated -> line-default */
+    --rogym-border-white-button: var(--color-line-strong); /* @deprecated -> line-strong */
+    --rogym-border-white-hover: var(--color-line-hover); /* @deprecated -> line-hover */
+    --rogym-border-teal-dim: var(--color-line-accent-subtle); /* @deprecated -> line-accent-subtle */
+    --rogym-border-teal-hover: var(--color-line-accent-hover); /* @deprecated -> line-accent-hover */
+    --rogym-border-teal-focus: var(--color-line-focus); /* @deprecated -> line-focus */
+  }
+}

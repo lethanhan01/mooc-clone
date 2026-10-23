@@ -1,0 +1,96 @@
+@layer base {
+  :root {
+    /* ==========================================================================
+       RoGym Non-Color Design Tokens
+       Quản lý phông chữ, gia tốc chuyển động, thời lượng, độ bóng và thang đo z-index.
+       ========================================================================== */
+
+    /* Typography & Fonts */
+    --font-body: 'Be Vietnam Pro', sans-serif;
+    --font-display: 'Anton', sans-serif;
+    --rogym-font-body: 'Be Vietnam Pro', sans-serif;
+    --rogym-font-display: 'Anton', sans-serif;
+
+    /* Motion & Transitions */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-button: 380ms;
+    --duration-link: 280ms;
+    --duration-image: 650ms;
+
+    --rogym-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --rogym-duration-button: 380ms;
+    --rogym-duration-link: 280ms;
+    --rogym-duration-image: 650ms;
+
+    /* Elevation & Shadows (100% HEX with alpha) */
+    --shadow-primary: 0 8px 24px -4px #06c3844d;
+    --shadow-card: 0 24px 56px -12px #06c38433;
+    --shadow-glass:
+      0 24px 64px #0000008c,
+      inset 0 1px 0 #ffffff0d;
+    --shadow-tone-sm: 0 0 12px #06c38459;
+    --shadow-tone-md: 0 0 15px #06c38466;
+    --shadow-warning-glow: 0 0 16px #f59e0b59;
+
+    --rogym-shadow-primary: 0 8px 24px -4px #06c3844d;
+    --rogym-shadow-card: 0 24px 56px -12px #06c38433;
+    --rogym-shadow-glass:
+      0 24px 64px #0000008c,
+      inset 0 1px 0 #ffffff0d;
+    --rogym-shadow-tone-sm: 0 0 12px #06c38459;
+    --rogym-shadow-tone-md: 0 0 15px #06c38466;
+    --rogym-shadow-warning-glow: 0 0 16px #f59e0b59;
+
+    /* Gradients */
+    --rogym-gradient-photo-overlay:
+      linear-gradient(
+        95deg,
+        #080e0bf2 0%,
+        #080e0b8c 60%,
+        transparent 100%
+      ),
+      linear-gradient(
+        0deg,
+        #080e0bb3 0%,
+        transparent 50%
+      );
+
+    /* Radius Scale */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-full: 9999px;
+
+    /* Standard 5-Tier Z-Index Scale (SEM-TOKEN-010) */
+    --z-base: 0;
+    --z-sticky: 10;
+    --z-dropdown: 20;
+    --z-modal: 50;
+    --z-toast: 100;
+
+    /* Layout Dimensions — @deprecated theo Quyết định D16 (Ưu tiên Tailwind utilities) */
+    --rogym-container-width: 1280px; /* @deprecated -> max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 */
+    --rogym-container-padding: 40px; /* @deprecated -> px-4 sm:px-6 lg:px-8 */
+    --rogym-section-padding: 128px; /* @deprecated -> py-16 sm:py-24 lg:py-32 */
+    --bottom-nav-height: 64px;
+    --bottom-nav-center-action-clearance: 44px;
+  }
+
+  .theme,
+  .dark {
+    --font-heading: var(--rogym-font-body);
+    --font-sans: var(--rogym-font-body);
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --rogym-container-padding: 20px; /* @deprecated -> px-4 */
+    --rogym-section-padding: 80px; /* @deprecated -> py-12 */
+    --rogym-dashboard-padding: 16px; /* @deprecated -> p-4 */
+    --rogym-bottom-nav-height: 64px;
+    --rogym-bottom-nav-center-action-clearance: 44px;
+    --bottom-nav-height: 64px;
+    --bottom-nav-center-action-clearance: 44px;
+  }
+}

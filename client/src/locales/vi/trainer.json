@@ -1,0 +1,668 @@
+{
+  "nav": {
+    "students": "Học viên",
+    "sessions": "Lịch dạy",
+    "plans": "Kế hoạch",
+    "exercises": "Bài tập"
+  },
+  "dashboard": {
+    "title": "Trainer workspace",
+    "eyebrow": "Trainer workspace",
+    "pageTitle": "Tổng quan hôm nay",
+    "description": "Theo dõi học viên, lịch dạy và các công việc cần ưu tiên.",
+    "viewSchedule": "Xem lịch",
+    "createSession": "Tạo buổi tập",
+    "stats": {
+      "managedStudents": "Học viên đang quản lý",
+      "todaySessions": "Buổi tập hôm nay",
+      "completedThisMonth": "Buổi tập hoàn thành tháng này",
+      "nextSession": "Buổi sắp tới",
+      "noUpcoming": "Chưa có"
+    },
+    "todaySchedule": {
+      "title": "Lịch dạy hôm nay",
+      "description": "Đánh dấu trạng thái từng buổi tập ngay tại đây",
+      "allSessions": "Tất cả buổi tập",
+      "noSessions": "Không có buổi tập nào hôm nay",
+      "noSessionsDesc": "Tạo buổi tập mới hoặc kiểm tra lịch tuần tới."
+    },
+    "upcoming": {
+      "title": "Lịch 7 ngày tới",
+      "viewAll": "Xem tất cả",
+      "noUpcoming": "Chưa có lịch sắp tới"
+    },
+    "expiring": {
+      "title": "Gói sắp hết hạn",
+      "students": "Học viên",
+      "noExpiring": "Không có gói sắp hết hạn",
+      "expiresOn": "Hết hạn {{date}}"
+    },
+    "actions": {
+      "start": "Bắt đầu",
+      "complete": "Hoàn thành",
+      "detail": "Chi tiết"
+    },
+    "error": {
+      "loadFailed": "Không thể tải tổng quan trainer.",
+      "updateStatus": "Không thể cập nhật trạng thái buổi tập."
+    },
+    "success": {
+      "completed": "Đã hoàn thành buổi tập",
+      "started": "Đã bắt đầu buổi tập"
+    }
+  },
+  "sessions": {
+    "calendar": {
+      "title": "Lịch buổi tập",
+      "eyebrow": "Lịch dạy",
+      "description": "Theo dõi lịch theo ngày hoặc theo tuần, giờ hiển thị theo múi giờ Việt Nam.",
+      "createSession": "Tạo buổi tập",
+      "prevPeriod": "Kỳ trước",
+      "nextPeriod": "Kỳ sau",
+      "today": "Hôm nay",
+      "dayView": "Ngày",
+      "weekView": "Tuần",
+      "noSession": "Không có lịch",
+      "noRoom": "Chưa xếp phòng",
+      "list": {
+        "title": "Danh sách buổi tập",
+        "allRooms": "Mọi phòng tập",
+        "allStatuses": "Mọi trạng thái",
+        "scheduled": "Đã lên lịch",
+        "inProgress": "Đang diễn ra",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy",
+        "fromDate": "Từ ngày",
+        "toDate": "Đến ngày",
+        "colTime": "Thời gian",
+        "colStudent": "Học viên",
+        "colRoom": "Phòng",
+        "colStatus": "Trạng thái",
+        "colAction": "Thao tác",
+        "detail": "Chi tiết",
+        "noSessions": "Chưa có buổi tập",
+        "noSessionsDesc": "Thay đổi bộ lọc để xem kết quả.",
+        "prevPage": "Trước",
+        "nextPage": "Sau",
+        "page": "Trang {{current}}/{{total}}"
+      }
+    },
+    "create": {
+      "title": "Tạo buổi tập",
+      "titleEdit": "Chỉnh sửa buổi tập",
+      "eyebrow": "Lịch dạy",
+      "description": "Chọn học viên, phòng và thời gian. Hệ thống sẽ kiểm tra gói tập và xung đột lịch.",
+      "back": "Quay lại",
+      "fieldStudent": "Học viên",
+      "fieldWorkoutPlan": "Workout plan",
+      "fieldPlanDay": "Ngày tập trong plan",
+      "fieldRoom": "Phòng tập",
+      "fieldStartTime": "Thời gian bắt đầu",
+      "fieldDuration": "Thời lượng",
+      "durationHint": "Thời lượng tính bằng phút (bội số của 15)",
+      "minutesUnit": "phút",
+      "selectRoom": "Chọn phòng tập",
+      "selectPlan": "Chọn workout plan để gán",
+      "selectPlanDay": "Chọn ngày tập",
+      "selectPlanFirst": "Chọn workout plan trước",
+      "loadingPlan": "Đang tải workout plan của học viên...",
+      "noActivePlan": "Chưa có workout plan active để gán cho học viên.",
+      "notLinked": "Buổi tập này chưa liên kết workout plan.",
+      "noPlanDay": "Chưa chọn ngày tập.",
+      "assignedPlanBadge": "Đang theo học",
+      "planDayOptionFormat": "Ngày {{dayNumber}} - Tuần {{weekNumber}}, {{dayName}}: {{name}}",
+      "capacityUnit": "người",
+      "selectDateHint": "Chọn ngày để tra cứu các khung giờ trống",
+      "availableSlots": "Khung giờ khả dụng",
+      "slotPast": "Quá giờ",
+      "slotBusy": "Đã đặt",
+      "noSlots": "Không có khung giờ nào khả dụng trong ngày đã chọn.",
+      "startTimePlaceholder": "Chọn ngày & giờ",
+      "estimatedEnd": "Kết thúc dự kiến:",
+      "summaryTitle": "Thời gian buổi tập dự kiến",
+      "endUnknown": "Chưa xác định",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "submit": "Tạo buổi tập",
+      "error": {
+        "editBlockedTitle": "Không thể chỉnh sửa",
+        "editBlocked": "Chỉ có thể sửa buổi tập đã lên lịch và chưa bắt đầu.",
+        "generalTitle": "Đã xảy ra lỗi",
+        "loadFailed": "Không thể tải dữ liệu tạo buổi tập.",
+        "loadPlanFailed": "Không thể tải workout plan của học viên.",
+        "saveFailed": "Không thể lưu buổi tập. Hãy kiểm tra trùng lịch, phòng và thời hạn gói tập."
+      }
+    },
+    "startWith": "Bắt đầu buổi tập với {{name}}",
+    "completeWith": "Hoàn thành buổi tập với {{name}}",
+    "detailWith": "Chi tiết buổi tập với {{name}}"
+  },
+  "students": {
+    "selectStudent": "Chọn học viên",
+    "weightLabel": "Cân nặng",
+    "list": {
+      "title": "Học viên của tôi",
+      "eyebrow": "Quản lý học viên",
+      "description": "{{total}} học viên đang được phân công cho bạn.",
+      "searchPlaceholder": "Tìm theo tên, email hoặc mã hội viên",
+      "filterTitle": "Bộ lọc",
+      "allStatuses": "Mọi trạng thái",
+      "statusActive": "Đang hoạt động",
+      "statusPending": "Chờ xác thực",
+      "statusLocked": "Đã khóa",
+      "searchButton": "Tìm kiếm",
+      "colStudent": "Học viên",
+      "colPackage": "Gói tập",
+      "colExpiry": "Ngày hết hạn",
+      "colStatus": "Trạng thái",
+      "colAction": "Thao tác",
+      "actionDetail": "Chi tiết",
+      "actionProgress": "Ghi tiến độ",
+      "noPackage": "Chưa có gói",
+      "noPackageActive": "Chưa có gói active",
+      "progressLink": "Tiến độ",
+      "notFound": "Không tìm thấy học viên",
+      "notFoundDesc": "Thử thay đổi từ khóa hoặc bộ lọc.",
+      "prevPage": "Trước",
+      "nextPage": "Sau",
+      "page": "Trang {{current}}/{{total}}"
+    },
+    "detail": {
+      "title": "Chi tiết học viên",
+      "backToList": "Danh sách học viên",
+      "createSession": "Tạo buổi tập",
+      "recordProgress": "Ghi tiến độ",
+      "tabs": {
+        "overview": "Tổng quan",
+        "sessions": "Buổi tập",
+        "workout": "Giáo án"
+      },
+      "profile": {
+        "title": "Hồ sơ cá nhân",
+        "memberCode": "Mã hội viên",
+        "email": "Email",
+        "phone": "Điện thoại",
+        "dob": "Ngày sinh",
+        "address": "Địa chỉ",
+        "noPhone": "Chưa cập nhật",
+        "noAddress": "Chưa cập nhật"
+      },
+      "training": {
+        "title": "Tình trạng tập luyện",
+        "currentPackage": "Gói hiện tại",
+        "expiry": "Hết hạn",
+        "nextSession": "Buổi tiếp theo",
+        "latestWeight": "Cân nặng mới nhất",
+        "goal": "Mục tiêu",
+        "noPackage": "Chưa có gói active",
+        "noWeight": "Chưa ghi",
+        "noGoal": "Chưa ghi"
+      },
+      "plan": {
+        "ptAssigned": "PT gán",
+        "personal": "Plan cá nhân",
+        "notFound": "Giáo án không tìm thấy",
+        "noDescription": "Không có mô tả",
+        "progressLabel": "Tiến độ hoàn thành",
+        "progressSets": "{{completed}} / {{total}} sets",
+        "progressDays": "{{completed}} / {{total}} ngày",
+        "progressSessions": "{{count}} buổi đã log"
+      },
+      "progress": {
+        "title": "Tiến độ",
+        "addNew": "Ghi mới",
+        "noData": "Chưa có dữ liệu tiến độ.",
+        "historyTitle": "Lịch sử đo lường",
+        "colDate": "Ngày ghi",
+        "colWeight": "Cân nặng",
+        "colBmi": "BMI",
+        "colGoal": "Mục tiêu",
+        "colNotes": "Ghi chú"
+      },
+      "sessions": {
+        "noSessions": "Chưa có buổi tập",
+        "createFirst": "Tạo buổi đầu tiên",
+        "noRoom": "Chưa có phòng"
+      },
+      "workout": {
+        "assignNew": "Gán giáo án mới",
+        "noActivePlan": "Chưa có giáo án active",
+        "noActivePlanDesc": "Gán một kế hoạch đang active cho học viên này.",
+        "unassign": "Gỡ gán",
+        "historyTitle": "Lịch sử gán giáo án",
+        "detail": "Chi tiết",
+        "startedOn": "Bắt đầu {{date}}",
+        "progressTitle": "Tiến độ hoàn thành giáo án",
+        "progressSets": "{{completed}} / {{total}} sets hoàn thành",
+        "progressDays": "{{completed}} / {{total}} ngày đã tập",
+        "progressSessions": "{{count}} buổi tập đã thực hiện"
+      },
+      "assignModal": {
+        "title": "Gán giáo án",
+        "cancel": "Hủy",
+        "submit": "Gán giáo án",
+        "fieldPlan": "Kế hoạch active",
+        "selectPlan": "Chọn kế hoạch",
+        "fieldStartDate": "Ngày bắt đầu",
+        "fieldNotes": "Ghi chú",
+        "warning": "Giáo án active hiện tại sẽ tự động chuyển sang trạng thái đã thay thế."
+      },
+      "unassignModal": {
+        "title": "Xác nhận gỡ gán giáo án",
+        "cancel": "Hủy",
+        "submitting": "Đang gỡ...",
+        "submit": "Gỡ gán",
+        "confirm": "Bạn có chắc muốn gỡ giáo án {{name}} khỏi học viên này? Thao tác này không thể hoàn tác."
+      },
+      "error": {
+        "loadFailed": "Không thể tải chi tiết học viên.",
+        "assignFailed": "Không thể gán kế hoạch tập.",
+        "unassignFailed": "Không thể gỡ gán giáo án."
+      }
+    },
+    "addProgress": {
+      "title": "Ghi tiến độ",
+      "eyebrow": "Theo dõi tiến độ",
+      "titleWith": "Ghi tiến độ - {{name}}",
+      "back": "Quay lại",
+      "fieldDate": "Ngày ghi",
+      "fieldWeight": "Cân nặng (kg)",
+      "fieldHeight": "Chiều cao để tính BMI (cm)",
+      "bmiLabel": "BMI tự tính",
+      "bmiNote": "Chiều cao chỉ dùng để tính, không lưu vào hệ thống.",
+      "fieldGoal": "Mục tiêu hiện tại",
+      "goalPlaceholder": "Ví dụ: giảm 3kg trong 2 tháng",
+      "fieldNotes": "Nhận xét của PT",
+      "cancel": "Hủy",
+      "submit": "Lưu tiến độ",
+      "error": {
+        "loadFailed": "Không thể tải học viên.",
+        "saveFailed": "Không thể lưu tiến độ.",
+        "invalidWeight": "Cân nặng phải lớn hơn 0 và không vượt quá 500kg.",
+        "invalidBmi": "BMI cần nằm trong khoảng 10-50."
+      }
+    },
+    "progressList": {
+      "title": "Lịch sử tiến độ",
+      "titleWith": "Lịch sử - {{name}}",
+      "eyebrow": "Theo dõi tiến độ",
+      "backToDetail": "Chi tiết học viên",
+      "addNew": "Ghi mới",
+      "colDate": "Ngày",
+      "colWeight": "Cân nặng",
+      "colBmi": "BMI",
+      "colGoal": "Mục tiêu",
+      "colNotes": "Nhận xét",
+      "colAction": "Thao tác",
+      "delete": "Xóa",
+      "noData": "Chưa có dữ liệu tiến độ",
+      "addFirst": "Ghi lần đầu",
+      "noGoal": "Chưa có mục tiêu",
+      "noNotes": "Chưa có nhận xét",
+      "deleteModal": {
+        "title": "Xóa bản ghi tiến độ",
+        "cancel": "Hủy",
+        "submitting": "Đang xóa...",
+        "submit": "Xác nhận xóa",
+        "confirm": "Bản ghi ngày {{date}} sẽ được xóa khỏi lịch sử. Bạn chỉ có thể xóa bản ghi do chính mình tạo.",
+        "ariaDelete": "Xóa bản ghi tiến độ"
+      },
+      "error": {
+        "loadFailed": "Không thể tải lịch sử tiến độ.",
+        "deleteFailed": "Không thể xóa bản ghi tiến độ này."
+      }
+    }
+  },
+  "plans": {
+    "workout": {
+      "title": "Kế hoạch tập",
+      "eyebrow": "Workout",
+      "description": "Tạo template giáo án, kích hoạt và gán cho học viên của bạn.",
+      "createPlan": "Tạo kế hoạch",
+      "searchPlaceholder": "Tìm theo tên kế hoạch",
+      "filterTitle": "Bộ lọc",
+      "allStatuses": "Mọi trạng thái",
+      "statusActive": "Đang hoạt động",
+      "statusArchived": "Lưu trữ",
+      "noPlan": "Chưa có kế hoạch tập",
+      "noPlanDesc": "Tạo template đầu tiên để bắt đầu xây dựng giáo án.",
+      "noDescription": "Chưa có mô tả.",
+      "metrics": {
+        "days": "Ngày tập",
+        "exercises": "Bài tập",
+        "students": "Học viên",
+        "createdAt": "Ngày tạo"
+      },
+      "actions": {
+        "assignStudent": "Gán học viên",
+        "expandStudents": "Xem học viên được gán",
+        "collapseStudents": "Thu gọn danh sách học viên",
+        "view": "Xem",
+        "builder": "Builder",
+        "activate": "Kích hoạt",
+        "archive": "Lưu trữ",
+        "delete": "Xóa"
+      },
+      "assignments": {
+        "startedOn": "Bắt đầu {{date}}",
+        "viewStudent": "Xem học viên",
+        "unassign": "Gỡ gán",
+        "noStudents": "Chưa có học viên nào được gán giáo án này."
+      },
+      "createModal": {
+        "title": "Tạo kế hoạch tập",
+        "cancel": "Hủy",
+        "submit": "Tạo và mở builder",
+        "fieldName": "Tên kế hoạch",
+        "fieldDescription": "Mô tả"
+      },
+      "assignModal": {
+        "title": "Gán {{name}}",
+        "cancel": "Hủy",
+        "submit": "Gán kế hoạch",
+        "fieldStudent": "Học viên",
+        "fieldStartDate": "Ngày bắt đầu",
+        "fieldNotes": "Ghi chú",
+        "warning": "Assignment active hiện tại của học viên sẽ tự động chuyển sang trạng thái đã thay thế."
+      },
+      "archiveModal": {
+        "title": "Lưu trữ kế hoạch",
+        "confirm": "Kế hoạch lưu trữ sẽ chuyển sang chỉ đọc và không thể kích hoạt lại."
+      },
+      "deleteModal": {
+        "title": "Xóa kế hoạch",
+        "confirm": "Kế hoạch sẽ bị xóa mềm. Thao tác có thể bị từ chối nếu vẫn còn assignment active hoặc dữ liệu lịch sử liên quan."
+      },
+      "unassignModal": {
+        "title": "Gỡ gán học viên",
+        "cancel": "Hủy",
+        "submitting": "Đang xử lý...",
+        "confirm": "Gỡ gán sẽ kết thúc assignment active của {{name}}. Dữ liệu lịch sử tập luyện vẫn được giữ nguyên."
+      },
+      "confirmModal": {
+        "cancel": "Hủy",
+        "submitting": "Đang xử lý...",
+        "submit": "Xác nhận"
+      },
+      "error": {
+        "createFailed": "Không thể tạo kế hoạch tập.",
+        "activateFailed": "Không thể kích hoạt kế hoạch.",
+        "activateEmpty": "Kế hoạch cần ít nhất một ngày và một bài tập trước khi kích hoạt.",
+        "archiveFailed": "Không thể lưu trữ kế hoạch khi còn assignment active.",
+        "deleteFailed": "Không thể xóa kế hoạch khi còn dữ liệu đang sử dụng.",
+        "assignFailed": "Không thể gán kế hoạch. Hãy kiểm tra trạng thái và cấu trúc kế hoạch.",
+        "loadStudentsFailed": "Không thể tải danh sách học viên.",
+        "unassignFailed": "Không thể gỡ gán."
+      },
+      "success": {
+        "created": "Tạo giáo án thành công",
+        "activated": "Giáo án đã được kích hoạt",
+        "archived": "Đã lưu trữ giáo án",
+        "deleted": "Đã xóa giáo án",
+        "assigned": "Giao giáo án thành công",
+        "unassigned": "Đã hủy giao giáo án"
+      }
+    },
+    "lesson": {
+      "title": "Giáo án"
+    },
+    "createLesson": {
+      "title": "Tạo giáo án"
+    },
+    "builder": {
+      "eyebrow": "Plan Builder",
+      "descriptionReadonly": "Kế hoạch đang ở chế độ chỉ đọc.",
+      "descriptionEdit": "Xây dựng cấu trúc ngày tập và target cho từng bài.",
+      "backToList": "Danh sách",
+      "activate": "Kích hoạt",
+      "archive": "Lưu trữ",
+      "readonlyBanner": "Plan đã lưu trữ hoặc có workout log nên không thể thay đổi cấu trúc.",
+      "weekSummary": "{{weeks}} tuần · {{days}} ngày · {{exercises}} bài tập",
+      "dayScheduled": "{{count}} ngày có lịch tập",
+      "weekLabel": "Tuần {{number}}",
+      "structureTitle": "Cấu trúc ngày tập",
+      "addDay": "Thêm ngày",
+      "addFirstDay": "Thêm ngày đầu tiên",
+      "noDay": "Chưa có ngày tập",
+      "noDayDesc": "Thêm ít nhất một ngày, sau đó chọn bài tập từ thư viện.",
+      "openExerciseLib": "Mở thư viện bài tập",
+      "metadata": {
+        "fieldName": "Tên kế hoạch",
+        "fieldDescription": "Mô tả",
+        "save": "Lưu thông tin"
+      },
+      "dayCard": {
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "noDayExercise": "Ngày này chưa có bài tập.",
+        "addExercise": "+ Thêm bài tập",
+        "editAriaLabel": "Sửa target bài tập",
+        "deleteAriaLabel": "Xóa bài tập",
+        "bodyPart": "Toàn thân",
+        "noEquipment": "Không cần dụng cụ",
+        "timeExercise": "Theo thời gian",
+        "dayLabel": "{{dayName}} · Ngày {{dayNumber}}",
+        "setRepSummary": "{{sets}} set · {{reps}} rep · tập {{duration}} · nghỉ {{rest}} giây",
+        "setTimeSummary": "{{sets}} set · Theo thời gian · tập {{duration}} · nghỉ {{rest}} giây",
+        "setWeightSummary": " · {{weight}} kg",
+        "durationUnset": "chưa đặt",
+        "durationSeconds": "{{s}} giây",
+        "durationMinutes": "{{m}} phút",
+        "durationMinutesSeconds": "{{m}} phút {{s}} giây"
+      },
+      "dayModal": {
+        "createTitle": "Thêm ngày tập",
+        "editTitle": "Chỉnh sửa ngày tập",
+        "cancel": "Hủy",
+        "submit": "Lưu ngày tập",
+        "fieldWeek": "Tuần",
+        "fieldDayOfWeek": "Thứ trong tuần",
+        "fieldDayNumber": "Ngày thứ",
+        "fieldName": "Tên ngày tập",
+        "fieldNotes": "Ghi chú"
+      },
+      "exerciseModal": {
+        "title": "Thêm bài tập vào {{dayName}}",
+        "cancel": "Hủy",
+        "submit": "Thêm bài tập",
+        "fieldExercise": "Bài tập",
+        "selectFromLib": "Chọn từ thư viện",
+        "searchPlaceholder": "Tìm theo tên bài tập...",
+        "loadMore": "Tải thêm bài tập",
+        "loading": "Đang tải bài tập...",
+        "notFound": "Không tìm thấy bài tập phù hợp",
+        "selected": "Đã chọn",
+        "resultsCount": "Hiển thị {{count}} / {{total}} bài tập",
+        "fieldNotes": "Ghi chú kỹ thuật",
+        "hint": "Mỗi bài cần có đủ số set, số rep nếu áp dụng, thời gian tập và thời gian nghỉ.",
+        "illustrationAlt": "Minh họa {{name}}"
+      },
+      "editExerciseModal": {
+        "title": "Chỉnh target {{name}}",
+        "defaultName": "bài tập",
+        "cancel": "Hủy",
+        "submit": "Lưu target",
+        "fieldNotes": "Ghi chú kỹ thuật"
+      },
+      "deleteModal": {
+        "deleteDay": "Xóa ngày tập",
+        "deleteExercise": "Xóa bài tập khỏi plan",
+        "cancel": "Hủy",
+        "submitting": "Đang xóa...",
+        "submit": "Xác nhận xóa",
+        "confirmDay": "Toàn bộ bài tập trong ngày này cũng sẽ bị xóa.",
+        "confirmExercise": "Dữ liệu lịch sử đã ghi nhận sẽ được backend bảo vệ và có thể chặn thao tác này."
+      },
+      "dayLabels": {
+        "mon": "Thứ Hai",
+        "tue": "Thứ Ba",
+        "wed": "Thứ Tư",
+        "thu": "Thứ Năm",
+        "fri": "Thứ Sáu",
+        "sat": "Thứ Bảy",
+        "sun": "Chủ Nhật"
+      },
+      "error": {
+        "loadFailed": "Không thể tải Plan Builder.",
+        "readonly": "Kế hoạch đã có dữ liệu tập luyện hoặc đang được sử dụng nên cấu trúc được chuyển sang chỉ đọc.",
+        "saveMetaFailed": "Không thể cập nhật thông tin kế hoạch.",
+        "saveDayFailed": "Không thể lưu ngày tập. Số thứ tự ngày phải là duy nhất.",
+        "addExerciseFailed": "Không thể thêm bài tập vào ngày này.",
+        "updateExerciseFailed": "Không thể cập nhật target bài tập.",
+        "deleteFailed": "Không thể xóa vì dữ liệu lịch sử đang được bảo vệ.",
+        "activateFailed": "Không thể kích hoạt kế hoạch.",
+        "activateEmpty": "Kế hoạch cần ít nhất một ngày và một bài tập trước khi kích hoạt.",
+        "activateEmptyDay": "Buổi tập '{{day}}' chưa có bài tập nào. Vui lòng thêm bài tập hoặc xóa buổi tập này.",
+        "activateIncompleteExercise": "Một số bài tập chưa được cài đặt target hoặc thời gian nghỉ.",
+        "archiveFailed": "Không thể lưu trữ kế hoạch khi còn assignment active."
+      }
+    }
+  },
+  "exercises": {
+    "title": "Thư viện bài tập",
+    "eyebrow": "Workout",
+    "description": "Quản lý các bài tập dùng chung khi xây dựng giáo án.",
+    "addButton": "Thêm bài tập",
+    "searchPlaceholder": "Tìm theo tên, nhóm cơ hoặc dụng cụ",
+    "allCategories": "Mọi loại bài tập",
+    "allMuscleGroups": "Mọi nhóm cơ",
+    "editAriaLabel": "Sửa {{name}}",
+    "notFound": "Không tìm thấy bài tập",
+    "notFoundDesc": "Thử đổi từ khóa hoặc thêm bài tập mới.",
+    "modal": {
+      "createTitle": "Thêm bài tập",
+      "editTitle": "Chỉnh sửa bài tập",
+      "cancel": "Hủy",
+      "submit": "Lưu bài tập",
+      "fieldName": "Tên bài tập",
+      "fieldCategory": "Loại bài tập",
+      "fieldMuscleGroup": "Nhóm cơ",
+      "fieldEquipment": "Dụng cụ",
+      "fieldDescription": "Mô tả",
+      "fieldImageUrl": "Đường dẫn ảnh tĩnh (URL)",
+      "fieldGifUrl": "Đường dẫn GIF minh họa"
+    },
+    "error": {
+      "loadFailed": "Không thể tải thư viện bài tập.",
+      "saveFailed": "Không thể lưu bài tập."
+    }
+  },
+  "sessionModal": {
+    "titleLoading": "Đang tải...",
+    "titleError": "Lỗi",
+    "titleStartSession": "Bắt đầu buổi tập",
+    "titleCompleteSession": "Hoàn thành buổi tập",
+    "titleCancelSession": "Hủy buổi tập",
+    "titleEditSession": "Chỉnh sửa buổi tập",
+    "confirmStartBody": "Xác nhận bắt đầu buổi tập với {{name}}? Trạng thái sẽ chuyển sang \"Đang diễn ra\".",
+    "confirmCompleteBody": "Xác nhận hoàn thành buổi tập với {{name}}? Trạng thái sẽ chuyển sang \"Hoàn thành\" và không thể hoàn tác.",
+    "btnDiscard": "Hủy bỏ",
+    "btnConfirmStart": "Xác nhận bắt đầu",
+    "btnConfirmComplete": "Xác nhận hoàn thành",
+    "cancelReasonLabel": "Lý do (không bắt buộc)",
+    "btnKeepSchedule": "Giữ lịch",
+    "btnConfirmCancel": "Xác nhận hủy",
+    "fieldRoom": "Phòng tập",
+    "selectRoom": "Chọn phòng tập",
+    "capacityUnit": "người",
+    "fieldStartTime": "Thời gian bắt đầu",
+    "fieldDuration": "Thời lượng (phút)",
+    "endTimePrefix": "Kết thúc:",
+    "endTimeUnknown": "Chưa xác định",
+    "btnCancel": "Hủy",
+    "btnSave": "Lưu thay đổi",
+    "labelStudent": "Học viên",
+    "labelStart": "Bắt đầu",
+    "labelEnd": "Kết thúc",
+    "labelRoom": "Phòng",
+    "noRoom": "Chưa xếp phòng",
+    "btnStart": "Bắt đầu",
+    "btnComplete": "Hoàn thành",
+    "btnEdit": "Chỉnh sửa",
+    "btnCancelSession": "Hủy buổi",
+    "ariaClose": "Đóng",
+    "error": {
+      "loadFailed": "Không thể tải buổi tập.",
+      "saveFailed": "Không thể lưu buổi tập. Kiểm tra trùng lịch và phòng.",
+      "cancelFailed": "Không thể hủy buổi tập.",
+      "statusFailed": "Không thể cập nhật trạng thái."
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ Huấn luyện viên",
+    "eyebrow": "Tài khoản",
+    "description": "Quản lý thông tin cá nhân, năng lực chuyên môn và thương hiệu của bạn tại RoGym.",
+    "avatar": {
+      "change": "Tải ảnh mới",
+      "remove": "Gỡ ảnh",
+      "uploading": "Đang tải ảnh...",
+      "hint": "Định dạng JPG, PNG hoặc WebP. Dung lượng tối đa 5MB.",
+      "removeConfirmTitle": "Gỡ ảnh đại diện",
+      "removeConfirmDesc": "Bạn có chắc chắn muốn xóa ảnh đại diện và quay về hình đại diện mặc định?",
+      "removeSuccess": "Đã gỡ ảnh đại diện.",
+      "uploadSuccess": "Cập nhật ảnh đại diện thành công."
+    },
+    "personalInfo": {
+      "title": "Thông tin cá nhân",
+      "fullName": "Họ và tên",
+      "staffCode": "Mã nhân viên",
+      "email": "Email tài khoản",
+      "phone": "Số điện thoại",
+      "position": "Vị trí / Chức danh",
+      "noPhone": "Chưa cập nhật"
+    },
+    "professionalInfo": {
+      "title": "Năng lực chuyên môn",
+      "specialty": "Chuyên môn chính",
+      "specialtyPlaceholder": "Ví dụ: HIIT & Giảm mỡ, Yoga, Tăng cơ...",
+      "specialtySuggestions": "Gợi ý phổ biến:",
+      "experienceYears": "Số năm kinh nghiệm",
+      "experienceYearsPlaceholder": "Ví dụ: 3",
+      "years": "năm",
+      "bio": "Giới thiệu bản thân & Triết lý huấn luyện",
+      "bioPlaceholder": "Chia sẻ về định hướng, kinh nghiệm giảng dạy hoặc phương châm tập luyện dành cho học viên...",
+      "noBio": "Chưa có phần giới thiệu bản thân.",
+      "noSpecialty": "Chưa cập nhật chuyên môn"
+    },
+    "preview": {
+      "title": "Thẻ xem trước cho Hội viên",
+      "badge": "Hiển thị công khai",
+      "description": "Đây là cách hồ sơ của bạn hiển thị khi học viên duyệt danh sách Huấn luyện viên.",
+      "reviewsCount": "{{count}} đánh giá",
+      "newBadge": "Mới"
+    },
+    "actions": {
+      "edit": "Chỉnh sửa hồ sơ",
+      "cancel": "Hủy bỏ",
+      "save": "Lưu thay đổi",
+      "logout": "Đăng xuất"
+    },
+    "changePassword": {
+      "title": "Đổi mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "submit": "Cập nhật mật khẩu",
+      "success": "Đổi mật khẩu thành công."
+    },
+    "success": {
+      "saved": "Cập nhật hồ sơ thành công."
+    },
+    "error": {
+      "loadFailed": "Không thể tải hồ sơ trainer.",
+      "saveFailed": "Lưu thất bại.",
+      "nameRequired": "Họ tên không được để trống.",
+      "nameInvalid": "Họ tên phải từ 2 đến 200 ký tự.",
+      "experienceInvalid": "Số năm kinh nghiệm phải từ 0 đến 50.",
+      "bioTooLong": "Tiểu sử không được vượt quá 1.000 ký tự.",
+      "avatarSize": "Kích thước ảnh không được vượt quá 5MB.",
+      "avatarFormat": "Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc WebP.",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp.",
+      "passwordTooShort": "Mật khẩu mới cần ít nhất 8 ký tự.",
+      "changePasswordFailed": "Không thể đổi mật khẩu."
+    }
+  },
+  "common": {
+    "retry": "Thử lại"
+  }
+}

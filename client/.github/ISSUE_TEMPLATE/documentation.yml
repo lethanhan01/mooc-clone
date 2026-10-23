@@ -1,0 +1,46 @@
+name: "Cải thiện tài liệu (Documentation)"
+description: Báo cáo lỗi hoặc đề xuất cải thiện cho tài liệu (README, docs/, comment trong code).
+title: "[Docs]: <mô tả ngắn gọn>"
+labels: ["documentation", "triage"]
+body:
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: Loại tài liệu
+      options:
+        - README
+        - docs/Design (DB / Architecture)
+        - Hướng dẫn cài đặt
+        - Hướng dẫn đóng góp
+        - JSDoc / TSDoc trong source code
+        - Khác
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Vị trí
+      description: Đường dẫn tới file hoặc URL.
+      placeholder: "docs/Design/Database.md (dòng 120)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Vấn đề hiện tại
+      description: Tài liệu đang sai/thiếu/khó hiểu ở chỗ nào?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Đề xuất chỉnh sửa
+      description: Bạn nghĩ nên viết lại như thế nào? (có thể dán đoạn văn bản mới).
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Thông tin bổ sung

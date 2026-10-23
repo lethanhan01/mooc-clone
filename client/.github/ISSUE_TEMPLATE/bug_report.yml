@@ -1,0 +1,119 @@
+name: "Báo lỗi (Bug Report)"
+description: Báo cáo một lỗi để chúng tôi có thể khắc phục.
+title: "[Bug]: <mô tả ngắn gọn về lỗi>"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã dành thời gian báo lỗi! Vui lòng điền đầy đủ các mục bên dưới để chúng tôi tái hiện và xử lý nhanh hơn.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Kiểm tra trước
+      description: Vui lòng xác nhận trước khi gửi issue.
+      options:
+        - label: Tôi đã tìm trong [Issues](../issues?q=is%3Aissue) và chắc chắn rằng lỗi này chưa được báo cáo.
+          required: true
+        - label: Tôi đang dùng phiên bản mới nhất của nhánh `main` (hoặc đã `git pull`).
+          required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Khu vực ảnh hưởng
+      description: Lỗi nằm ở phần nào của dự án?
+      multiple: true
+      options:
+        - Client (React/Vite)
+        - Server (Express/API)
+        - Database / Migration
+        - CI / GitHub Actions
+        - Tài liệu (docs/)
+        - Khác
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Mô tả lỗi
+      description: Mô tả rõ lỗi đang gặp phải.
+      placeholder: Khi tôi bấm nút "Đăng ký gói tập", hệ thống trả về 500...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước tái hiện
+      description: Liệt kê các bước cụ thể để tái hiện lỗi.
+      value: |
+        1. Truy cập '...'
+        2. Bấm vào '...'
+        3. Cuộn xuống '...'
+        4. Xuất hiện lỗi
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Kết quả mong đợi
+      description: Bạn kỳ vọng điều gì xảy ra?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Kết quả thực tế
+      description: Thực tế đã xảy ra điều gì? Kèm thông báo lỗi nếu có.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log / Stack trace
+      description: Dán console log, server log, hoặc stack trace liên quan.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Ảnh chụp màn hình / Video
+      description: Kéo thả ảnh hoặc video minh hoạ vào đây (nếu có).
+
+  - type: input
+    id: os
+    attributes:
+      label: Hệ điều hành
+      placeholder: "Windows 11 / macOS 14 / Ubuntu 22.04"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Trình duyệt (nếu liên quan client)
+      placeholder: "Chrome 124 / Firefox 125 / Safari 17"
+
+  - type: input
+    id: node
+    attributes:
+      label: Phiên bản Node.js
+      placeholder: "v20.12.2"
+
+  - type: input
+    id: db
+    attributes:
+      label: Phiên bản PostgreSQL (nếu liên quan server)
+      placeholder: "16.2"
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Thông tin bổ sung
+      description: Bất kỳ thông tin nào khác có thể hữu ích (cấu hình, biến môi trường đã ẩn secret, v.v.).

@@ -1,0 +1,46 @@
+name: "Câu hỏi / Hỗ trợ (Question)"
+description: Đặt câu hỏi về cách sử dụng, cấu hình hoặc kiến trúc dự án.
+title: "[Question]: <câu hỏi của bạn>"
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > Với các câu hỏi mang tính trao đổi (không liên quan trực tiếp đến bug/feature), bạn có thể cân nhắc dùng [GitHub Discussions](../../discussions) trước.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Kiểm tra trước
+      options:
+        - label: Tôi đã đọc README và các tài liệu trong thư mục `docs/`.
+          required: true
+        - label: Tôi đã tìm trong Issues / Discussions và chưa thấy câu trả lời.
+          required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Bối cảnh
+      description: Bạn đang cố làm gì? Đang gặp khó khăn ở đâu?
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Câu hỏi
+      description: Nêu câu hỏi một cách rõ ràng, cụ thể.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: Bạn đã thử những gì?
+      description: Mô tả các hướng tiếp cận / tài liệu bạn đã tham khảo.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Thông tin bổ sung

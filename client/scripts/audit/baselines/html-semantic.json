@@ -1,0 +1,22 @@
+{
+  "src/components/shared/error-boundary/ErrorBoundary.tsx": {
+    "NO_REDUNDANT_BORDER_PADDING": 1
+  },
+  "src/layouts/AuthLayout.tsx": {
+    "NO_NONSEMANTIC_TAGS": 3
+  },
+  "src/layouts/DashboardLayout.tsx": {
+    "NO_NONSEMANTIC_TAGS": 4,
+    "SEMANTIC_CLICK": 1
+  },
+  "src/pages/auth/LoginPage.tsx": {
+    "NO_NONSEMANTIC_TAGS": 2
+  },
+  "src/pages/dashboard/DashboardPage.tsx": {
+    "NO_NONSEMANTIC_TAGS": 9
+  },
+  "src/pages/dev/DesignSystemShowcasePage.tsx": {
+    "NO_NONSEMANTIC_TAGS": 13,
+    "NO_RAW_INTERACTIVE_ELEMENTS": 1
+  }
+}

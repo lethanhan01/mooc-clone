@@ -1,0 +1,668 @@
+{
+  "nav": {
+    "students": "生徒",
+    "sessions": "授業スケジュール",
+    "plans": "プラン",
+    "exercises": "エクササイズ"
+  },
+  "dashboard": {
+    "title": "トレーナーワークスペース",
+    "eyebrow": "トレーナーワークスペース",
+    "pageTitle": "今日の概要",
+    "description": "受講生、授業スケジュール、優先事項を管理します。",
+    "viewSchedule": "スケジュールを見る",
+    "createSession": "セッションを作成",
+    "stats": {
+      "managedStudents": "担当受講生数",
+      "todaySessions": "今日のセッション数",
+      "completedThisMonth": "今月の完了セッション数",
+      "nextSession": "次のセッション",
+      "noUpcoming": "なし"
+    },
+    "todaySchedule": {
+      "title": "今日の授業スケジュール",
+      "description": "各セッションのステータスをここで更新",
+      "allSessions": "全セッション",
+      "noSessions": "今日のセッションはありません",
+      "noSessionsDesc": "新しいセッションを作成するか、来週のスケジュールを確認してください。"
+    },
+    "upcoming": {
+      "title": "今後7日間のスケジュール",
+      "viewAll": "すべて見る",
+      "noUpcoming": "今後のスケジュールはありません"
+    },
+    "expiring": {
+      "title": "まもなく期限切れのプラン",
+      "students": "受講生",
+      "noExpiring": "まもなく期限切れのプランはありません",
+      "expiresOn": "期限：{{date}}"
+    },
+    "actions": {
+      "start": "開始",
+      "complete": "完了",
+      "detail": "詳細"
+    },
+    "error": {
+      "loadFailed": "概要を読み込めませんでした。",
+      "updateStatus": "セッションのステータスを更新できませんでした。"
+    },
+    "success": {
+      "completed": "セッションが完了しました",
+      "started": "セッションが開始されました"
+    }
+  },
+  "sessions": {
+    "calendar": {
+      "title": "セッションカレンダー",
+      "eyebrow": "授業スケジュール",
+      "description": "日または週単位でスケジュールを管理。時刻はベトナム時間で表示されます。",
+      "createSession": "セッションを作成",
+      "prevPeriod": "前の期間",
+      "nextPeriod": "次の期間",
+      "today": "今日",
+      "dayView": "日",
+      "weekView": "週",
+      "noSession": "予定なし",
+      "noRoom": "部屋未割り当て",
+      "list": {
+        "title": "セッション一覧",
+        "allRooms": "すべての部屋",
+        "allStatuses": "すべてのステータス",
+        "scheduled": "予定済み",
+        "inProgress": "進行中",
+        "completed": "完了",
+        "cancelled": "キャンセル済み",
+        "fromDate": "開始日",
+        "toDate": "終了日",
+        "colTime": "日時",
+        "colStudent": "受講生",
+        "colRoom": "部屋",
+        "colStatus": "ステータス",
+        "colAction": "操作",
+        "detail": "詳細",
+        "noSessions": "セッションはありません",
+        "noSessionsDesc": "フィルターを変更して再検索してください。",
+        "prevPage": "前へ",
+        "nextPage": "次へ",
+        "page": "{{current}}/{{total}} ページ"
+      }
+    },
+    "create": {
+      "title": "セッションを作成",
+      "titleEdit": "セッションを編集",
+      "eyebrow": "授業スケジュール",
+      "description": "受講生、部屋、時間を選択してください。システムが会員プランとスケジュールの競合を確認します。",
+      "back": "戻る",
+      "fieldStudent": "受講生",
+      "fieldWorkoutPlan": "ワークアウトプラン",
+      "fieldPlanDay": "プランの練習日",
+      "fieldRoom": "トレーニングルーム",
+      "fieldStartTime": "開始時刻",
+      "fieldDuration": "所要時間",
+      "durationHint": "所要時間は分単位（15の倍数）",
+      "minutesUnit": "分",
+      "selectRoom": "部屋を選択",
+      "selectPlan": "割り当てるワークアウトプランを選択",
+      "selectPlanDay": "練習日を選択",
+      "selectPlanFirst": "先にワークアウトプランを選択",
+      "loadingPlan": "受講生のワークアウトプランを読み込み中...",
+      "noActivePlan": "受講生に割り当て可能なアクティブなワークアウトプランがありません。",
+      "notLinked": "このセッションはワークアウトプランにリンクされていません。",
+      "noPlanDay": "練習日が選択されていません。",
+      "assignedPlanBadge": "割り当て中",
+      "planDayOptionFormat": "{{weekNumber}}週目 {{dayName}} Day{{dayNumber}}: {{name}}",
+      "capacityUnit": "人",
+      "selectDateHint": "空き時間枠を確認する日付を選択してください",
+      "availableSlots": "利用可能な時間枠",
+      "slotPast": "時間外",
+      "slotBusy": "予約済み",
+      "noSlots": "選択した日には利用可能な時間枠がありません。",
+      "startTimePlaceholder": "日時を選択",
+      "estimatedEnd": "終了予定：",
+      "summaryTitle": "セッション予定時間",
+      "endUnknown": "未定",
+      "cancel": "キャンセル",
+      "save": "変更を保存",
+      "submit": "セッションを作成",
+      "error": {
+        "editBlockedTitle": "編集できません",
+        "editBlocked": "予定済みでまだ開始していないセッションのみ編集できます。",
+        "generalTitle": "エラーが発生しました",
+        "loadFailed": "セッション作成データを読み込めませんでした。",
+        "loadPlanFailed": "受講生のワークアウトプランを読み込めませんでした。",
+        "saveFailed": "セッションを保存できませんでした。スケジュールの競合、部屋、プランの有効期限を確認してください。"
+      }
+    },
+    "startWith": "{{name}}とのセッションを開始",
+    "completeWith": "{{name}}とのセッションを完了",
+    "detailWith": "{{name}}とのセッション詳細"
+  },
+  "students": {
+    "selectStudent": "受講生を選択",
+    "weightLabel": "体重",
+    "list": {
+      "title": "担当受講生",
+      "eyebrow": "受講生管理",
+      "description": "{{total}}名の受講生が担当として割り当てられています。",
+      "searchPlaceholder": "名前、メール、会員コードで検索",
+      "filterTitle": "フィルター",
+      "allStatuses": "すべてのステータス",
+      "statusActive": "アクティブ",
+      "statusPending": "認証待ち",
+      "statusLocked": "ロック済み",
+      "searchButton": "検索",
+      "colStudent": "受講生",
+      "colPackage": "プラン",
+      "colExpiry": "有効期限",
+      "colStatus": "ステータス",
+      "colAction": "操作",
+      "actionDetail": "詳細",
+      "actionProgress": "進捗記録",
+      "noPackage": "プランなし",
+      "noPackageActive": "アクティブなプランなし",
+      "progressLink": "進捗",
+      "notFound": "受講生が見つかりません",
+      "notFoundDesc": "キーワードまたはフィルターを変更してください。",
+      "prevPage": "前へ",
+      "nextPage": "次へ",
+      "page": "{{current}}/{{total}} ページ"
+    },
+    "detail": {
+      "title": "受講生詳細",
+      "backToList": "受講生一覧",
+      "createSession": "セッションを作成",
+      "recordProgress": "進捗を記録",
+      "tabs": {
+        "overview": "概要",
+        "sessions": "セッション",
+        "workout": "プラン"
+      },
+      "profile": {
+        "title": "プロフィール",
+        "memberCode": "会員コード",
+        "email": "メール",
+        "phone": "電話番号",
+        "dob": "生年月日",
+        "address": "住所",
+        "noPhone": "未登録",
+        "noAddress": "未登録"
+      },
+      "training": {
+        "title": "トレーニング状況",
+        "currentPackage": "現在のプラン",
+        "expiry": "有効期限",
+        "nextSession": "次のセッション",
+        "latestWeight": "最新の体重",
+        "goal": "目標",
+        "noPackage": "アクティブなプランなし",
+        "noWeight": "未記録",
+        "noGoal": "未記録"
+      },
+      "plan": {
+        "ptAssigned": "PT割り当て",
+        "personal": "個人プラン",
+        "notFound": "プランが見つかりません",
+        "noDescription": "説明なし",
+        "progressLabel": "進捗状況",
+        "progressSets": "{{completed}} / {{total}} セット",
+        "progressDays": "{{completed}} / {{total}} 日",
+        "progressSessions": "{{count}} 回記録済み"
+      },
+      "progress": {
+        "title": "進捗",
+        "addNew": "新規記録",
+        "noData": "進捗データはありません。",
+        "historyTitle": "測定履歴",
+        "colDate": "記録日",
+        "colWeight": "体重",
+        "colBmi": "BMI",
+        "colGoal": "目標",
+        "colNotes": "メモ"
+      },
+      "sessions": {
+        "noSessions": "セッションはありません",
+        "createFirst": "最初のセッションを作成",
+        "noRoom": "部屋なし"
+      },
+      "workout": {
+        "assignNew": "新しいプランを割り当て",
+        "noActivePlan": "アクティブなプランなし",
+        "noActivePlanDesc": "この受講生にアクティブなプランを割り当ててください。",
+        "unassign": "割り当て解除",
+        "historyTitle": "プラン割り当て履歴",
+        "detail": "詳細",
+        "startedOn": "開始：{{date}}",
+        "progressTitle": "プラン完了進捗",
+        "progressSets": "{{completed}} / {{total}} セット完了",
+        "progressDays": "{{completed}} / {{total}} 日実施済み",
+        "progressSessions": "{{count}} 回セッション実施"
+      },
+      "assignModal": {
+        "title": "プランを割り当て",
+        "cancel": "キャンセル",
+        "submit": "プランを割り当て",
+        "fieldPlan": "アクティブなプラン",
+        "selectPlan": "プランを選択",
+        "fieldStartDate": "開始日",
+        "fieldNotes": "メモ",
+        "warning": "現在のアクティブなプランは自動的に「置き換え済み」ステータスに変更されます。"
+      },
+      "unassignModal": {
+        "title": "プラン割り当て解除の確認",
+        "cancel": "キャンセル",
+        "submitting": "解除中...",
+        "submit": "割り当て解除",
+        "confirm": "受講生からプラン「{{name}}」の割り当てを解除しますか？この操作は元に戻せません。"
+      },
+      "error": {
+        "loadFailed": "受講生詳細を読み込めませんでした。",
+        "assignFailed": "プランを割り当てられませんでした。",
+        "unassignFailed": "プランの割り当てを解除できませんでした。"
+      }
+    },
+    "addProgress": {
+      "title": "進捗を追加",
+      "eyebrow": "進捗管理",
+      "titleWith": "進捗記録 - {{name}}",
+      "back": "戻る",
+      "fieldDate": "記録日",
+      "fieldWeight": "体重（kg）",
+      "fieldHeight": "BMI計算用身長（cm）",
+      "bmiLabel": "自動計算BMI",
+      "bmiNote": "身長はBMI計算にのみ使用され、保存されません。",
+      "fieldGoal": "現在の目標",
+      "goalPlaceholder": "例：2ヶ月で3kg減量",
+      "fieldNotes": "トレーナーのコメント",
+      "cancel": "キャンセル",
+      "submit": "進捗を保存",
+      "error": {
+        "loadFailed": "受講生を読み込めませんでした。",
+        "saveFailed": "進捗を保存できませんでした。",
+        "invalidWeight": "体重は0より大きく500kg以下である必要があります。",
+        "invalidBmi": "BMIは10〜50の範囲である必要があります。"
+      }
+    },
+    "progressList": {
+      "title": "進捗履歴",
+      "titleWith": "履歴 - {{name}}",
+      "eyebrow": "進捗管理",
+      "backToDetail": "受講生詳細",
+      "addNew": "新規記録",
+      "colDate": "日付",
+      "colWeight": "体重",
+      "colBmi": "BMI",
+      "colGoal": "目標",
+      "colNotes": "コメント",
+      "colAction": "操作",
+      "delete": "削除",
+      "noData": "進捗データはありません",
+      "addFirst": "最初の記録を追加",
+      "noGoal": "目標なし",
+      "noNotes": "コメントなし",
+      "deleteModal": {
+        "title": "進捗記録を削除",
+        "cancel": "キャンセル",
+        "submitting": "削除中...",
+        "submit": "削除を確認",
+        "confirm": "{{date}}の記録が履歴から削除されます。自分が作成した記録のみ削除できます。",
+        "ariaDelete": "進捗記録を削除"
+      },
+      "error": {
+        "loadFailed": "進捗履歴を読み込めませんでした。",
+        "deleteFailed": "この進捗記録を削除できませんでした。"
+      }
+    }
+  },
+  "plans": {
+    "workout": {
+      "title": "トレーニングプラン",
+      "eyebrow": "ワークアウト",
+      "description": "プランテンプレートを作成し、有効化して受講生に割り当てます。",
+      "createPlan": "プランを作成",
+      "searchPlaceholder": "プラン名で検索",
+      "filterTitle": "フィルター",
+      "allStatuses": "すべてのステータス",
+      "statusActive": "アクティブ",
+      "statusArchived": "アーカイブ済み",
+      "noPlan": "トレーニングプランはありません",
+      "noPlanDesc": "最初のテンプレートを作成してプラン構築を始めましょう。",
+      "noDescription": "説明なし",
+      "metrics": {
+        "days": "練習日数",
+        "exercises": "エクササイズ数",
+        "students": "受講生数",
+        "createdAt": "作成日"
+      },
+      "actions": {
+        "assignStudent": "受講生に割り当て",
+        "expandStudents": "割り当て済み受講生を見る",
+        "collapseStudents": "受講生一覧を閉じる",
+        "view": "表示",
+        "builder": "ビルダー",
+        "activate": "有効化",
+        "archive": "アーカイブ",
+        "delete": "削除"
+      },
+      "assignments": {
+        "startedOn": "開始：{{date}}",
+        "viewStudent": "受講生を見る",
+        "unassign": "割り当て解除",
+        "noStudents": "このプランに割り当てられた受講生はいません。"
+      },
+      "createModal": {
+        "title": "トレーニングプランを作成",
+        "cancel": "キャンセル",
+        "submit": "作成してビルダーを開く",
+        "fieldName": "プラン名",
+        "fieldDescription": "説明"
+      },
+      "assignModal": {
+        "title": "{{name}}を割り当て",
+        "cancel": "キャンセル",
+        "submit": "プランを割り当て",
+        "fieldStudent": "受講生",
+        "fieldStartDate": "開始日",
+        "fieldNotes": "メモ",
+        "warning": "受講生の現在のアクティブな割り当てが自動的に「置き換え済み」ステータスに変更されます。"
+      },
+      "archiveModal": {
+        "title": "プランをアーカイブ",
+        "confirm": "アーカイブされたプランは読み取り専用になり、再度有効化できません。"
+      },
+      "deleteModal": {
+        "title": "プランを削除",
+        "confirm": "プランは論理削除されます。アクティブな割り当てまたは関連する履歴データが存在する場合、操作が拒否される場合があります。"
+      },
+      "unassignModal": {
+        "title": "受講生の割り当て解除",
+        "cancel": "キャンセル",
+        "submitting": "処理中...",
+        "confirm": "{{name}}のアクティブな割り当てが終了します。トレーニング履歴データは保持されます。"
+      },
+      "confirmModal": {
+        "cancel": "キャンセル",
+        "submitting": "処理中...",
+        "submit": "確認"
+      },
+      "error": {
+        "createFailed": "トレーニングプランを作成できませんでした。",
+        "activateFailed": "プランを有効化できませんでした。",
+        "activateEmpty": "有効化する前に、少なくとも1日と1つのエクササイズが必要です。",
+        "archiveFailed": "アクティブな割り当てが存在するため、プランをアーカイブできませんでした。",
+        "deleteFailed": "使用中のデータが存在するため、プランを削除できませんでした。",
+        "assignFailed": "プランを割り当てられませんでした。ステータスと構造を確認してください。",
+        "loadStudentsFailed": "受講生一覧を読み込めませんでした。",
+        "unassignFailed": "割り当てを解除できませんでした。"
+      },
+      "success": {
+        "created": "ワークアウトプランの作成に成功しました",
+        "activated": "ワークアウトプランが有効化されました",
+        "archived": "ワークアウトプランがアーカイブされました",
+        "deleted": "ワークアウトプランが削除されました",
+        "assigned": "ワークアウトプランの割り当てに成功しました",
+        "unassigned": "ワークアウトプランの割り当てを解除しました"
+      }
+    },
+    "lesson": {
+      "title": "レッスンプラン"
+    },
+    "createLesson": {
+      "title": "レッスンプランを作成"
+    },
+    "builder": {
+      "eyebrow": "プランビルダー",
+      "descriptionReadonly": "このプランは読み取り専用モードです。",
+      "descriptionEdit": "練習日の構造と各エクササイズの目標を設定します。",
+      "backToList": "一覧",
+      "activate": "有効化",
+      "archive": "アーカイブ",
+      "readonlyBanner": "このプランはアーカイブ済みまたはワークアウトログがあるため、構造を変更できません。",
+      "weekSummary": "{{weeks}}週 · {{days}}日 · {{exercises}}エクササイズ",
+      "dayScheduled": "{{count}}日の練習スケジュール",
+      "weekLabel": "第{{number}}週",
+      "structureTitle": "練習日の構造",
+      "addDay": "日を追加",
+      "addFirstDay": "最初の日を追加",
+      "noDay": "練習日がありません",
+      "noDayDesc": "少なくとも1日追加してから、ライブラリからエクササイズを選択してください。",
+      "openExerciseLib": "エクササイズライブラリを開く",
+      "metadata": {
+        "fieldName": "プラン名",
+        "fieldDescription": "説明",
+        "save": "情報を保存"
+      },
+      "dayCard": {
+        "edit": "編集",
+        "delete": "削除",
+        "noDayExercise": "この日のエクササイズはまだありません。",
+        "addExercise": "+ エクササイズを追加",
+        "editAriaLabel": "エクササイズ目標を編集",
+        "deleteAriaLabel": "エクササイズを削除",
+        "bodyPart": "全身",
+        "noEquipment": "器具不要",
+        "timeExercise": "時間制",
+        "dayLabel": "{{dayName}} · 第{{dayNumber}}日",
+        "setRepSummary": "{{sets}}セット · {{reps}}回 · {{duration}}実施 · {{rest}}秒休憩",
+        "setTimeSummary": "{{sets}}セット · 時間制 · {{duration}}実施 · {{rest}}秒休憩",
+        "setWeightSummary": " · {{weight}} kg",
+        "durationUnset": "未設定",
+        "durationSeconds": "{{s}}秒",
+        "durationMinutes": "{{m}}分",
+        "durationMinutesSeconds": "{{m}}分{{s}}秒"
+      },
+      "dayModal": {
+        "createTitle": "練習日を追加",
+        "editTitle": "練習日を編集",
+        "cancel": "キャンセル",
+        "submit": "練習日を保存",
+        "fieldWeek": "週",
+        "fieldDayOfWeek": "曜日",
+        "fieldDayNumber": "日番号",
+        "fieldName": "練習日名",
+        "fieldNotes": "メモ"
+      },
+      "exerciseModal": {
+        "title": "{{dayName}}にエクササイズを追加",
+        "cancel": "キャンセル",
+        "submit": "エクササイズを追加",
+        "fieldExercise": "エクササイズ",
+        "selectFromLib": "ライブラリから選択",
+        "searchPlaceholder": "エクササイズ名で検索...",
+        "loadMore": "さらに読み込む",
+        "loading": "読み込み中...",
+        "notFound": "該当するエクササイズが見つかりません",
+        "selected": "選択中",
+        "resultsCount": "{{count}} / {{total}} 件のエクササイズを表示中",
+        "fieldNotes": "技術メモ",
+        "hint": "セット数、レップ数（適用の場合）、トレーニング時間、休憩時間を入力してください。",
+        "illustrationAlt": "{{name}}のイラスト"
+      },
+      "editExerciseModal": {
+        "title": "{{name}}の目標を編集",
+        "defaultName": "エクササイズ",
+        "cancel": "キャンセル",
+        "submit": "目標を保存",
+        "fieldNotes": "技術メモ"
+      },
+      "deleteModal": {
+        "deleteDay": "練習日を削除",
+        "deleteExercise": "プランからエクササイズを削除",
+        "cancel": "キャンセル",
+        "submitting": "削除中...",
+        "submit": "削除を確認",
+        "confirmDay": "この日のすべてのエクササイズも削除されます。",
+        "confirmExercise": "記録済みの履歴データはバックエンドで保護されており、この操作がブロックされる場合があります。"
+      },
+      "dayLabels": {
+        "mon": "月曜日",
+        "tue": "火曜日",
+        "wed": "水曜日",
+        "thu": "木曜日",
+        "fri": "金曜日",
+        "sat": "土曜日",
+        "sun": "日曜日"
+      },
+      "error": {
+        "loadFailed": "プランビルダーを読み込めませんでした。",
+        "readonly": "このプランにはトレーニングデータがあるか使用中のため、構造が読み取り専用になりました。",
+        "saveMetaFailed": "プラン情報を更新できませんでした。",
+        "saveDayFailed": "練習日を保存できませんでした。日番号は一意である必要があります。",
+        "addExerciseFailed": "この日にエクササイズを追加できませんでした。",
+        "updateExerciseFailed": "エクササイズの目標を更新できませんでした。",
+        "deleteFailed": "履歴データが保護されているため削除できませんでした。",
+        "activateFailed": "プランを有効化できませんでした。",
+        "activateEmpty": "有効化する前に、少なくとも1日と1つのエクササイズが必要です。",
+        "activateEmptyDay": "トレーニング日「{{day}}」にエクササイズがありません。エクササイズを追加するか、この日を削除してください。",
+        "activateIncompleteExercise": "一部のエクササイズに目標や休憩時間が設定されていません。",
+        "archiveFailed": "アクティブな割り当てが存在するため、プランをアーカイブできませんでした。"
+      }
+    }
+  },
+  "exercises": {
+    "title": "エクササイズライブラリ",
+    "eyebrow": "ワークアウト",
+    "description": "プラン構築時に使用する共通エクササイズを管理します。",
+    "addButton": "エクササイズを追加",
+    "searchPlaceholder": "名前、筋肉グループ、器具で検索",
+    "allCategories": "すべてのカテゴリ",
+    "allMuscleGroups": "すべての筋肉グループ",
+    "editAriaLabel": "{{name}}を編集",
+    "notFound": "エクササイズが見つかりません",
+    "notFoundDesc": "キーワードを変更するか、新しいエクササイズを追加してください。",
+    "modal": {
+      "createTitle": "エクササイズを追加",
+      "editTitle": "エクササイズを編集",
+      "cancel": "キャンセル",
+      "submit": "保存",
+      "fieldName": "エクササイズ名",
+      "fieldCategory": "カテゴリ",
+      "fieldMuscleGroup": "筋肉グループ",
+      "fieldEquipment": "必要器具",
+      "fieldDescription": "説明",
+      "fieldImageUrl": "画像URL",
+      "fieldGifUrl": "GIF URL"
+    },
+    "error": {
+      "loadFailed": "エクササイズライブラリを読み込めませんでした。",
+      "saveFailed": "エクササイズを保存できませんでした。"
+    }
+  },
+  "sessionModal": {
+    "titleLoading": "読み込み中...",
+    "titleError": "エラー",
+    "titleStartSession": "セッションを開始",
+    "titleCompleteSession": "セッションを完了",
+    "titleCancelSession": "セッションをキャンセル",
+    "titleEditSession": "セッションを編集",
+    "confirmStartBody": "{{name}}とのセッションを開始しますか？ステータスが「進行中」に変わります。",
+    "confirmCompleteBody": "{{name}}とのセッションを完了しますか？ステータスが「完了」に変わり、元に戻すことはできません。",
+    "btnDiscard": "破棄",
+    "btnConfirmStart": "開始を確認",
+    "btnConfirmComplete": "完了を確認",
+    "cancelReasonLabel": "理由（任意）",
+    "btnKeepSchedule": "予定を維持",
+    "btnConfirmCancel": "キャンセルを確認",
+    "fieldRoom": "トレーニングルーム",
+    "selectRoom": "部屋を選択",
+    "capacityUnit": "人",
+    "fieldStartTime": "開始時刻",
+    "fieldDuration": "所要時間（分）",
+    "endTimePrefix": "終了：",
+    "endTimeUnknown": "未定",
+    "btnCancel": "キャンセル",
+    "btnSave": "変更を保存",
+    "labelStudent": "受講生",
+    "labelStart": "開始",
+    "labelEnd": "終了",
+    "labelRoom": "部屋",
+    "noRoom": "部屋未割り当て",
+    "btnStart": "開始",
+    "btnComplete": "完了",
+    "btnEdit": "編集",
+    "btnCancelSession": "キャンセル",
+    "ariaClose": "閉じる",
+    "error": {
+      "loadFailed": "セッションを読み込めませんでした。",
+      "saveFailed": "セッションを保存できませんでした。スケジュールの競合と部屋を確認してください。",
+      "cancelFailed": "セッションをキャンセルできませんでした。",
+      "statusFailed": "ステータスを更新できませんでした。"
+    }
+  },
+  "profile": {
+    "title": "トレーナープロフィール",
+    "eyebrow": "アカウント",
+    "description": "RoGymでの個人情報、専門スキル、ブランディングを管理します。",
+    "avatar": {
+      "change": "新しい写真をアップロード",
+      "remove": "写真を削除",
+      "uploading": "アップロード中...",
+      "hint": "JPG、PNG、またはWebP形式。最大5MB。",
+      "removeConfirmTitle": "アバターの削除",
+      "removeConfirmDesc": "アバター画像を削除してデフォルトのアバターに戻しますか？",
+      "removeSuccess": "アバター画像を削除しました。",
+      "uploadSuccess": "アバター画像を更新しました。"
+    },
+    "personalInfo": {
+      "title": "個人情報",
+      "fullName": "氏名",
+      "staffCode": "スタッフコード",
+      "email": "メールアドレス",
+      "phone": "電話番号",
+      "position": "役職",
+      "noPhone": "未登録"
+    },
+    "professionalInfo": {
+      "title": "専門能力",
+      "specialty": "主な専門分野",
+      "specialtyPlaceholder": "例: HIIT＆脂肪燃焼、ヨガ、筋力向上...",
+      "specialtySuggestions": "人気の専門分野:",
+      "experienceYears": "指導経験年数",
+      "experienceYearsPlaceholder": "例: 3",
+      "years": "年",
+      "bio": "自己紹介・指導理念",
+      "bioPlaceholder": "受講生へのメッセージ、指導方針や経験について記入してください...",
+      "noBio": "自己紹介はまだ登録されていません。",
+      "noSpecialty": "専門分野未設定"
+    },
+    "preview": {
+      "title": "会員向けプレビューカード",
+      "badge": "公開表示",
+      "description": "会員がトレーナー一覧を閲覧する際に表示されるカードのプレビューです。",
+      "reviewsCount": "{{count}} 件のレビュー",
+      "newBadge": "新規"
+    },
+    "actions": {
+      "edit": "プロフィールを編集",
+      "cancel": "キャンセル",
+      "save": "変更を保存",
+      "logout": "ログアウト"
+    },
+    "changePassword": {
+      "title": "パスワード変更",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "パスワードの確認",
+      "submit": "パスワードを更新",
+      "success": "パスワードが正常に変更されました。"
+    },
+    "success": {
+      "saved": "プロフィールを更新しました。"
+    },
+    "error": {
+      "loadFailed": "トレーナープロフィールを読み込めませんでした。",
+      "saveFailed": "保存に失敗しました。",
+      "nameRequired": "氏名は必須です。",
+      "nameInvalid": "氏名は2〜200文字で入力してください。",
+      "experienceInvalid": "指導経験年数は0〜50の範囲で入力してください。",
+      "bioTooLong": "自己紹介は1,000文字以内で入力してください。",
+      "avatarSize": "画像ファイルサイズは5MB以下にしてください。",
+      "avatarFormat": "JPG、PNG、またはWebP形式の画像ファイルのみ受け付けています。",
+      "passwordMismatch": "確認用パスワードが一致しません。",
+      "passwordTooShort": "新しいパスワードは8文字以上必要です。",
+      "changePasswordFailed": "パスワードを変更できませんでした。"
+    }
+  },
+  "common": {
+    "retry": "再試行"
+  }
+}

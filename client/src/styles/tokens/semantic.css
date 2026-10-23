@@ -1,0 +1,231 @@
+@layer base {
+  /* ==========================================================================
+     RoGym Semantic Design Tokens — Dual-Theme Architecture (SEM-TOKEN-008)
+     Mọi component và Tailwind utilities chỉ được phép tham chiếu tầng Semantic này.
+     ========================================================================== */
+
+  /* --------------------------------------------------------------------------
+     1. DARK THEME (Mặc định toàn hệ thống)
+     -------------------------------------------------------------------------- */
+  :root,
+  [data-theme='dark'] {
+    color-scheme: dark;
+
+    /* Surfaces (Màu bề mặt & Nền) */
+    --color-surface-base: var(--primitive-dark-bg-base);
+    --color-surface-sunken: var(--primitive-dark-bg-deep);
+    --color-surface-sunken-alt: var(--primitive-dark-bg-deep-alt);
+    --color-surface-card: var(--primitive-dark-bg-card);
+    --color-surface-card-hover: var(--primitive-dark-bg-card-hover);
+    --color-surface-card-inset: var(--primitive-dark-bg-card-darker);
+    --color-surface-elevated: var(--primitive-dark-bg-elevated);
+    --color-surface-elevated-accent: var(--primitive-green-950);
+    --color-surface-inverse: var(--primitive-white);
+    --color-surface-glass: var(--primitive-dark-bg-glass);
+    --color-surface-overlay: var(--primitive-dark-bg-overlay);
+
+    /* Foregrounds (Văn bản & Biểu tượng) */
+    --color-fg-primary: var(--primitive-dark-text-primary);
+    --color-fg-secondary: var(--primitive-dark-text-secondary);
+    --color-fg-muted: var(--primitive-dark-text-muted);
+    --color-fg-subtle: var(--primitive-dark-text-dim);
+    --color-fg-disabled: var(--primitive-dark-text-faint);
+    --color-fg-on-inverse: var(--primitive-dark-text-on-light);
+    --color-fg-on-inverse-muted: var(--primitive-dark-text-on-light-muted);
+    --color-fg-on-solid: var(--primitive-white);
+
+    /* Lines & Borders (Đường viền & Dải phân cách) */
+    --color-line-subtle: var(--primitive-dark-border-subtle);
+    --color-line-divider: var(--primitive-dark-border-section);
+    --color-line-default: var(--primitive-dark-border-white-dim);
+    --color-line-strong: var(--primitive-dark-border-white-button);
+    --color-line-hover: var(--primitive-dark-border-white-hover);
+    --color-line-accent-subtle: var(--primitive-teal-border-dim);
+    --color-line-accent-hover: var(--primitive-teal-border-hover);
+    --color-line-focus: var(--primitive-teal-400);
+
+    /* Actions & Brand (Bản sắc & Tương tác) */
+    --color-action-primary: var(--primitive-green-500);
+    --color-action-primary-hover: var(--primitive-green-400);
+    --color-action-primary-fg: var(--primitive-green-800);
+    --color-action-primary-fg-strong: var(--primitive-green-900);
+    --color-action-primary-soft: var(--primitive-green-soft);
+    --color-action-primary-soft-border: var(--primitive-green-soft-border);
+    --color-action-accent: var(--primitive-teal-400);
+    --color-action-accent-soft: var(--primitive-teal-soft);
+    --color-accent: var(--primitive-teal-400);
+    --color-accent-soft: var(--primitive-teal-soft);
+    --color-focus-ring: var(--primitive-teal-400);
+
+    /* Status: Success */
+    --color-status-success-solid: var(--primitive-green-500);
+    --color-status-success-on-solid: var(--primitive-green-800);
+    --color-status-success-fg: var(--primitive-green-subtle-fg);
+    --color-status-success-bg: var(--primitive-green-subtle-bg);
+    --color-status-success-border: var(--primitive-green-subtle-border);
+    --color-status-success-surface: var(--primitive-green-toast-surface);
+
+    /* Status: Warning */
+    --color-status-warning-solid: var(--primitive-amber-500);
+    --color-status-warning-on-solid: var(--primitive-white);
+    --color-status-warning-fg: var(--primitive-amber-subtle-fg);
+    --color-status-warning-bg: var(--primitive-amber-soft);
+    --color-status-warning-border: var(--primitive-amber-soft-border);
+    --color-status-warning-surface: var(--primitive-amber-toast-surface);
+
+    /* Status: Danger */
+    --color-status-danger-solid: var(--primitive-red-500);
+    --color-status-danger-on-solid: var(--primitive-white);
+    --color-status-danger-fg: var(--primitive-red-400);
+    --color-status-danger-bg: var(--primitive-red-subtle-bg);
+    --color-status-danger-border: var(--primitive-red-subtle-border);
+    --color-status-danger-surface: var(--primitive-red-toast-surface);
+
+    /* Status: Info */
+    --color-status-info-solid: var(--primitive-blue-500);
+    --color-status-info-on-solid: var(--primitive-white);
+    --color-status-info-fg: var(--primitive-blue-subtle-fg);
+    --color-status-info-bg: var(--primitive-blue-subtle-bg);
+    --color-status-info-border: var(--primitive-blue-subtle-border);
+    --color-status-info-surface: var(--primitive-blue-toast-surface);
+
+    /* Status: Neutral */
+    --color-status-neutral-solid: var(--primitive-gray-500);
+    --color-status-neutral-on-solid: var(--primitive-white);
+    --color-status-neutral-fg: var(--primitive-gray-subtle-fg);
+    --color-status-neutral-bg: var(--primitive-gray-subtle-bg);
+    --color-status-neutral-border: var(--primitive-gray-subtle-border);
+    --color-status-neutral-surface: var(--primitive-gray-toast-surface);
+
+    /* Status: Accent (Tím VIP / Đặc quyền) */
+    --color-status-accent-solid: var(--primitive-purple-500);
+    --color-status-accent-on-solid: var(--primitive-white);
+    --color-status-accent-fg: var(--primitive-purple-subtle-fg);
+    --color-status-accent-bg: var(--primitive-purple-subtle-bg);
+    --color-status-accent-border: var(--primitive-purple-subtle-border);
+    --color-status-accent-surface: var(--primitive-purple-toast-surface);
+
+    /* Charts & Data Visualization */
+    --color-chart-1: var(--primitive-green-500);
+    --color-chart-2: var(--primitive-teal-400);
+    --color-chart-3: var(--primitive-blue-500);
+    --color-chart-4: var(--primitive-amber-500);
+    --color-chart-5: var(--primitive-purple-500);
+    --color-chart-6: var(--primitive-red-500);
+    --color-chart-grid: var(--primitive-dark-border-subtle);
+    --color-chart-axis: var(--primitive-dark-text-muted);
+    --color-chart-tooltip-bg: var(--primitive-dark-bg-elevated);
+  }
+
+  /* --------------------------------------------------------------------------
+     2. LIGHT THEME (Kiến trúc đối xứng 100% chuẩn WCAG 2.1 AA)
+     -------------------------------------------------------------------------- */
+  [data-theme='light'] {
+    color-scheme: light;
+
+    /* Surfaces Light */
+    --color-surface-base: var(--primitive-light-bg-base);
+    --color-surface-sunken: var(--primitive-light-bg-deep);
+    --color-surface-sunken-alt: var(--primitive-light-border-subtle);
+    --color-surface-card: var(--primitive-light-bg-card);
+    --color-surface-card-hover: var(--primitive-light-bg-card-hover);
+    --color-surface-card-inset: var(--primitive-light-bg-base);
+    --color-surface-elevated: var(--primitive-light-bg-elevated);
+    --color-surface-elevated-accent: var(--primitive-green-light-bg);
+    --color-surface-inverse: var(--primitive-light-text-primary);
+    --color-surface-glass: var(--primitive-light-bg-glass);
+    --color-surface-overlay: var(--primitive-light-bg-overlay);
+
+    /* Foregrounds Light */
+    --color-fg-primary: var(--primitive-light-text-primary);
+    --color-fg-secondary: var(--primitive-light-text-secondary);
+    --color-fg-muted: var(--primitive-light-text-muted);
+    --color-fg-subtle: var(--primitive-light-text-dim);
+    --color-fg-disabled: var(--primitive-light-text-faint);
+    --color-fg-on-inverse: var(--primitive-white);
+    --color-fg-on-inverse-muted: var(--primitive-light-border-subtle);
+    --color-fg-on-solid: var(--primitive-white);
+
+    /* Lines & Borders Light */
+    --color-line-subtle: var(--primitive-light-border-subtle);
+    --color-line-divider: var(--primitive-light-border-section);
+    --color-line-default: var(--primitive-light-border-default);
+    --color-line-strong: var(--primitive-light-border-strong);
+    --color-line-hover: var(--primitive-light-border-hover);
+    --color-line-accent-subtle: var(--primitive-teal-300);
+    --color-line-accent-hover: var(--primitive-teal-500);
+    --color-line-focus: var(--primitive-teal-600);
+
+    /* Actions & Brand Light */
+    --color-action-primary: var(--primitive-green-700);
+    --color-action-primary-hover: var(--primitive-green-800);
+    --color-action-primary-fg: var(--primitive-white);
+    --color-action-primary-fg-strong: var(--primitive-white);
+    --color-action-primary-soft: var(--primitive-green-light-bg);
+    --color-action-primary-soft-border: var(--primitive-green-light-border);
+    --color-action-accent: var(--primitive-teal-600);
+    --color-action-accent-soft: var(--primitive-teal-300);
+    --color-accent: var(--primitive-teal-600);
+    --color-accent-soft: var(--primitive-teal-300);
+    --color-focus-ring: var(--primitive-teal-600);
+
+    /* Status: Success Light */
+    --color-status-success-solid: var(--primitive-green-600);
+    --color-status-success-on-solid: var(--primitive-white);
+    --color-status-success-fg: var(--primitive-green-light-fg);
+    --color-status-success-bg: var(--primitive-green-light-bg);
+    --color-status-success-border: var(--primitive-green-light-border);
+    --color-status-success-surface: var(--primitive-white);
+
+    /* Status: Warning Light */
+    --color-status-warning-solid: var(--primitive-amber-600);
+    --color-status-warning-on-solid: var(--primitive-white);
+    --color-status-warning-fg: var(--primitive-amber-800);
+    --color-status-warning-bg: var(--primitive-amber-light-bg);
+    --color-status-warning-border: var(--primitive-amber-light-border);
+    --color-status-warning-surface: var(--primitive-white);
+
+    /* Status: Danger Light */
+    --color-status-danger-solid: var(--primitive-red-600);
+    --color-status-danger-on-solid: var(--primitive-white);
+    --color-status-danger-fg: var(--primitive-red-800);
+    --color-status-danger-bg: var(--primitive-red-light-bg);
+    --color-status-danger-border: var(--primitive-red-light-border);
+    --color-status-danger-surface: var(--primitive-white);
+
+    /* Status: Info Light */
+    --color-status-info-solid: var(--primitive-blue-600);
+    --color-status-info-on-solid: var(--primitive-white);
+    --color-status-info-fg: var(--primitive-blue-800);
+    --color-status-info-bg: var(--primitive-blue-light-bg);
+    --color-status-info-border: var(--primitive-blue-light-border);
+    --color-status-info-surface: var(--primitive-white);
+
+    /* Status: Neutral Light */
+    --color-status-neutral-solid: var(--primitive-gray-600);
+    --color-status-neutral-on-solid: var(--primitive-white);
+    --color-status-neutral-fg: var(--primitive-gray-700);
+    --color-status-neutral-bg: var(--primitive-gray-light-bg);
+    --color-status-neutral-border: var(--primitive-gray-light-border);
+    --color-status-neutral-surface: var(--primitive-white);
+
+    /* Status: Accent Light */
+    --color-status-accent-solid: var(--primitive-purple-600);
+    --color-status-accent-on-solid: var(--primitive-white);
+    --color-status-accent-fg: var(--primitive-purple-800);
+    --color-status-accent-bg: var(--primitive-purple-light-bg);
+    --color-status-accent-border: var(--primitive-purple-light-border);
+    --color-status-accent-surface: var(--primitive-white);
+
+    /* Charts & Data Visualization Light */
+    --color-chart-1: var(--primitive-green-600);
+    --color-chart-2: var(--primitive-teal-600);
+    --color-chart-3: var(--primitive-blue-600);
+    --color-chart-4: var(--primitive-amber-600);
+    --color-chart-5: var(--primitive-purple-600);
+    --color-chart-6: var(--primitive-red-600);
+    --color-chart-grid: var(--primitive-light-border-subtle);
+    --color-chart-axis: var(--primitive-light-text-muted);
+    --color-chart-tooltip-bg: var(--primitive-light-bg-card);
+  }
+}

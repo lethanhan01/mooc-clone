@@ -1,0 +1,8 @@
+{
+  "src/components/ui/forms/number-input-subcomponents.tsx": {
+    "NO_UNCONTROLLED_TO_CONTROLLED_DRIFT": 1
+  },
+  "src/pages/auth/LoginPage.tsx": {
+    "FORMS_LABEL_ASSOC": 2
+  }
+}

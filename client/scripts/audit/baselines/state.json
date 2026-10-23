@@ -1,0 +1,8 @@
+{
+  "src/components/ui/data-display/Image.tsx": {
+    "NO_EFFECT_DERIVED_STATE": 2
+  },
+  "src/components/ui/forms/DatePickerInput.tsx": {
+    "NO_EFFECT_DERIVED_STATE": 1
+  }
+}

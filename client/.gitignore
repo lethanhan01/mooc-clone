@@ -1,0 +1,85 @@
+# ==============================================================================
+# mooc-clone Client .gitignore (Scoped for client/ frontend app)
+# ==============================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.output/
+.vite/
+.turbo/
+.parcel-cache/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+!.env.liff-mock.example
+!.env.docker.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Local file uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# AI local files & duplicate subfolder agent copy
+.claude/
+CLAUDE.md
+.gemini/
+.agents/
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# TypeScript
+*.tsbuildinfo
+
+# PlantUML generated output
+docs/VI/Diagram/picture/*.png
+docs/VI/Diagram/picture/*.svg
+!docs/VI/Diagram/picture/.gitkeep
+
+# Postman exports (collections / environments) for API testing
+docs/Design/API/postman_collections/
+docs/Design/API/*.postman_collection.json
+
+# Standalone Portable Design System Kit
+design-system-kit/
+
+templates/*

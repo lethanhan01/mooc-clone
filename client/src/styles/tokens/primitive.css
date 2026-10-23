@@ -1,0 +1,156 @@
+@layer base {
+  :root {
+    /* ==========================================================================
+       RoGym Primitive Design Tokens (100% 6/8-digit HEX)
+       Nguồn gốc duy nhất của toàn bộ mã màu thô trong hệ thống RoGym.
+       TUYỆT ĐỐI KHÔNG sử dụng trực tiếp trong component/page; chỉ gán cho Semantic.
+       ========================================================================== */
+
+    /* Brand Green (Primary Action) */
+    --primitive-green-400: #08d891;
+    --primitive-green-500: #06c384;
+    --primitive-green-600: #059669;
+    --primitive-green-700: #047857;
+    --primitive-green-800: #00492f;
+    --primitive-green-900: #003d28;
+    --primitive-green-950: #1a3326;
+    --primitive-green-soft: #06c38414;
+    --primitive-green-soft-border: #06c38438;
+    --primitive-green-subtle-fg: #b6f4d7;
+    --primitive-green-subtle-bg: #06c38421;
+    --primitive-green-subtle-border: #06c38445;
+    --primitive-green-toast-surface: #173527;
+
+    /* Light Mode Green Variants */
+    --primitive-green-light-fg: #065f46;
+    --primitive-green-light-bg: #ecfdf5;
+    --primitive-green-light-border: #a7f3d0;
+
+    /* Secondary Accent Teal */
+    --primitive-teal-300: #99f6e4;
+    --primitive-teal-400: #42e09e;
+    --primitive-teal-500: #2dd4bf;
+    --primitive-teal-600: #0d9488;
+    --primitive-teal-soft: #42e09e1f;
+    --primitive-teal-border-dim: #42e09e1a;
+    --primitive-teal-border-hover: #42e09e66;
+
+    /* Status Warning (Amber) */
+    --primitive-amber-500: #f59e0b;
+    --primitive-amber-600: #d97706;
+    --primitive-amber-800: #92400e;
+    --primitive-amber-soft: #f59e0b14;
+    --primitive-amber-soft-border: #f59e0b38;
+    --primitive-amber-subtle-fg: #fcd34d;
+    --primitive-amber-subtle-bg: #f59e0b21;
+    --primitive-amber-subtle-border: #f59e0b45;
+    --primitive-amber-toast-surface: #332412;
+    --primitive-amber-light-bg: #fffbeb;
+    --primitive-amber-light-border: #fde68a;
+
+    /* Status Danger (Red) */
+    --primitive-red-400: #ff6b6b;
+    --primitive-red-500: #ef4444;
+    --primitive-red-600: #dc2626;
+    --primitive-red-800: #991b1b;
+    --primitive-red-soft: #ef444414;
+    --primitive-red-soft-border: #ef444438;
+    --primitive-red-subtle-fg: #ff6b6b;
+    --primitive-red-toast-fg: #fca5a5;
+    --primitive-red-subtle-bg: #ef444421;
+    --primitive-red-subtle-border: #ef444445;
+    --primitive-red-toast-surface: #321616;
+    --primitive-red-light-bg: #fef2f2;
+    --primitive-red-light-border: #fecaca;
+
+    /* Status Info (Blue) */
+    --primitive-blue-500: #3b82f6;
+    --primitive-blue-600: #2563eb;
+    --primitive-blue-800: #1e40af;
+    --primitive-blue-subtle-fg: #93c5fd;
+    --primitive-blue-subtle-bg: #3b82f621;
+    --primitive-blue-subtle-border: #3b82f645;
+    --primitive-blue-toast-surface: #132238;
+    --primitive-blue-light-bg: #eff6ff;
+    --primitive-blue-light-border: #bfdbfe;
+
+    /* Status Neutral (Gray) */
+    --primitive-gray-400: #9ca3af;
+    --primitive-gray-500: #6b7280;
+    --primitive-gray-600: #4b5563;
+    --primitive-gray-700: #374151;
+    --primitive-gray-subtle-fg: #9ca3af;
+    --primitive-gray-subtle-bg: #6b728021;
+    --primitive-gray-subtle-border: #6b728045;
+    --primitive-gray-toast-surface: #1f2937;
+    --primitive-gray-light-bg: #f3f4f6;
+    --primitive-gray-light-border: #e5e7eb;
+
+    /* Status Accent (Purple) */
+    --primitive-purple-400: #c4b5fd;
+    --primitive-purple-500: #8b5cf6;
+    --primitive-purple-600: #7c3aed;
+    --primitive-purple-800: #5b21b6;
+    --primitive-purple-subtle-fg: #c4b5fd;
+    --primitive-purple-subtle-bg: #8b5cf621;
+    --primitive-purple-subtle-border: #8b5cf645;
+    --primitive-purple-toast-surface: #2e1065;
+    --primitive-purple-light-bg: #f5f3ff;
+    --primitive-purple-light-border: #ddd6fe;
+
+    /* Dark Theme Surface Palette */
+    --primitive-dark-bg-base: #080e0b;
+    --primitive-dark-bg-deep: #030907;
+    --primitive-dark-bg-deep-alt: #040d08;
+    --primitive-dark-bg-card: #0f1c16;
+    --primitive-dark-bg-card-hover: #132218;
+    --primitive-dark-bg-card-darker: #0b1610;
+    --primitive-dark-bg-elevated: #1a2520;
+    --primitive-dark-bg-glass: #0c1611d1;
+    --primitive-dark-bg-overlay: #00000099;
+
+    /* Dark Theme Text Palette */
+    --primitive-dark-text-primary: #ffffff;
+    --primitive-dark-text-secondary: #bbcabf;
+    --primitive-dark-text-muted: #8ab89c;
+    --primitive-dark-text-dim: #ffffff73;
+    --primitive-dark-text-faint: #ffffff40;
+    --primitive-dark-text-on-light: #0a0f0e;
+    --primitive-dark-text-on-light-muted: #00000080;
+
+    /* Dark Theme Border Palette */
+    --primitive-dark-border-subtle: #ffffff12;
+    --primitive-dark-border-section: #ffffff0a;
+    --primitive-dark-border-white-dim: #ffffff1a;
+    --primitive-dark-border-white-button: #ffffff73;
+    --primitive-dark-border-white-hover: #ffffff;
+
+    /* Light Theme Palette (Slate / Neutral / Pure White) */
+    --primitive-light-bg-base: #f8fafc;
+    --primitive-light-bg-deep: #f1f5f9;
+    --primitive-light-bg-card: #ffffff;
+    --primitive-light-bg-card-hover: #f1f5f9;
+    --primitive-light-bg-elevated: #ffffff;
+    --primitive-light-bg-glass: #ffffffcc;
+    --primitive-light-bg-overlay: #ffffffeb;
+    --primitive-light-text-primary: #0f172a;
+    --primitive-light-text-secondary: #334155;
+    --primitive-light-text-muted: #64748b;
+    --primitive-light-text-dim: #94a3b8;
+    --primitive-light-text-faint: #cbd5e1;
+    --primitive-light-border-subtle: #e2e8f0;
+    --primitive-light-border-section: #f1f5f9;
+    --primitive-light-border-default: #cbd5e1;
+    --primitive-light-border-strong: #94a3b8;
+    --primitive-light-border-hover: #64748b;
+
+    /* Third-party Brand LINE */
+    --brand-line-green: #06c755;
+    --brand-line-green-hover: #05b84f;
+    --brand-line-contrast: #ffffff;
+
+    /* Pure Colors */
+    --primitive-white: #ffffff;
+    --primitive-black: #000000;
+  }
+}

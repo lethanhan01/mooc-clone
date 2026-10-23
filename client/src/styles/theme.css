@@ -1,0 +1,149 @@
+@theme inline {
+  /* ==========================================================================
+     RoGym Tailwind v4 @theme inline Integration
+     Phơi bày Semantic Tokens cho Tailwind sinh utility classes tự nhiên.
+     Directive @theme inline đảm bảo không tự sinh :root, chống vòng lặp CSS.
+     ========================================================================== */
+
+  /* 1. Semantic Surfaces (bg-surface-*) */
+  --color-surface-base: var(--color-surface-base);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-surface-sunken-alt: var(--color-surface-sunken-alt);
+  --color-surface-card: var(--color-surface-card);
+  --color-surface-card-hover: var(--color-surface-card-hover);
+  --color-surface-card-inset: var(--color-surface-card-inset);
+  --color-surface-elevated: var(--color-surface-elevated);
+  --color-surface-elevated-accent: var(--color-surface-elevated-accent);
+  --color-surface-inverse: var(--color-surface-inverse);
+  --color-surface-glass: var(--color-surface-glass);
+  --color-surface-overlay: var(--color-surface-overlay);
+
+  /* 2. Semantic Foregrounds (text-fg-*) */
+  --color-fg-primary: var(--color-fg-primary);
+  --color-fg-secondary: var(--color-fg-secondary);
+  --color-fg-muted: var(--color-fg-muted);
+  --color-fg-subtle: var(--color-fg-subtle);
+  --color-fg-disabled: var(--color-fg-disabled);
+  --color-fg-on-inverse: var(--color-fg-on-inverse);
+  --color-fg-on-inverse-muted: var(--color-fg-on-inverse-muted);
+  --color-fg-on-solid: var(--color-fg-on-solid);
+
+  /* 3. Semantic Lines & Borders (border-line-*) */
+  --color-line-subtle: var(--color-line-subtle);
+  --color-line-divider: var(--color-line-divider);
+  --color-line-default: var(--color-line-default);
+  --color-line-strong: var(--color-line-strong);
+  --color-line-hover: var(--color-line-hover);
+  --color-line-accent-subtle: var(--color-line-accent-subtle);
+  --color-line-accent-hover: var(--color-line-accent-hover);
+  --color-line-focus: var(--color-line-focus);
+
+  /* 4. Semantic Actions & Brand (bg-action-*, text-action-*) */
+  --color-action-primary: var(--color-action-primary);
+  --color-action-primary-hover: var(--color-action-primary-hover);
+  --color-action-primary-fg: var(--color-action-primary-fg);
+  --color-action-primary-fg-strong: var(--color-action-primary-fg-strong);
+  --color-action-primary-soft: var(--color-action-primary-soft);
+  --color-action-primary-soft-border: var(--color-action-primary-soft-border);
+  --color-action-accent: var(--color-action-accent);
+  --color-action-accent-soft: var(--color-action-accent-soft);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-focus-ring: var(--color-focus-ring);
+
+  /* 5. Semantic Status: Success */
+  --color-status-success-solid: var(--color-status-success-solid);
+  --color-status-success-on-solid: var(--color-status-success-on-solid);
+  --color-status-success-fg: var(--color-status-success-fg);
+  --color-status-success-bg: var(--color-status-success-bg);
+  --color-status-success-border: var(--color-status-success-border);
+  --color-status-success-surface: var(--color-status-success-surface);
+
+  /* 6. Semantic Status: Warning */
+  --color-status-warning-solid: var(--color-status-warning-solid);
+  --color-status-warning-on-solid: var(--color-status-warning-on-solid);
+  --color-status-warning-fg: var(--color-status-warning-fg);
+  --color-status-warning-bg: var(--color-status-warning-bg);
+  --color-status-warning-border: var(--color-status-warning-border);
+  --color-status-warning-surface: var(--color-status-warning-surface);
+
+  /* 7. Semantic Status: Danger */
+  --color-status-danger-solid: var(--color-status-danger-solid);
+  --color-status-danger-on-solid: var(--color-status-danger-on-solid);
+  --color-status-danger-fg: var(--color-status-danger-fg);
+  --color-status-danger-bg: var(--color-status-danger-bg);
+  --color-status-danger-border: var(--color-status-danger-border);
+  --color-status-danger-surface: var(--color-status-danger-surface);
+
+  /* 8. Semantic Status: Info */
+  --color-status-info-solid: var(--color-status-info-solid);
+  --color-status-info-on-solid: var(--color-status-info-on-solid);
+  --color-status-info-fg: var(--color-status-info-fg);
+  --color-status-info-bg: var(--color-status-info-bg);
+  --color-status-info-border: var(--color-status-info-border);
+  --color-status-info-surface: var(--color-status-info-surface);
+
+  /* 9. Semantic Status: Neutral */
+  --color-status-neutral-solid: var(--color-status-neutral-solid);
+  --color-status-neutral-on-solid: var(--color-status-neutral-on-solid);
+  --color-status-neutral-fg: var(--color-status-neutral-fg);
+  --color-status-neutral-bg: var(--color-status-neutral-bg);
+  --color-status-neutral-border: var(--color-status-neutral-border);
+  --color-status-neutral-surface: var(--color-status-neutral-surface);
+
+  /* 10. Semantic Status: Accent */
+  --color-status-accent-solid: var(--color-status-accent-solid);
+  --color-status-accent-on-solid: var(--color-status-accent-on-solid);
+  --color-status-accent-fg: var(--color-status-accent-fg);
+  --color-status-accent-bg: var(--color-status-accent-bg);
+  --color-status-accent-border: var(--color-status-accent-border);
+  --color-status-accent-surface: var(--color-status-accent-surface);
+
+  /* 11. Charts & Data Visualization */
+  --color-chart-1: var(--color-chart-1);
+  --color-chart-2: var(--color-chart-2);
+  --color-chart-3: var(--color-chart-3);
+  --color-chart-4: var(--color-chart-4);
+  --color-chart-5: var(--color-chart-5);
+  --color-chart-6: var(--color-chart-6);
+  --color-chart-grid: var(--color-chart-grid);
+  --color-chart-axis: var(--color-chart-axis);
+  --color-chart-tooltip-bg: var(--color-chart-tooltip-bg);
+
+  /* 12. Legacy Brand Variables (Bảo lưu đến Phase 5) */
+  --color-rogym-green: var(--rogym-green);
+  --color-rogym-green-hover: var(--rogym-green-hover);
+  --color-rogym-green-dark: var(--rogym-green-dark);
+  --color-rogym-green-deeper: var(--rogym-green-deeper);
+  --color-rogym-teal: var(--rogym-teal);
+  --color-rogym-error: var(--rogym-error);
+  --color-rogym-bg-base: var(--rogym-bg-base);
+  --color-rogym-bg-deep: var(--rogym-bg-deep);
+  --color-rogym-bg-deep-alt: var(--rogym-bg-deep-alt);
+  --color-rogym-bg-card: var(--rogym-bg-card);
+  --color-rogym-bg-card-hover: var(--rogym-bg-card-hover);
+  --color-rogym-bg-card-darker: var(--rogym-bg-card-darker);
+  --color-rogym-bg-elevated: var(--rogym-bg-elevated);
+  --color-rogym-bg-elevated-green: var(--rogym-bg-elevated-green);
+  --color-rogym-bg-light: var(--rogym-bg-light);
+  --color-rogym-text-primary: var(--rogym-text-primary);
+  --color-rogym-text-secondary: var(--rogym-text-secondary);
+  --color-rogym-text-muted: var(--rogym-text-muted);
+  --color-rogym-text-on-light: var(--rogym-text-on-light);
+
+  /* 13. Phông chữ chuẩn RoGym */
+  --font-vietnam: "Be Vietnam Pro", sans-serif;
+  --font-anton: Anton, sans-serif;
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+
+  /* 14. Thang đo Z-Index 5 tầng chuẩn RoGym (SEM-TOKEN-010) */
+  --z-index-base: var(--z-base);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-modal: var(--z-modal);
+  --z-index-toast: var(--z-toast);
+}
+
+/* Định nghĩa variant dark theo class & data-theme để tránh phụ thuộc prefers-color-scheme */
+@custom-variant dark (&:where(.dark, [data-theme="dark"], .dark *));

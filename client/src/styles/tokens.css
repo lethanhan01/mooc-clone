@@ -1,0 +1,10 @@
+/* ==========================================================================
+   RoGym Design Tokens Root Shim
+   Điểm import tổng hợp các tầng Design Tokens theo kiến trúc Semantic Design Suite.
+   ========================================================================== */
+
+@import "./tokens/primitive.css";
+@import "./tokens/semantic.css";
+@import "./tokens/non-color.css";
+@import "./tokens/compat.css";
+@import "./tokens/shadcn.css";

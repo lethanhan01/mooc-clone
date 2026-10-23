@@ -1,0 +1,5 @@
+{
+  "src/components/ui/forms/FilterDropdown.tsx": {
+    "NO_BYPASS_PORTAL_OVERLAYS": 1
+  }
+}

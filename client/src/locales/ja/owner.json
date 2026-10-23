@@ -1,0 +1,660 @@
+{
+  "nav": {
+    "sectionStaff": "スタッフ",
+    "sectionBusiness": "ビジネス",
+    "sectionFacility": "施設",
+    "sectionSystem": "システム",
+    "staff": "スタッフリスト",
+    "addStaff": "スタッフ追加",
+    "schedules": "シフトスケジュール",
+    "packages": "プラン",
+    "feedback": "フィードバック",
+    "reports": "レポート",
+    "revenue": "収益",
+    "invoices": "取引請求書",
+    "performance": "従業員実績",
+    "equipment": "設備",
+    "rbac": "権限管理",
+    "rbacGroups": "権限グループ",
+    "rbacPermissions": "権限",
+    "modeBack": "オーナーに戻る",
+    "modeOperation": "運営モード"
+  },
+  "dashboard": {
+    "title": "オーナーワークスペース",
+    "greeting": "{{name}}さん、こんにちは",
+    "subtitle": "ジム全体システムの概要です。",
+    "staffManagement": "スタッフ管理",
+    "permissions": "権限 & グループ",
+    "packages": "プラン設定",
+    "reports": "統計レポート",
+    "viewReports": "レポートを見る",
+    "equipmentAlert": "設備アラート",
+    "totalMembers": "総会員数",
+    "systemWide": "システム全体",
+    "activePackages": "販売中のプラン",
+    "activeStatus": "アクティブ状態",
+    "membersAndPackages": "会員 & プラン",
+    "pendingFeedback": "対応が必要なフィードバック",
+    "noNewFeedback": "新しいフィードバックはありません",
+    "viewDetail": "詳細を見る",
+    "allFeedback": "すべてのフィードバック",
+    "membersInSystem": "システム内の会員",
+    "activePackagesInSystem": "システム上のアクティブなプラン",
+    "needsAttention": "早急な対応が必要",
+    "allHandled": "すべて対応済み",
+    "equipmentBrokenRepairing": "故障 / 修理中の設備",
+    "brokenCount": "{{count}}台故障、",
+    "repairingCount": "{{count}}台修理中",
+    "allEquipmentOk": "すべての設備が正常に動作しています",
+    "equipmentAlertDetails": "{{broken}}台故障、{{repairing}}台修理中",
+    "feedbackPending": "対応待ちフィードバック",
+    "severity": {
+      "low": "低",
+      "medium": "中",
+      "high": "高"
+    },
+    "feedbackType": {
+      "staff": "スタッフ",
+      "equipment": "設備",
+      "service": "サービス"
+    }
+  },
+  "packages": {
+    "title": "プラン管理",
+    "eyebrow": "設定",
+    "totalCount": "システムに{{total}}個のプランがあります",
+    "createNew": "新規作成",
+    "searchPlaceholder": "プラン名、コードで検索...",
+    "notFound": "プランがありません",
+    "notFoundDesc": "フィルターを変更するか、新しいプランを作成してください。",
+    "loadFailed": "プラン一覧を読み込めません。",
+    "daysCount": "{{days}}日間",
+    "deleted": "削除済み",
+    "noActions": "操作なし",
+    "deactivate": "停止",
+    "status": {
+      "active": "販売中",
+      "inactive": "販売停止"
+    },
+    "table": {
+      "code": "プランコード",
+      "name": "プラン名",
+      "duration": "期間",
+      "price": "価格",
+      "status": "状態",
+      "actions": "操作"
+    },
+    "modal": {
+      "editTitle": "プランを編集",
+      "createTitle": "新しいプランを作成",
+      "saveChanges": "変更を保存",
+      "createBtn": "プランを作成"
+    },
+    "form": {
+      "includesPt": "パーソナルトレーナーを含む",
+      "withPt": "PT付き",
+      "withoutPt": "PT無し",
+      "name": "プラン名 *",
+      "namePlaceholder": "スタンダード1ヶ月",
+      "duration": "期間（日）*",
+      "price": "価格（VND）*",
+      "benefits": "特典・権利",
+      "benefitsPlaceholder": "ジムアクセス、ロッカー、クーポン...",
+      "status": "状態",
+      "fillRequired": "有効な情報をすべて入力してください。",
+      "saveFailed": "保存に失敗しました。"
+    },
+    "deleteModal": {
+      "title": "確認",
+      "deactivateMsg": "「{{name}}」の販売を停止しますか？現在利用中の会員には影響ありません。",
+      "deleteMsg": "「{{name}}」を完全に削除しますか？この操作は元に戻せません。",
+      "deactivateBtn": "販売停止",
+      "conflictError": "削除できません：プランを使用中の会員がいます。",
+      "deleteFailed": "削除に失敗しました。"
+    }
+  },
+  "equipment": {
+    "title": "設備管理",
+    "eyebrow": "施設",
+    "totalCount": "システムに{{count}}台の設備があります。",
+    "addEquipment": "設備を追加",
+    "searchPlaceholder": "設備名またはコードで検索",
+    "filterByStatus": "状態で絞り込む",
+    "notFound": "設備が見つかりません",
+    "notFoundDesc": "フィルターを変更するか、新しい設備を追加してください。",
+    "noRoom": "部屋未割当",
+    "loadFailed": "設備一覧を読み込めません。",
+    "saveFailed": "設備を保存できません。",
+    "editTitle": "編集: {{name}}",
+    "createTitle": "新しい設備を追加",
+    "saveChanges": "変更を保存",
+    "deleting": "削除中...",
+    "deleteBtn": "設備を削除",
+    "deleteConfirmTitle": "設備の削除を確認",
+    "deleteConfirmMsg": "設備「{{name}}」を削除しますか？この操作は元に戻せません。",
+    "deleteFailed": "設備を削除できません。",
+    "table": {
+      "code": "コード",
+      "name": "設備名",
+      "room": "部屋",
+      "importDate": "購入日",
+      "warrantyUntil": "保証期限",
+      "status": "状態",
+      "actions": "操作"
+    },
+    "pagination": {
+      "prev": "前へ",
+      "next": "次へ",
+      "page": "{{page}}/{{total}}ページ"
+    },
+    "form": {
+      "name": "設備名 *",
+      "namePlaceholder": "例: トレッドミル",
+      "room": "部屋 *",
+      "importDate": "購入日",
+      "warrantyUntil": "保証期限",
+      "status": "状態",
+      "selectRoom": "-- 部屋を選択 --"
+    },
+    "status": {
+      "active": "稼働中",
+      "repairing": "修理中",
+      "broken": "故障",
+      "retired": "廃止",
+      "all": "すべての状態"
+    }
+  },
+  "reports": {
+    "revenue": {
+      "title": "売上レポート",
+      "eyebrow": "財務",
+      "tabs": {
+        "week": "週",
+        "month": "月",
+        "quarter": "四半期",
+        "custom": "カスタム"
+      },
+      "filter": {
+        "year": "年",
+        "week": "週",
+        "month": "月",
+        "quarter": "四半期",
+        "from": "開始日",
+        "to": "終了日",
+        "method": "支払方法"
+      },
+      "kpi": {
+        "totalRevenue": "総売上",
+        "newMembers": "新規会員",
+        "renewalRate": "更新率",
+        "vsLastPeriod": "前期比"
+      },
+      "gridEmpty": "空",
+      "legend": {
+        "less": "少ない",
+        "more": "多い"
+      },
+      "monthLabel": "{{month}}月",
+      "chartTitle": "期間別売上",
+      "topPackages": "人気プラン",
+      "packageSalesCount": "{{count}}件",
+      "packageDurationPrice": "{{days}}日 · {{price}}",
+      "collapse": "折りたたむ",
+      "showMore": "もっと見る（{{count}}プラン）",
+      "transactionDays": "{{count}}日間の取引",
+      "newSubscriptions": "期間内の新規登録",
+      "prevPeriod": "前期：{{amount}}",
+      "partialNote": "{{from}}から{{to}}までの暫定集計",
+      "subtitle": "売上、構成、販売パフォーマンスを追跡します。",
+      "renewalHint": "{{renewed}}件更新 · {{churned}}件離脱",
+      "noDataYet": "データがまだありません",
+      "tryOtherPeriod": "別の期間を選択してください。",
+      "noData": "この期間の売上データはありません",
+      "viewReport": "レポートを見る",
+      "loadFailed": "売上を読み込めませんでした。",
+      "paymentMethod": {
+        "all": "すべて",
+        "cash": "現金",
+        "transfer": "振込",
+        "card": "カード"
+      },
+      "quarters": {
+        "q1": "Q1 (1-3月)",
+        "q2": "Q2 (4-6月)",
+        "q3": "Q3 (7-9月)",
+        "q4": "Q4 (10-12月)"
+      }
+    },
+    "performance": {
+      "title": "スタッフパフォーマンス",
+      "eyebrow": "レポート",
+      "tabs": {
+        "month": "月",
+        "quarter": "四半期",
+        "custom": "カスタム"
+      },
+      "filter": {
+        "year": "年",
+        "month": "月",
+        "quarter": "四半期",
+        "from": "開始日",
+        "to": "終了日",
+        "view": "レポートを見る"
+      },
+      "viewDetail": "詳細を見る",
+      "actual": "実績：",
+      "expected": "目標：",
+      "hoursValue": "{{hours}}時間",
+      "legend": {
+        "good": "1.0–1.5：良好",
+        "average": "1.5–2.5：普通",
+        "needsImprovement": "2.5–3.0：要改善"
+      },
+      "detailModal": "パフォーマンス詳細 — {{name}}",
+      "attendanceSectionTitle": "出勤記録一覧",
+      "scheduleSectionTitle": "勤務シフト一覧",
+      "attendanceTable": {
+        "date": "日付",
+        "checkIn": "チェックイン",
+        "checkOut": "チェックアウト",
+        "hours": "時間（h）"
+      },
+      "scheduleTable": {
+        "date": "日付",
+        "shift": "シフト"
+      },
+      "remaining": "残り",
+      "subtitle": "スタッフの実績/目標パフォーマンスを時系列で追跡します。",
+      "noDataTitle": "データがありません",
+      "noStaff": "この期間に該当するスタッフがいません。",
+      "noAttendance": "出勤データがありません。",
+      "noSchedule": "シフトがありません。",
+      "loadFailed": "レポートを読み込めませんでした。",
+      "shifts": {
+        "morning": "朝番",
+        "afternoon": "昼番",
+        "evening": "夕番",
+        "night": "夜番"
+      }
+    },
+    "invoices": {
+      "title": "取引請求書一覧",
+      "eyebrow": "レポート",
+      "kpi": {
+        "totalTransactions": "総取引数",
+        "pageTotal": "このページの合計金額",
+        "refundable": "返金可能額"
+      },
+      "filter": {
+        "from": "開始日",
+        "to": "終了日",
+        "method": "支払方法",
+        "status": "ステータス",
+        "sort": "並び替え",
+        "reload": "再読み込み"
+      },
+      "table": {
+        "id": "取引ID",
+        "date": "支払日",
+        "member": "会員",
+        "staff": "担当スタッフ",
+        "package": "サービス/プラン",
+        "method": "支払方法",
+        "amount": "金額",
+        "status": "ステータス",
+        "detail": "アクション"
+      },
+      "status": {
+        "success": "成功",
+        "failed": "失敗"
+      },
+      "unassigned": "未割り当て",
+      "memberFallback": "会員 #{{id}}",
+      "pageTransactionsHint": "{{count}}件の取引を表示中",
+      "packageReference": "プラン {{code}}",
+      "viewDetailAria": "取引{{code}}の詳細を見る",
+      "subscriptionLabel": "サブスクリプション",
+      "detailModal": {
+        "title": "取引詳細"
+      },
+      "exportBtn": "請求書一覧をエクスポート",
+      "exportFailed": "請求書一覧をエクスポートできませんでした。",
+      "sort": {
+        "newest": "新しい順",
+        "oldest": "古い順",
+        "amountDesc": "金額（高い順）",
+        "amountAsc": "金額（低い順）"
+      },
+      "filterStatus": {
+        "all": "すべてのステータス",
+        "success": "成功",
+        "failed": "失敗"
+      },
+      "methodBankCard": "銀行カード",
+      "methodEwallet": "電子ウォレット",
+      "loadFailed": "取引一覧を読み込めませんでした。",
+      "subtitle": "支払い詳細の追跡、請求書のエクスポート、返金条件の確認。",
+      "byCurrentFilter": "現在のフィルター適用中",
+      "successInPage": "このページの成功した取引",
+      "noTransactions": "取引がありません",
+      "tryOtherFilter": "日付範囲、支払方法、または状態を変更してください。",
+      "noMatchingInvoices": "現在のフィルターに一致する請求書がありません。",
+      "exportSheetTitle": "取引請求書一覧",
+      "export": {
+        "colDate": "支払日",
+        "colId": "取引ID",
+        "colMember": "会員",
+        "colPackage": "サービス/プラン",
+        "colAmount": "金額",
+        "colMethod": "支払方法",
+        "colStatus": "状態",
+        "colStaff": "担当スタッフ",
+        "filterFrom": "開始日: {{value}}",
+        "filterTo": "終了日: {{value}}",
+        "filterMethod": "支払方法: {{value}}",
+        "filterStatus": "状態: {{value}}",
+        "filterSort": "並び替え: {{value}}",
+        "worksheetName": "取引請求書"
+      }
+    }
+  },
+  "staffManagement": {
+    "users": {
+      "title": "スタッフ管理",
+      "eyebrow": "人事",
+      "totalCount": "{{total}}名のスタッフ",
+      "addBtn": "スタッフを追加",
+      "searchPlaceholder": "名前またはメールで検索...",
+      "positions": {
+        "all": "すべての役職",
+        "staff": "スタッフ",
+        "trainer": "トレーナー",
+        "pt": "パーソナルトレーナー",
+        "owner": "マネージャー"
+      },
+      "statusFilter": {
+        "all": "すべての状態",
+        "working": "在職中",
+        "resigned": "退職済み"
+      },
+      "table": {
+        "code": "スタッフID",
+        "name": "氏名",
+        "email": "メール",
+        "position": "役職",
+        "status": "状態",
+        "actions": "操作"
+      },
+      "scheduleBtn": "シフト管理",
+      "detailBtn": "詳細",
+      "notFound": "スタッフが見つかりません",
+      "notFoundDesc": "フィルターを変更するか、新しいスタッフを追加してください。",
+      "deleteFailed": "スタッフを削除できません。",
+      "loadFailed": "スタッフ一覧を読み込めません。"
+    },
+    "detail": {
+      "eyebrow": "人事",
+      "createTitle": "新しいスタッフを追加",
+      "editTitle": "編集: {{name}}",
+      "createDesc": "新しいスタッフアカウントを作成します",
+      "editDesc": "スタッフID: {{code}}",
+      "newInfoTitle": "新しいスタッフ情報",
+      "editInfoTitle": "情報を編集",
+      "form": {
+        "name": "氏名 *",
+        "namePlaceholder": "山田 太郎",
+        "email": "メール *",
+        "phone": "電話番号",
+        "position": "役職 *"
+      },
+      "positions": {
+        "staff": "スタッフ",
+        "trainer": "トレーナー",
+        "pt": "パーソナルトレーナー",
+        "owner": "マネージャー"
+      },
+      "createBtn": "スタッフを作成",
+      "scheduleTitle": "勤務スケジュール",
+      "noSchedule": "スタッフにまだ勤務スケジュールがありません。",
+      "noShifts": "シフトが見つかりません。",
+      "shifts": {
+        "morning": "午前シフト",
+        "afternoon": "午後シフト",
+        "evening": "夕方シフト",
+        "night": "夜間シフト"
+      },
+      "actions": "操作",
+      "terminate": "退職処理",
+      "terminateConfirm": "{{name}}を退職させますか？この操作は元に戻せません。",
+      "terminateConfirmBtn": "確認",
+      "loadFailed": "スタッフ情報を読み込めません。",
+      "saveFailed": "保存に失敗しました。",
+      "terminateFailed": "退職処理に失敗しました。",
+      "validation": {
+        "nameRequired": "氏名は必須です。",
+        "emailRequired": "メールアドレスは必須です",
+        "positionRequired": "役職は必須です。"
+      },
+      "createSuccess": "スタッフの追加に成功しました",
+      "updateSuccess": "情報の更新に成功しました",
+      "terminateSuccess": "スタッフの削除に成功しました"
+    },
+    "schedule": {
+      "title": "シフト管理",
+      "eyebrow": "スタッフ管理",
+      "description": "スタッフの月次シフトを確認・割り当てます。",
+      "modalTitle": "{{date}}のシフトを追加",
+      "addStaffBtn": "スタッフを追加",
+      "allAssigned": "この日のこのシフトにはすでに全スタッフが割り当てられています。",
+      "shiftLabel": "シフト",
+      "staffLabel": "スタッフ",
+      "selectStaff": "-- スタッフを選択 --",
+      "detailEyebrow": "シフト詳細",
+      "emptyDayMessage": "この日にシフトはありません",
+      "emptyShiftMessage": "割り当てられているスタッフはいません",
+      "removeAriaLabel": "{{name}}を削除",
+      "loadFailed": "スケジュールを読み込めません。",
+      "saveFailed": "シフトを保存できません。",
+      "deleteFailed": "シフトを削除できません。"
+    }
+  },
+  "rbac": {
+    "groups": {
+      "title": "権限グループ",
+      "eyebrow": "権限管理",
+      "totalCount": "システムに{{total}}個の権限グループがあります",
+      "searchPlaceholder": "グループを検索...",
+      "notFound": "権限グループがありません",
+      "notFoundDesc": "システムに権限グループがまだありません。",
+      "systemBadge": "システム",
+      "assignedPermissions": "付与された権限",
+      "morePermissions": "+{{count}}個以上",
+      "noPermissions": "権限がありません。",
+      "memberCount": "{{count}}名のメンバー",
+      "permissionCount": "{{count}}個の権限",
+      "ownerNote": "システム最高権限のため、権限付与は不要です。",
+      "assignBtn": "権限を設定",
+      "deleteConflict": "メンバーがいるため削除できません。",
+      "deleteFailed": "削除に失敗しました。",
+      "loadFailed": "権限グループ一覧を読み込めません。",
+      "permissionsLoadFailed": "グループの権限を読み込めません。",
+      "editModal": {
+        "title": "権限グループを編集",
+        "groupName": "グループ名 *",
+        "description": "説明 *",
+        "descPlaceholder": "グループの機能を説明してください...",
+        "saveChanges": "変更を保存",
+        "fillRequired": "必須項目を入力してください。",
+        "descTooShort": "説明は10文字以上必要です。",
+        "saveFailed": "保存に失敗しました。"
+      },
+      "permsModal": {
+        "title": "権限設定: {{name}}",
+        "saveBtn": "権限を保存",
+        "saveFailed": "権限の保存に失敗しました。"
+      }
+    },
+    "permissions": {
+      "title": "権限",
+      "eyebrow": "権限管理",
+      "catalogTitle": "権限カタログ",
+      "totalCount": "システムに{{count}}個の権限があります — 読み取り専用",
+      "searchPlaceholder": "コード、名前、説明で検索...",
+      "notFound": "権限が見つかりません",
+      "notFoundDesc": "フィルターを変更してください。",
+      "sectionCount": "{{count}}個の権限",
+      "readonlyNote": "権限カタログは読み取り専用です — 権限はシステムによって管理されています。権限の追加/編集/削除にはデータベースのシードとサーバーの再起動が必要です。",
+      "loadFailed": "権限一覧を読み込めません。",
+      "resources": {
+        "all": "すべて",
+        "user": "ユーザー",
+        "member": "会員",
+        "staff": "スタッフ",
+        "package": "プラン",
+        "subscription": "サブスクリプション",
+        "payment": "支払い",
+        "room": "ジムルーム",
+        "equipment": "設備",
+        "maintenance": "メンテナンス",
+        "session": "トレーニングセッション",
+        "attendance": "出席",
+        "progress": "進捗",
+        "feedback": "フィードバック",
+        "schedule": "勤務スケジュール",
+        "report": "レポート",
+        "rbac": "権限管理"
+      },
+      "actions": {
+        "read": "閲覧",
+        "create": "作成",
+        "update": "編集",
+        "delete": "削除",
+        "manage": "管理",
+        "view": "閲覧",
+        "handle": "処理",
+        "checkin": "チェックイン",
+        "report": "レポート",
+        "resolve": "解決"
+      }
+    }
+  },
+  "usersOverview": {
+    "eyebrow": "管理",
+    "title": "ユーザー一覧",
+    "notFound": "ユーザーが見つかりません",
+    "notFoundDesc": "キーワードまたはフィルターを変更してください。",
+    "noPackage": "プランなし",
+    "description": "システム内の{{type}}：{{total}}件",
+    "pageLabel": "{{page}}/{{totalPages}}ページ",
+    "expiresOn": "有効期限：{{date}}",
+    "tabs": {
+      "members": "会員",
+      "staff": "スタッフ & PT"
+    },
+    "filter": {
+      "searchMember": "名前またはメールで会員を検索...",
+      "searchStaff": "名前またはメールでスタッフを検索...",
+      "packageStatus": "パッケージ状態",
+      "staffStatus": "スタッフ状態",
+      "position": "役職"
+    },
+    "pagination": {
+      "prev": "前へ",
+      "next": "次へ"
+    },
+    "memberTable": {
+      "name": "氏名",
+      "package": "現在のプラン",
+      "expiry": "有効期限",
+      "status": "状態",
+      "actions": "操作"
+    },
+    "staffTable": {
+      "name": "氏名",
+      "position": "役職",
+      "contact": "連絡先",
+      "status": "状態"
+    },
+    "positions": {
+      "trainer": "トレーナー",
+      "pt": "パーソナルトレーナー",
+      "staff": "スタッフ",
+      "owner": "ジムオーナー"
+    },
+    "packageStatus": {
+      "all": "すべての状態",
+      "active": "アクティブ",
+      "expired": "期限切れ",
+      "none": "プランなし"
+    },
+    "staffStatus": {
+      "all": "すべての状態",
+      "working": "在職中",
+      "resigned": "退職済み"
+    },
+    "memberStatus": {
+      "all": "すべての状態",
+      "active": "アクティブ",
+      "pendingVerification": "認証待ち",
+      "locked": "ロック済み"
+    },
+    "userStatus": {
+      "active": "アクティブ",
+      "pendingVerification": "認証待ち",
+      "locked": "ロック済み",
+      "deleted": "削除済み"
+    }
+  },
+  "status": {
+    "active": "アクティブ",
+    "scheduled": "予定済み",
+    "inProgress": "進行中",
+    "completed": "完了",
+    "cancelled": "キャンセル済み",
+    "expired": "期限切れ",
+    "pending": "対応待ち",
+    "pendingVerification": "認証待ち",
+    "draft": "下書き",
+    "archived": "アーカイブ済み",
+    "replaced": "置換済み",
+    "realtime": "デバイス",
+    "manual": "手動",
+    "qr": "QR",
+    "available": "利用可能",
+    "broken": "故障",
+    "repairing": "修理中",
+    "reported": "報告済み",
+    "resolved": "対応済み",
+    "inactive": "非アクティブ",
+    "suspended": "停止中",
+    "retired": "廃止",
+    "deleted": "削除済み",
+    "locked": "ロック済み",
+    "maintenance": "メンテナンス",
+    "unknown": "不明"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "accountTitle": "オーナーアカウント",
+    "subtitle": "個人情報とセキュリティを管理します。",
+    "personalInfo": "個人情報",
+    "fullName": "氏名",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "role": "役割",
+    "roleOwner": "オーナー",
+    "changePassword": "パスワード変更",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "新しいパスワードの確認",
+    "changePasswordBtn": "パスワードを変更する",
+    "nameRequired": "氏名は必須です。",
+    "saveFailed": "保存に失敗しました。",
+    "passwordMinLength": "新しいパスワードは8文字以上必要です。",
+    "passwordMismatch": "パスワードが一致しません。",
+    "changePasswordFailed": "パスワードを変更できません。",
+    "changePasswordSuccess": "パスワードが変更されました！",
+    "loadFailed": "プロフィールを読み込めません。"
+  }
+}
