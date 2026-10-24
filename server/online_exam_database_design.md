@@ -43,10 +43,11 @@
 
 | Tên Khung nhìn (View) | Mục đích sử dụng (Purpose) |
 |---|---|
-| `v_attempt_results` | Tính toán số lượng tổng số câu, câu đúng, câu sai, câu chưa trả lời và tỷ lệ phần trăm điểm cho các lượt thi đã hoàn thành |
+| `v_attempt_results` | Tính toán số lượng tổng số câu, câu đúng, câu sai, câu chưa trả lời, tỷ lệ % đúng (`correct_percent`) và quy đổi thang điểm 10 (`score_10`) cho các lượt thi đã hoàn thành |
 | `v_room_list` | Danh sách phòng thi bao gồm tổng số câu hỏi được tổng hợp từ cấu hình độ khó và số lượng thành viên tham gia |
-| `v_room_results` | Kết quả thi của các thí sinh trong các phòng thi có trạng thái `ENDED`; việc phân quyền truy cập kết quả vẫn bắt buộc phải được kiểm tra bởi backend |
-| `v_user_statistics` | Tổng hợp kết quả các lượt thi đã hoàn thành theo từng người dùng và tỷ lệ phần trăm đúng tổng thể nhằm hiển thị trên biểu đồ Dashboard |
+| `v_room_results` | Kết quả thi của các thí sinh trong các phòng thi có trạng thái `ENDED`, bao gồm số câu đúng, tỷ lệ % và `score_10`; việc phân quyền truy cập kết quả vẫn bắt buộc phải được kiểm tra bởi backend |
+| `v_user_statistics` | Tổng hợp kết quả các lượt thi đã hoàn thành theo từng người dùng, tỷ lệ phần trăm đúng tổng thể (`overall_correct_percent`) và điểm thang 10 (`overall_score_10`) nhằm hiển thị trên Dashboard |
+| `v_user_topic_performance` | Thống kê số câu đúng, tỷ lệ % đúng và điểm số quy đổi theo từng chủ đề câu hỏi cho từng người dùng, phục vụ vẽ biểu đồ phân tích năng lực (radar/bar chart) |
 
 Các khung nhìn trên là các khung nhìn thông thường (normal views), không phải khung nhìn cụ thể hóa (materialized views). Với quy mô dự án dự kiến, backend có thể truy vấn trực tiếp; việc sử dụng materialized view và lập lịch làm mới dữ liệu là chưa cần thiết ở giai đoạn ban đầu.
 
@@ -89,7 +90,7 @@ erDiagram
 
 1. Trước khi đưa một câu hỏi hoạt động (`active`) vào sử dụng, bắt buộc câu hỏi phải có tối thiểu 2 phương án lựa chọn và chính xác 1 phương án đúng.
 2. Mỗi phòng thi bắt buộc phải có ít nhất một dòng cấu hình trong `room_difficulty_configs`; tổng số lượng câu hỏi đã cấu hình chính là tổng số câu hỏi của cả phòng thi.
-3. Phòng thi riêng tư (private room) chỉ cho phép người dùng đáp ứng đúng chính sách truy cập tham gia; toàn bộ yêu cầu tham gia phòng phải bị từ chối sau khi phòng thi đã bắt đầu.
+3. Phòng thi riêng tư (private room) được kiểm soát truy cập bằng cơ chế Whitelist (chủ phòng thêm danh sách thí sinh hợp lệ vào `room_members` trước khi phòng thi diễn ra); toàn bộ yêu cầu tham gia phòng ngoài danh sách hoặc sau khi phòng thi đã bắt đầu đều bị từ chối.
 4. Khi bắt đầu phòng thi, thực hiện chọn tập câu hỏi một lần duy nhất và tạo các snapshot tương đương cho toàn bộ thí sinh đủ điều kiện, đảm bảo tất cả thí sinh đều nhận được đề thi đồng nhất. Việc lưu trữ snapshot và khởi tạo các attempt phải diễn ra trong cùng một transaction.
 5. Một lượt thi luyện tập (practice attempt) sẽ tự tạo các snapshot riêng và không có `room_id`.
 6. Việc cập nhật câu trả lời và hành động nộp bài phải được tuần tự hóa (serialize) bằng kỹ thuật khóa dòng (row locking) hoặc kiểm soát đồng thời lạc quan (optimistic concurrency). Sau khi đã chốt bài thi (finalized), toàn bộ câu trả lời trở thành dữ liệu bất biến (immutable).

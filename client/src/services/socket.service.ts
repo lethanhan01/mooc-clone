@@ -1,5 +1,3 @@
-import { io, Socket } from 'socket.io-client'
-
 export interface ExamRoomState {
   roomId: string
   roomName: string
@@ -15,74 +13,133 @@ export interface UserAnswerPayload {
   selectedOption: string
 }
 
-class SocketService {
-  private socket: Socket | null = null
+export interface SocketConnection {
+  connected: boolean
+  on(event: string, callback: (...args: unknown[]) => void): void
+  off(event: string, callback: (...args: unknown[]) => void): void
+}
 
-  connect(wsUrl?: string, token?: string): Socket {
-    if (this.socket?.connected) {
-      return this.socket
+class SocketService implements SocketConnection {
+  private ws: WebSocket | null = null
+  private eventListeners: Map<string, Set<(...args: unknown[]) => void>> = new Map()
+  public connected: boolean = false
+
+  connect(wsUrl?: string, token?: string): SocketConnection {
+    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      return this
     }
 
-    const url = wsUrl || import.meta.env.VITE_WS_URL || window.location.origin
+    const defaultUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'
+    const targetUrl = wsUrl || defaultUrl
 
-    this.socket = io(url, {
-      path: '/socket.io',
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    })
+    try {
+      this.ws = new WebSocket(token ? `${targetUrl}?token=${encodeURIComponent(token)}` : targetUrl)
 
-    return this.socket
+      this.ws.onopen = () => {
+        this.connected = true
+        this.emit('connect')
+      }
+
+      this.ws.onclose = () => {
+        this.connected = false
+        this.emit('disconnect')
+      }
+
+      this.ws.onerror = (err) => {
+        console.warn('[WebSocket] Error occurred', err)
+      }
+
+      this.ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data)
+          if (payload && payload.event) {
+            this.emit(payload.event, payload.data)
+          }
+        } catch (e) {
+          console.error('[WebSocket] Failed to parse message', e)
+        }
+      }
+    } catch (e) {
+      console.warn('[WebSocket] Connection failed', e)
+    }
+
+    return this
   }
 
-  getSocket(): Socket | null {
-    return this.socket
+  getSocket(): SocketConnection | null {
+    return this.ws ? this : null
+  }
+
+  on(event: string, callback: (...args: unknown[]) => void): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set())
+    }
+    this.eventListeners.get(event)!.add(callback)
+  }
+
+  off(event: string, callback: (...args: unknown[]) => void): void {
+    this.eventListeners.get(event)?.delete(callback)
+  }
+
+  private emit(event: string, ...args: unknown[]): void {
+    const listeners = this.eventListeners.get(event)
+    listeners?.forEach((cb) => {
+      try {
+        cb(...args)
+      } catch (e) {
+        console.error(`Error in listener for ${event}`, e)
+      }
+    })
+  }
+
+  private send(event: string, data: unknown): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ event, data }))
+    }
   }
 
   joinRoom(roomId: string, user: { id: string; name: string }): void {
-    this.socket?.emit('join_room', { roomId, user })
+    this.send('join_room', { roomId, user })
   }
 
   leaveRoom(roomId: string): void {
-    this.socket?.emit('leave_room', { roomId })
+    this.send('leave_room', { roomId })
   }
 
   submitAnswer(payload: UserAnswerPayload): void {
-    this.socket?.emit('submit_answer', payload)
+    this.send('submit_answer', payload)
   }
 
   submitExam(roomId: string): void {
-    this.socket?.emit('submit_exam', { roomId })
+    this.send('submit_exam', { roomId })
   }
 
   onTimeTick(callback: (secondsRemaining: number) => void): () => void {
-    this.socket?.on('time_tick', callback)
+    this.on('time_tick', callback)
     return () => {
-      this.socket?.off('time_tick', callback)
+      this.off('time_tick', callback)
     }
   }
 
   onRoomUpdated(callback: (room: ExamRoomState) => void): () => void {
-    this.socket?.on('room_updated', callback)
+    this.on('room_updated', callback)
     return () => {
-      this.socket?.off('room_updated', callback)
+      this.off('room_updated', callback)
     }
   }
 
   onExamFinished(callback: (results: { score: number; total: number }) => void): () => void {
-    this.socket?.on('exam_finished', callback)
+    this.on('exam_finished', callback)
     return () => {
-      this.socket?.off('exam_finished', callback)
+      this.off('exam_finished', callback)
     }
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect()
-      this.socket = null
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+      this.connected = false
     }
   }
 }
