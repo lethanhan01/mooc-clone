@@ -56,13 +56,13 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         padding="none"
         to={to}
         ref={ref}
-        className={cn('p-5 flex flex-col justify-between', className)}
+        className={cn('flex flex-col justify-between rounded-lg p-3 shadow-none', className)}
         {...props}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-2 flex items-center justify-between">
           <div
             className={cn(
-              'flex h-10 w-10 items-center justify-center rounded-xl transition-colors shrink-0',
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
               TONE_ICON_BG[resolvedTone]
             )}
             aria-hidden="true"
@@ -89,17 +89,17 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
           </div>
         ) : (
           <div>
-            <div className="text-2xl font-bold text-fg-primary tracking-tight">
+            <div className="text-xl font-bold tracking-tight text-fg-primary">
               {value}
             </div>
-            <div className="mt-1 text-sm font-medium text-fg-secondary">
+            <div className="mt-0.5 text-xs font-medium text-fg-secondary">
               {label}
             </div>
-            {hint && (
-              <div className="mt-2 text-xs text-fg-dim leading-relaxed">
+            {hint ? (
+              <div className="mt-1 text-[11px] leading-snug text-fg-dim">
                 {hint}
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </Card>

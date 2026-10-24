@@ -21,5 +21,8 @@ export interface NavSection {
 export interface SidebarProps {
   isMobileOpen?: boolean
   onCloseMobile?: () => void
+  /** Controlled expand (desktop hover) — sync content offset from layout */
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
   className?: string
 }

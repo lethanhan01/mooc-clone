@@ -1,17 +1,21 @@
-import { useRef, useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useLocation, NavLink } from 'react-router-dom'
 import { GraduationCap } from 'lucide-react'
 import { SidebarNav } from './SidebarNav'
-import { getSQBNavSections } from './sidebar.config'
+import { getMoocNavSections } from './sidebar.config'
+import { useAuthStore, type Role } from '@/stores/authStore'
+import { getHomePathForRoles } from '@/stores/mockExamStore'
 import type { SidebarProps } from './sidebar.types'
 
 export function Sidebar({
   isMobileOpen = false,
   onCloseMobile,
+  expanded = false,
+  onExpandedChange,
 }: Readonly<SidebarProps>) {
-  const [expanded, setExpanded] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { pathname } = useLocation()
+  const roles = useAuthStore((s) => s.user?.roles ?? (['student'] as Role[]))
 
   useEffect(() => {
     onCloseMobile?.()
@@ -28,46 +32,55 @@ export function Sidebar({
       clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
-    setExpanded(true)
+    onExpandedChange?.(true)
   }
 
   function handleMouseLeave() {
-    closeTimerRef.current = setTimeout(() => setExpanded(false), 300)
+    closeTimerRef.current = setTimeout(() => onExpandedChange?.(false), 180)
   }
 
-  const sections = getSQBNavSections()
+  const sections = getMoocNavSections(roles)
+  const homePath = getHomePathForRoles(roles)
+  const showLabels = expanded || isMobileOpen
 
   return (
     <aside
-      className={`rogym-sidebar fixed top-0 left-0 h-full z-40 bg-surface border-r border-line-subtle transition-all duration-300 flex flex-col ${
-        expanded ? 'w-64' : 'w-18'
-      } ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      className={`rogym-sidebar fixed top-0 left-0 z-40 flex h-full flex-col border-r border-line-subtle transition-[width] duration-200 ease-out ${
+        showLabels ? 'is-expanded w-60' : 'w-16'
+      } ${isMobileOpen ? 'is-mobile-open translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       aria-label="Thanh điều hướng chính"
+      aria-expanded={showLabels}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-4 border-b border-line-subtle shrink-0">
-        <NavLink to="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-action-accent flex items-center justify-center text-text-inverse font-bold shrink-0">
-            <GraduationCap size={24} />
+      <div
+        className={`rogym-sidebar__logo flex h-12 shrink-0 items-center border-b border-line-subtle ${
+          showLabels ? 'gap-2.5 px-3' : 'justify-center px-0'
+        }`}
+      >
+        <NavLink to={homePath} className="flex min-w-0 items-center gap-2.5">
+          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Brand mark icon wrapper] */}
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-action-accent font-bold text-text-inverse">
+            <GraduationCap size={18} />
           </div>
-          {expanded && (
-            <div className="truncate">
-              <span className="font-extrabold text-base tracking-tight text-text-primary block">
-                mooc-clone
+          {showLabels ? (
+            /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Sidebar brand text stack] */
+            <div className="min-w-0 truncate">
+              <span className="block text-sm font-bold leading-tight tracking-tight text-text-primary">
+                MOOC Clone
               </span>
-              <span className="text-[11px] text-text-muted block">
-                Online Quiz & Exam
+              <span className="block text-[10px] leading-tight text-text-muted">
+                Cổng thi trực tuyến
               </span>
             </div>
-          )}
+          ) : null}
         </NavLink>
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto px-2 py-4">
-        <SidebarNav sections={sections} expanded={expanded} />
+      <div className={`flex-1 overflow-y-auto py-2 ${showLabels ? 'px-1.5' : 'px-1'}`}>
+        <SidebarNav sections={sections} expanded={showLabels} />
       </div>
     </aside>
   )

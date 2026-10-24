@@ -63,6 +63,8 @@ function customToast(message: React.ReactNode, tone: NotificationTone, options?:
   }
 
   const className = ['rogym-sonner-toast', options?.className].filter(Boolean).join(' ')
+  // Do not forward `description` — custom toast only shows `message` (avoids names leaking into the toast UI)
+  const { description: _description, className: _className, action, ...restOptions } = options ?? {}
 
   return sonnerToast.custom(
     (t) => (
@@ -71,20 +73,18 @@ function customToast(message: React.ReactNode, tone: NotificationTone, options?:
         message={message}
         icon={options?.icon || getIcon(tone)}
         action={
-          options?.action ? (
+          action ? (
             <Button
               variant="link"
               tone="accent"
               size="sm"
               onClick={(e) => {
-                if (options.action?.onClick) {
-                  options.action.onClick(e)
-                }
+                action.onClick(e)
                 sonnerToast.dismiss(t)
               }}
               className="rogym-text-link rogym-text-link--accent text-sm font-semibold h-auto p-0"
             >
-              {options.action.label}
+              {action.label}
             </Button>
           ) : undefined
         }
@@ -97,7 +97,7 @@ function customToast(message: React.ReactNode, tone: NotificationTone, options?:
         }}
       />
     ),
-    { ...options, className }
+    { ...restOptions, className, duration: options?.duration ?? 2000 }
   )
 }
 

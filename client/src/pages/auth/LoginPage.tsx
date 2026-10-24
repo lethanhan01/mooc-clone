@@ -1,27 +1,34 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, Lock, Mail } from 'lucide-react'
+import { GraduationCap, Lock, Mail, UserRound, BookOpen } from 'lucide-react'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
-import { SubmitButton } from '@/components/ui/actions'
+import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore, type Role } from '@/stores/authStore'
-import { authService } from '@/services/auth.service'
+import { useAuthStore } from '@/stores/authStore'
+import { DEMO_ACCOUNTS } from '@/services/mockData'
+import { getHomePathForRoles } from '@/stores/mockExamStore'
 import { toast } from '@/lib/toast'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('student@mooc.edu.vn')
-  const [password, setPassword] = useState('Password@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
 
+  function loginAs(kind: 'teacher' | 'student') {
+    const account = DEMO_ACCOUNTS[kind]
+    setAuth(account.user, `mock_token_${kind}`)
+    toast.success('Đăng nhập demo thành công')
+    navigate(getHomePathForRoles(account.user.roles))
+  }
+
   async function handleSubmit() {
     const newErrors: { email?: string; password?: string } = {}
-    if (!email.trim()) newErrors.email = 'Vui lòng nhập tài khoản / email'
+    if (!email.trim()) newErrors.email = 'Vui lòng nhập tên đăng nhập hoặc email'
     if (!password) newErrors.password = 'Vui lòng nhập mật khẩu'
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
@@ -29,72 +36,51 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const res = await authService.login({ email, password })
-      setAuth(res.user, res.token)
-      toast.success('Đăng nhập thành công!', { description: `Chào mừng trở lại, ${res.user.fullName}` })
-      navigate('/dashboard')
-    } catch {
-      // Mock login fallback if backend isn't reachable during offline dev
-      const mockUser = {
-        userId: 'u_mooc_01',
-        email: email,
-        fullName: 'Lê Thành An',
-        roles: ['student'] as Role[],
-        studentId: '20235631',
-        department: 'Khoa Công nghệ Thông tin',
+      const normalized = email.trim().toLowerCase()
+      const match = Object.values(DEMO_ACCOUNTS).find(
+        (a) => a.email.toLowerCase() === normalized && a.password === password
+      )
+      if (!match) {
+        setErrors({ password: 'Email hoặc mật khẩu không đúng (dùng tài khoản demo)' })
+        return
       }
-      setAuth(mockUser, 'mock_token_mooc_clone')
-      toast.info('Đang sử dụng phiên đăng nhập demo (Backend offline)', {
-        description: 'Đã cấp quyền truy cập tài khoản thí sinh thành công.',
-      })
-      navigate('/dashboard')
+      setAuth(match.user, `mock_token_${match.user.roles[0]}`)
+      toast.success('Đăng nhập thành công!')
+      navigate(getHomePathForRoles(match.user.roles))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card as="article" className="p-8 bg-surface border-line-subtle shadow-card rounded-2xl max-w-md w-full">
-      <div className="text-center mb-8">
-        <div className="mx-auto w-14 h-14 rounded-2xl bg-action-accent flex items-center justify-center text-text-inverse mb-4 shadow-sm">
-          <CheckCircle2 size={32} />
-        </div>
-        <Heading level={2} className="text-2xl font-extrabold tracking-tight text-text-primary">
-          mooc-clone
+    <Card as="article" className="p-8 bg-surface border-line-subtle shadow-card rounded-2xl w-full">
+      <header className="mb-6">
+        <Heading level={1} className="text-2xl font-extrabold tracking-tight text-text-primary">
+          Đăng nhập hệ thống
         </Heading>
         <Text size="sm" tone="muted" className="mt-1">
-          Hệ Thống Thi Trắc Nghiệm Trực Tuyến
+          Chào mừng bạn đến với Cổng thi trực tuyến
         </Text>
-      </div>
+      </header>
 
-      <Form onSubmit={handleSubmit} noValidate className="space-y-5">
-        <FormField
-          id="login-email"
-          label="Tài khoản / Email sinh viên"
-          error={errors.email}
-          required
-        >
+      <Form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <FormField id="login-email" label="Tên đăng nhập hoặc Email:" error={errors.email} required>
           <Input
             id="login-email"
-            aria-label="Tài khoản / Email sinh viên"
+            aria-label="Tên đăng nhập hoặc Email"
             type="email"
-            placeholder="student@mooc.edu.vn"
+            placeholder="taikhoan@mooc.edu.vn"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
               if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
             }}
             leftIcon={<Mail size={16} />}
-            autoComplete="email"
+            autoComplete="username"
           />
         </FormField>
 
-        <FormField
-          id="login-password"
-          label="Mật khẩu"
-          error={errors.password}
-          required
-        >
+        <FormField id="login-password" label="Mật khẩu:" error={errors.password} required>
           <Input
             id="login-password"
             aria-label="Mật khẩu"
@@ -110,14 +96,46 @@ export default function LoginPage() {
           />
         </FormField>
 
-        <SubmitButton
-          loading={loading}
-          variant="primary"
-          className="w-full justify-center mt-2"
-        >
-          Đăng nhập vào hệ thống
+        <SubmitButton loading={loading} variant="primary" className="w-full justify-center uppercase tracking-wide">
+          Đăng nhập
         </SubmitButton>
       </Form>
+
+      <footer className="mt-4 flex flex-col gap-3">
+        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Demo quick-login grid] */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-line-subtle pt-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            leftIcon={<GraduationCap size={16} />}
+            onClick={() => loginAs('teacher')}
+            className="justify-center"
+          >
+            Đăng nhập Giáo viên Demo
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            leftIcon={<BookOpen size={16} />}
+            onClick={() => loginAs('student')}
+            className="justify-center"
+          >
+            Đăng nhập Học sinh Demo
+          </Button>
+        </div>
+
+        <Text size="sm" tone="muted" className="text-center mt-2">
+          Bạn chưa có tài khoản?{' '}
+          <ButtonLink to="/register" variant="ghost" size="sm" className="inline px-1 text-action-accent">
+            Đăng ký ngay
+          </ButtonLink>
+        </Text>
+        <Text size="xs" tone="muted" className="text-center flex items-center justify-center gap-1">
+          <UserRound size={12} /> teacher@mooc.edu.vn / student@mooc.edu.vn · Password@123
+        </Text>
+      </footer>
     </Card>
   )
 }

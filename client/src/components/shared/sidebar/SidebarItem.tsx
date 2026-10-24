@@ -26,6 +26,7 @@ export function SidebarItem({
     : null
 
   return (
+    /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Sidebar item + optional subnav] */
     <div>
       <NavLink
         to={item.to}
@@ -33,67 +34,57 @@ export function SidebarItem({
         title={!expanded ? item.label : undefined}
         className={({ isActive }) => {
           const active = hasChildren ? groupActive : isActive
-          return `rogym-sidebar__nav-link rogym-sweep flex items-center py-2.5 rounded-xl text-sm font-medium ${
-            expanded ? 'px-3' : 'justify-center px-0'
+          return `rogym-sidebar__nav-link flex items-center rounded-md py-1.5 text-[13px] font-medium ${
+            expanded ? 'gap-2 px-2.5' : 'justify-center px-0'
           } ${
             active
               ? 'bg-action-accent-soft text-action-accent font-semibold'
-              : 'text-fg-secondary hover:text-fg-primary'
+              : 'text-fg-secondary hover:bg-surface-hover hover:text-fg-primary'
           }`
         }}
       >
-        <span className="shrink-0 relative">
-          {item.icon}
-          {!expanded && Boolean(badgeContent) && (
-            <Badge
-              tone="danger"
-              emphasis="solid"
-              size="sm"
-              className="absolute -top-1 -right-1.5 h-4 min-w-4 p-0 px-1 text-[10px] flex items-center justify-center font-bold"
-            >
-              {badgeContent}
-            </Badge>
-          )}
-        </span>
-        <span className="rogym-sidebar__label flex-1 flex items-center justify-between">
-          <span>{item.label}</span>
-          {expanded && Boolean(badgeContent) && (
-            <Badge
-              tone="danger"
-              emphasis="solid"
-              size="sm"
-              className="ml-2 h-4 min-w-4 p-0 px-1.5 text-[10px] flex items-center justify-center font-bold"
-            >
-              {badgeContent}
-            </Badge>
-          )}
-        </span>
+        <span className="relative shrink-0 [&_svg]:size-4">{item.icon}</span>
+        {expanded ? (
+          <span className="rogym-sidebar__label flex flex-1 items-center justify-between">
+            <span>{item.label}</span>
+            {badgeContent ? (
+              <Badge
+                tone="danger"
+                emphasis="solid"
+                size="sm"
+                className="ml-2 flex h-4 min-w-4 items-center justify-center p-0 px-1.5 text-[10px] font-bold"
+              >
+                {badgeContent}
+              </Badge>
+            ) : null}
+          </span>
+        ) : null}
       </NavLink>
 
-      {/* Sub-items — hiển thị khi expanded VÀ group đang active */}
-      {hasChildren && (
+      {hasChildren ? (
         <div className={`rogym-sidebar__subnav ${showChildren ? 'is-open' : ''}`}>
-          <div className="flex flex-col gap-0.5 pl-3 pr-1 pt-1 pb-1">
+          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Subnav list] */}
+          <div className="flex flex-col gap-0.5 py-0.5 pl-2.5 pr-1">
             {item.children!.map((child) => (
               <NavLink
                 key={child.to}
                 to={child.to}
                 end
                 className={({ isActive }) =>
-                  `rogym-sweep flex h-8 items-center rounded-lg px-3 text-xs font-medium ${
+                  `flex h-7 items-center rounded-md px-2.5 text-xs font-medium ${
                     isActive
-                      ? 'bg-action-accent-soft text-action-accent font-semibold'
-                      : 'text-fg-secondary hover:text-fg-primary'
+                      ? 'bg-action-accent-soft font-semibold text-action-accent'
+                      : 'text-fg-secondary hover:bg-surface-hover hover:text-fg-primary'
                   }`
                 }
               >
-                <span className="mr-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-60" />
+                <span className="mr-2 inline-block h-1 w-1 shrink-0 rounded-full bg-current opacity-60" />
                 {child.label}
               </NavLink>
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
