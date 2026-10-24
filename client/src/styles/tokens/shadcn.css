@@ -31,7 +31,7 @@
     --border: var(--color-line-subtle);
     --input: var(--color-line-default);
     --ring: var(--color-focus-ring);
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Sidebar tokens */
     --sidebar: var(--color-surface-card);

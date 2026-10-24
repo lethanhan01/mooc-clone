@@ -22,24 +22,20 @@
     --rogym-duration-link: 280ms;
     --rogym-duration-image: 650ms;
 
-    /* Elevation & Shadows (100% HEX with alpha) */
-    --shadow-primary: 0 8px 24px -4px #06c3844d;
-    --shadow-card: 0 24px 56px -12px #06c38433;
-    --shadow-glass:
-      0 24px 64px #0000008c,
-      inset 0 1px 0 #ffffff0d;
-    --shadow-tone-sm: 0 0 12px #06c38459;
-    --shadow-tone-md: 0 0 15px #06c38466;
-    --shadow-warning-glow: 0 0 16px #f59e0b59;
+    /* Elevation & Shadows — enterprise / ERP (subtle) */
+    --shadow-primary: 0 1px 2px #00000014;
+    --shadow-card: 0 1px 3px #00000012;
+    --shadow-glass: 0 1px 2px #00000010;
+    --shadow-tone-sm: 0 1px 2px #0d948833;
+    --shadow-tone-md: 0 1px 3px #0d948840;
+    --shadow-warning-glow: 0 1px 2px #f59e0b33;
 
-    --rogym-shadow-primary: 0 8px 24px -4px #06c3844d;
-    --rogym-shadow-card: 0 24px 56px -12px #06c38433;
-    --rogym-shadow-glass:
-      0 24px 64px #0000008c,
-      inset 0 1px 0 #ffffff0d;
-    --rogym-shadow-tone-sm: 0 0 12px #06c38459;
-    --rogym-shadow-tone-md: 0 0 15px #06c38466;
-    --rogym-shadow-warning-glow: 0 0 16px #f59e0b59;
+    --rogym-shadow-primary: 0 1px 2px #00000014;
+    --rogym-shadow-card: 0 1px 3px #00000012;
+    --rogym-shadow-glass: 0 1px 2px #00000010;
+    --rogym-shadow-tone-sm: 0 1px 2px #0d948833;
+    --rogym-shadow-tone-md: 0 1px 3px #0d948840;
+    --rogym-shadow-warning-glow: 0 1px 2px #f59e0b33;
 
     /* Gradients */
     --rogym-gradient-photo-overlay:
@@ -55,10 +51,10 @@
         transparent 50%
       );
 
-    /* Radius Scale */
-    --radius-sm: 0.375rem;
+    /* Radius Scale — denser ERP (8–10px preferred) */
+    --radius-sm: 0.25rem;
     --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
+    --radius-lg: 0.625rem;
     --radius-full: 9999px;
 
     /* Standard 5-Tier Z-Index Scale (SEM-TOKEN-010) */

@@ -10,14 +10,16 @@ export function SidebarNav({
   expanded: boolean
 }>) {
   return (
-    <nav className="flex flex-col gap-1 px-2">
+    <nav className="flex flex-col gap-0.5 px-0.5">
       {sections.map((section, si) => (
+        /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Nav section group] */
         <div
           key={section.label ?? section.items[0]?.to ?? `nav-section-${si}`}
-          className={si > 0 ? 'mt-1' : ''}
+          className={si > 0 ? 'mt-1.5 border-t border-line-subtle pt-1.5' : ''}
         >
-          {section.label && <SidebarSection label={section.label} />}
-          <div className="flex flex-col gap-1">
+          {section.label ? <SidebarSection label={section.label} /> : null}
+          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Nav items stack] */}
+          <div className="flex flex-col gap-0.5">
             {section.items.map((item) => (
               <SidebarItem key={item.to} item={item} expanded={expanded} />
             ))}

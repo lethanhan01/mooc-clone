@@ -11,12 +11,13 @@ function defaultRole(tone: NotificationTone): AriaRole {
 }
 
 const NOTIFICATION_TOAST_TONE_CLASS: Record<string, string> = {
-  success: 'border-status-success-border bg-status-success-surface text-fg-primary',
-  danger: 'border-status-danger-border bg-status-danger-surface text-fg-primary',
-  error: 'border-status-danger-border bg-status-danger-surface text-fg-primary',
-  warning: 'border-status-warning-border bg-status-warning-surface text-fg-primary',
-  info: 'border-status-info-border bg-status-info-surface text-fg-primary',
-  accent: 'border-line-accent-subtle bg-action-accent-soft text-fg-primary',
+  // Use *-surface (opaque) — never *-bg (8-digit alpha) so page content cannot bleed through
+  success: 'border-status-success-border bg-status-success-surface text-status-success-fg',
+  danger: 'border-status-danger-border bg-status-danger-surface text-status-danger-fg',
+  error: 'border-status-danger-border bg-status-danger-surface text-status-danger-fg',
+  warning: 'border-status-warning-border bg-status-warning-surface text-status-warning-fg',
+  info: 'border-status-info-border bg-status-info-surface text-status-info-fg',
+  accent: 'border-line-accent-subtle bg-surface-card text-fg-primary',
   neutral: 'border-line-subtle bg-surface-elevated text-fg-primary',
 }
 
@@ -39,7 +40,7 @@ export function NotificationToast({
   return (
     <div
       className={cn(
-        'rogym-notification-toast grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 rounded-lg border p-3 sm:px-4 shadow-glass text-sm font-semibold',
+        'rogym-notification-toast grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 rounded-lg border p-3 sm:px-4 text-sm font-semibold opacity-100 shadow-card isolate',
         toneClass
       )}
       data-tone={tone}

@@ -175,7 +175,8 @@
     --color-status-success-fg: var(--primitive-green-light-fg);
     --color-status-success-bg: var(--primitive-green-light-bg);
     --color-status-success-border: var(--primitive-green-light-border);
-    --color-status-success-surface: var(--primitive-white);
+    /* Opaque toast/panel fills — solid light tints (no alpha bleed-through) */
+    --color-status-success-surface: var(--primitive-green-light-bg);
 
     /* Status: Warning Light */
     --color-status-warning-solid: var(--primitive-amber-600);
@@ -183,7 +184,7 @@
     --color-status-warning-fg: var(--primitive-amber-800);
     --color-status-warning-bg: var(--primitive-amber-light-bg);
     --color-status-warning-border: var(--primitive-amber-light-border);
-    --color-status-warning-surface: var(--primitive-white);
+    --color-status-warning-surface: var(--primitive-amber-light-bg);
 
     /* Status: Danger Light */
     --color-status-danger-solid: var(--primitive-red-600);
@@ -191,7 +192,7 @@
     --color-status-danger-fg: var(--primitive-red-800);
     --color-status-danger-bg: var(--primitive-red-light-bg);
     --color-status-danger-border: var(--primitive-red-light-border);
-    --color-status-danger-surface: var(--primitive-white);
+    --color-status-danger-surface: var(--primitive-red-light-bg);
 
     /* Status: Info Light */
     --color-status-info-solid: var(--primitive-blue-600);
@@ -199,7 +200,7 @@
     --color-status-info-fg: var(--primitive-blue-800);
     --color-status-info-bg: var(--primitive-blue-light-bg);
     --color-status-info-border: var(--primitive-blue-light-border);
-    --color-status-info-surface: var(--primitive-white);
+    --color-status-info-surface: var(--primitive-blue-light-bg);
 
     /* Status: Neutral Light */
     --color-status-neutral-solid: var(--primitive-gray-600);
@@ -207,7 +208,7 @@
     --color-status-neutral-fg: var(--primitive-gray-700);
     --color-status-neutral-bg: var(--primitive-gray-light-bg);
     --color-status-neutral-border: var(--primitive-gray-light-border);
-    --color-status-neutral-surface: var(--primitive-white);
+    --color-status-neutral-surface: var(--primitive-gray-light-bg);
 
     /* Status: Accent Light */
     --color-status-accent-solid: var(--primitive-purple-600);
@@ -215,7 +216,7 @@
     --color-status-accent-fg: var(--primitive-purple-800);
     --color-status-accent-bg: var(--primitive-purple-light-bg);
     --color-status-accent-border: var(--primitive-purple-light-border);
-    --color-status-accent-surface: var(--primitive-white);
+    --color-status-accent-surface: var(--primitive-purple-light-bg);
 
     /* Charts & Data Visualization Light */
     --color-chart-1: var(--primitive-green-600);

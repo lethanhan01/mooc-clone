@@ -5,8 +5,6 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/data-display'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/navigation'
-import { LanguageSwitcher } from '@/components/ui/typography'
-import { ThemeToggle } from '@/components/ui/navigation'
 import { QuickComponentFinder } from './showcase/components/QuickComponentFinder'
 import { ButtonsShowcase } from './showcase/sections/ButtonsShowcase'
 import { FormsShowcase } from './showcase/sections/FormsShowcase'
@@ -31,31 +29,34 @@ export default function DesignSystemShowcasePage() {
   }, [])
 
   return (
+    /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Showcase page stack under DashboardLayout] */
     <div
-      className="min-h-screen bg-[var(--rogym-bg-base)] text-text-primary p-4 sm:p-8 space-y-10"
+      className="space-y-5 text-text-primary"
       style={{ '--rogym-tone': activeTone } as React.CSSProperties}
     >
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-line-subtle pb-6">
+      {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Showcase header] */}
+      <div className="flex flex-col justify-between gap-3 border-b border-line-subtle pb-3 md:flex-row md:items-center">
+        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Title block] */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex h-3 w-3 rounded-full bg-action-accent animate-pulse" />
-            <Badge tone="accent">SQB HUST UI Design System v2.0</Badge>
-            <ThemeToggle />
-            <LanguageSwitcher />
+          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Badge row] */}
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-action-accent" />
+            <Badge tone="accent">MOOC UI Design System v2.0</Badge>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text-primary sm:text-4xl">
+          <h1 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
             Design System & Component Showcase
           </h1>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="mt-0.5 text-xs text-text-muted">
             Thư viện thành phần giao diện chuẩn hóa, Interactive Prop Playgrounds và Semantic Primitives.
           </p>
         </div>
 
         {/* Global Tone Color Picker Playground */}
-        <div className="flex items-center gap-3 bg-surface p-3 rounded-2xl border border-line-subtle shrink-0">
-          <Zap className="h-4 w-4 text-action-accent" />
-          <span className="text-xs font-medium text-text-secondary">Tone Thử Nghiệm:</span>
+        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Tone picker] */}
+        <div className="flex shrink-0 items-center gap-2 rounded-lg border border-line-subtle bg-surface px-2.5 py-1.5">
+          <Zap className="h-3.5 w-3.5 text-action-accent" />
+          <span className="text-[11px] font-medium text-text-secondary">Tone:</span>
           <div className="flex gap-1.5">
             {[
               { label: 'Neon Green', hex: '#06c384' },

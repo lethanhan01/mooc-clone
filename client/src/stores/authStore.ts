@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { DEMO_STUDENT, DEMO_TEACHER } from '@/services/mockData'
 
 export type Role = 'student' | 'teacher' | 'admin' | 'user'
 
@@ -12,6 +13,14 @@ export interface AuthUser {
   studentId?: string | null
   department?: string | null
   memberId?: string | null
+}
+
+/** Keep persisted demo sessions in sync when mock display names change. */
+function syncDemoUser(user: AuthUser | null): AuthUser | null {
+  if (!user) return null
+  if (user.userId === DEMO_TEACHER.userId) return { ...user, ...DEMO_TEACHER }
+  if (user.userId === DEMO_STUDENT.userId) return { ...user, ...DEMO_STUDENT }
+  return user
 }
 
 export type LogoutListener = () => void
@@ -82,6 +91,12 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          const synced = syncDemoUser(state.user)
+          if (synced && synced !== state.user) {
+            state.setUser(synced)
+          }
+        }
         state?.setHasHydrated(true)
       },
     }
