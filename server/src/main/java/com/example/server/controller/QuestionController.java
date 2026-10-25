@@ -3,11 +3,15 @@ package com.example.server.controller;
 import com.example.server.dto.common.ApiResponse;
 import com.example.server.dto.question.CreateQuestionRequest;
 import com.example.server.dto.question.QuestionResponse;
+import com.example.server.dto.question.UpdateQuestionRequest;
 import com.example.server.entity.QuestionEntity;
 import com.example.server.service.QuestionService;
+import com.example.server.util.SpecificationBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Controller quản lý Ngân hàng câu hỏi kế thừa trọn vẹn 5 API CRUD chuẩn từ BaseController.
@@ -25,10 +30,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/questions")
 @Tag(name = "Questions", description = "Quản lý ngân hàng câu hỏi và phương án trắc nghiệm (Kế thừa BaseController)")
-public class QuestionController extends BaseController<QuestionEntity, Long, CreateQuestionRequest, QuestionResponse, QuestionService> {
+public class QuestionController extends BaseController<QuestionEntity, Long, CreateQuestionRequest, UpdateQuestionRequest, QuestionResponse, QuestionService> {
 
     public QuestionController(QuestionService service) {
         super(service);
+    }
+
+    @Override
+    protected Specification<QuestionEntity> buildSpecification(HttpServletRequest request) {
+        return SpecificationBuilder.fromRequest(
+                request,
+                Set.of("status", "difficulty", "questionType"),
+                Set.of("topic", "content")
+        );
     }
 
     @GetMapping("/topic/{topic}")
@@ -47,7 +61,7 @@ public class QuestionController extends BaseController<QuestionEntity, Long, Cre
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật nội dung câu hỏi (Dành riêng cho ADMIN)")
-    public ResponseEntity<ApiResponse<QuestionResponse>> update(@PathVariable Long id, @Valid @RequestBody CreateQuestionRequest request) {
+    public ResponseEntity<ApiResponse<QuestionResponse>> update(@PathVariable Long id, @Valid @RequestBody UpdateQuestionRequest request) {
         return super.update(id, request);
     }
 

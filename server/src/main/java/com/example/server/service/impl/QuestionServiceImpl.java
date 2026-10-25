@@ -3,11 +3,10 @@ package com.example.server.service.impl;
 import com.example.server.dto.question.CreateQuestionRequest;
 import com.example.server.dto.question.QuestionOptionResponse;
 import com.example.server.dto.question.QuestionResponse;
+import com.example.server.dto.question.UpdateQuestionRequest;
 import com.example.server.entity.QuestionEntity;
 import com.example.server.entity.QuestionOptionEntity;
 import com.example.server.entity.enums.QuestionStatus;
-import com.example.server.exception.AppException;
-import com.example.server.exception.ErrorCode;
 import com.example.server.repository.QuestionRepository;
 import com.example.server.service.QuestionService;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,8 @@ import java.util.List;
 
 @Service
 @Transactional
-public class QuestionServiceImpl extends BaseServiceImpl<QuestionEntity, Long, CreateQuestionRequest, QuestionResponse, QuestionRepository>
+public class QuestionServiceImpl
+        extends BaseServiceImpl<QuestionEntity, Long, CreateQuestionRequest, UpdateQuestionRequest, QuestionResponse, QuestionRepository>
         implements QuestionService {
 
     public QuestionServiceImpl(QuestionRepository repository) {
@@ -67,16 +67,35 @@ public class QuestionServiceImpl extends BaseServiceImpl<QuestionEntity, Long, C
     }
 
     @Override
-    protected void updateEntityFromDto(CreateQuestionRequest request, QuestionEntity entity) {
+    protected void updateEntityFromDto(UpdateQuestionRequest request, QuestionEntity entity) {
         if (request.topic() != null) entity.setTopic(request.topic());
         if (request.difficulty() != null) entity.setDifficulty(request.difficulty());
+        if (request.questionType() != null) entity.setQuestionType(request.questionType());
         if (request.content() != null) entity.setContent(request.content());
+        if (request.status() != null) entity.setStatus(request.status());
+
+        if (request.options() != null && !request.options().isEmpty()) {
+            if (entity.getOptions() != null) {
+                entity.getOptions().clear();
+            }
+            List<QuestionOptionEntity> options = request.options().stream().map(optReq -> {
+                QuestionOptionEntity opt = new QuestionOptionEntity();
+                opt.setQuestion(entity);
+                opt.setContent(optReq.content());
+                opt.setPosition(optReq.position());
+                opt.setCorrect(optReq.isCorrect());
+                return opt;
+            }).toList();
+            if (entity.getOptions() != null) {
+                entity.getOptions().addAll(options);
+            } else {
+                entity.setOptions(options);
+            }
+        }
     }
 
     @Override
-    public void deleteById(Long id) {
-        QuestionEntity question = repository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy câu hỏi với ID: " + id));
+    protected void doDelete(QuestionEntity question) {
         question.setStatus(QuestionStatus.ARCHIVED);
         repository.save(question);
     }

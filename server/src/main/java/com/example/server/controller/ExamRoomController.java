@@ -4,10 +4,14 @@ import com.example.server.dto.common.ApiResponse;
 import com.example.server.dto.room.CreateRoomRequest;
 import com.example.server.dto.room.RoomDetailResponse;
 import com.example.server.dto.room.RoomSummaryDto;
+import com.example.server.dto.room.UpdateRoomRequest;
 import com.example.server.entity.ExamRoomEntity;
 import com.example.server.service.RoomService;
+import com.example.server.util.SpecificationBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Controller quản lý Phòng thi trực tuyến kế thừa 5 API CRUD chuẩn từ BaseController
@@ -26,10 +31,19 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/rooms")
 @Tag(name = "Exam Rooms", description = "Quản lý vòng đời phòng thi trắc nghiệm (Kế thừa BaseController)")
-public class ExamRoomController extends BaseController<ExamRoomEntity, Long, CreateRoomRequest, RoomSummaryDto, RoomService> {
+public class ExamRoomController extends BaseController<ExamRoomEntity, Long, CreateRoomRequest, UpdateRoomRequest, RoomSummaryDto, RoomService> {
 
     public ExamRoomController(RoomService service) {
         super(service);
+    }
+
+    @Override
+    protected Specification<ExamRoomEntity> buildSpecification(HttpServletRequest request) {
+        return SpecificationBuilder.fromRequest(
+                request,
+                Set.of("status", "visibility"),
+                Set.of("name", "topic", "roomCode")
+        );
     }
 
     @PostMapping("/{roomCode}/join")

@@ -2,6 +2,7 @@ package com.example.server.dto.room;
 
 import com.example.server.entity.enums.RoomStatus;
 import com.example.server.entity.enums.RoomVisibility;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
 public record UpdateRoomRequest(
@@ -10,11 +11,11 @@ public record UpdateRoomRequest(
 
         String description,
         String topic,
-        Integer easyCount,
-        Integer mediumCount,
-        Integer hardCount,
         RoomVisibility visibility,
         RoomStatus status,
+
+        @Min(value = 60, message = "Thời lượng tối thiểu 60 giây")
         Integer durationSeconds,
+
         Integer maxParticipants
 ) {}

@@ -17,6 +17,7 @@ import com.example.server.service.RoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.server.dto.room.UpdateRoomRequest;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -26,7 +27,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, CreateRoomRequest, RoomSummaryDto, ExamRoomRepository>
+public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, CreateRoomRequest, UpdateRoomRequest, RoomSummaryDto, ExamRoomRepository>
         implements RoomService {
 
     private final RoomMemberRepository memberRepository;
@@ -147,11 +148,14 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
     }
 
     @Override
-    protected ExamRoomEntity toEntity(CreateRoomRequest request) {
+    protected void beforeCreate(CreateRoomRequest request) {
         if (repository.existsByRoomCode(request.roomCode())) {
             throw new AppException(ErrorCode.INVALID_KEY, "Mã phòng đã tồn tại: " + request.roomCode());
         }
+    }
 
+    @Override
+    protected ExamRoomEntity toEntity(CreateRoomRequest request) {
         ExamRoomEntity entity = new ExamRoomEntity();
         entity.setRoomCode(request.roomCode());
         entity.setName(request.name());
@@ -190,15 +194,13 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
     }
 
     @Override
-    protected void updateEntityFromDto(CreateRoomRequest request, ExamRoomEntity entity) {
+    protected void updateEntityFromDto(UpdateRoomRequest request, ExamRoomEntity entity) {
         if (request.name() != null) entity.setName(request.name());
         if (request.description() != null) entity.setDescription(request.description());
         if (request.topic() != null) entity.setTopic(request.topic());
-        entity.setEasyCount(request.easyCount());
-        entity.setMediumCount(request.mediumCount());
-        entity.setHardCount(request.hardCount());
         if (request.visibility() != null) entity.setVisibility(request.visibility());
-        entity.setDurationSeconds(request.durationSeconds());
+        if (request.status() != null) entity.setStatus(request.status());
+        if (request.durationSeconds() != null) entity.setDurationSeconds(request.durationSeconds());
         if (request.maxParticipants() != null) entity.setMaxParticipants(request.maxParticipants());
     }
 }

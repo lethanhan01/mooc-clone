@@ -1,6 +1,7 @@
 package com.example.server.service.impl;
 
 import com.example.server.dto.user.CreateUserRequest;
+import com.example.server.dto.user.UpdateUserRequest;
 import com.example.server.dto.user.UserResponse;
 import com.example.server.entity.UserEntity;
 import com.example.server.entity.enums.SystemRole;
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
-public class UserServiceImpl extends BaseServiceImpl<UserEntity, Long, CreateUserRequest, UserResponse, UserRepository>
+public class UserServiceImpl
+        extends BaseServiceImpl<UserEntity, Long, CreateUserRequest, UpdateUserRequest, UserResponse, UserRepository>
         implements UserService {
 
     private final PasswordEncoder passwordEncoder;
@@ -34,10 +36,14 @@ public class UserServiceImpl extends BaseServiceImpl<UserEntity, Long, CreateUse
     }
 
     @Override
-    protected UserEntity toEntity(CreateUserRequest request) {
+    protected void beforeCreate(CreateUserRequest request) {
         if (repository.existsByUsername(request.username())) {
             throw new AppException(ErrorCode.USER_EXISTED, "Tên người dùng đã tồn tại: " + request.username());
         }
+    }
+
+    @Override
+    protected UserEntity toEntity(CreateUserRequest request) {
         UserEntity entity = new UserEntity();
         entity.setUsername(request.username());
         entity.setEmail(request.email());
@@ -63,7 +69,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserEntity, Long, CreateUse
     }
 
     @Override
-    protected void updateEntityFromDto(CreateUserRequest request, UserEntity entity) {
+    protected void updateEntityFromDto(UpdateUserRequest request, UserEntity entity) {
         if (request.displayName() != null) entity.setDisplayName(request.displayName());
         if (request.email() != null) entity.setEmail(request.email());
         if (request.password() != null && !request.password().isBlank()) {

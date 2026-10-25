@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface QuestionRepository extends JpaRepository<QuestionEntity, Long> {
+public interface QuestionRepository extends BaseRepository<QuestionEntity, Long> {
     List<QuestionEntity> findByTopicAndDifficultyAndStatus(String topic, DifficultyLevel difficulty, QuestionStatus status);
     List<QuestionEntity> findByStatus(QuestionStatus status);
     List<QuestionEntity> findByTopicAndStatus(String topic, QuestionStatus status);
