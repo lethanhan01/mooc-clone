@@ -43,36 +43,13 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
     public RoomSummaryDto joinRoom(String roomCode, String usernameOrId, String displayName) {
         String safeRoomCode = roomCode.length() > 12 ? roomCode.substring(0, 12) : roomCode;
 
-        // 1. Tìm hoặc tự động khởi tạo User cho kênh Socket & Testing
+        // 1. Kiểm tra User bắt buộc phải tồn tại trong CSDL
         UserEntity user = userRepository.findByUsername(usernameOrId)
-                .orElseGet(() -> {
-                    UserEntity newUser = new UserEntity();
-                    newUser.setUsername(usernameOrId.length() > 50 ? usernameOrId.substring(0, 50) : usernameOrId);
-                    newUser.setDisplayName(displayName != null && !displayName.isBlank() ? displayName : usernameOrId);
-                    newUser.setEmail(usernameOrId + "@exam.local");
-                    newUser.setPasswordHash("auth_token_hash_auto");
-                    newUser.setSystemRole(com.example.server.entity.enums.SystemRole.USER);
-                    newUser.setStatus(com.example.server.entity.enums.UserStatus.ACTIVE);
-                    return userRepository.save(newUser);
-                });
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED, "Không tìm thấy người dùng: " + usernameOrId));
 
-        // 2. Tìm hoặc tự động khởi tạo ExamRoom cho kênh Socket & Testing
+        // 2. Kiểm tra ExamRoom bắt buộc phải tồn tại trong CSDL
         ExamRoomEntity room = repository.findByRoomCode(safeRoomCode)
-                .orElseGet(() -> {
-                    ExamRoomEntity newRoom = new ExamRoomEntity();
-                    newRoom.setRoomCode(safeRoomCode);
-                    newRoom.setName("Phòng thi " + safeRoomCode);
-                    newRoom.setDescription("Phòng thi trắc nghiệm trực tuyến mã " + safeRoomCode);
-                    newRoom.setOwner(user);
-                    newRoom.setTopic("Lập Trình Mạng");
-                    newRoom.setEasyCount(5);
-                    newRoom.setMediumCount(3);
-                    newRoom.setHardCount(2);
-                    newRoom.setVisibility(com.example.server.entity.enums.RoomVisibility.PUBLIC);
-                    newRoom.setStatus(RoomStatus.WAITING);
-                    newRoom.setDurationSeconds(300);
-                    return repository.save(newRoom);
-                });
+                .orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_FOUND, "Không tìm thấy phòng thi với mã: " + safeRoomCode));
 
         if (room.getStatus() == RoomStatus.ENDED || room.getStatus() == RoomStatus.CANCELLED) {
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Phòng thi đã kết thúc hoặc bị hủy");

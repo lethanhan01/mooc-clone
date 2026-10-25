@@ -80,4 +80,12 @@ public class QuestionServiceImpl extends BaseServiceImpl<QuestionEntity, Long, C
         question.setStatus(QuestionStatus.ARCHIVED);
         repository.save(question);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuestionResponse> findByTopic(String topic) {
+        return repository.findByTopicAndStatus(topic, QuestionStatus.ACTIVE).stream()
+                .map(this::toResponseDto)
+                .toList();
+    }
 }

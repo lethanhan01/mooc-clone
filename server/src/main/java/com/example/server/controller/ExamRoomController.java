@@ -66,10 +66,23 @@ public class ExamRoomController extends BaseController<ExamRoomEntity, Long, Cre
         return ResponseEntity.ok(ApiResponse.success(detail));
     }
 
+    @GetMapping("/code/{code}")
+    @Operation(summary = "Alias tra cứu chi tiết phòng thi theo mã phòng (Tương thích RESTful)")
+    public ResponseEntity<ApiResponse<RoomDetailResponse>> getByCode(@PathVariable String code) {
+        return getRoomDetail(code);
+    }
+
     @PostMapping("/{roomCode}/finish")
     @Operation(summary = "Kết thúc phòng thi")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> finishRoom(@PathVariable String roomCode) {
         Map<String, Integer> results = service.finishRoom(roomCode);
         return ResponseEntity.ok(ApiResponse.success("Phòng thi đã kết thúc", results));
+    }
+
+    @Override
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Hủy phòng thi (Dành riêng cho ADMIN)")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        return super.delete(id);
     }
 }

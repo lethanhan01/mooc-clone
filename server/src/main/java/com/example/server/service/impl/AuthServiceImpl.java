@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         UserEntity user = userRepository.findByUsername(request.usernameOrEmail())
                 .or(() -> userRepository.findByEmail(request.usernameOrEmail()))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED, "Tài khoản hoặc mật khẩu không chính xác"));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Tài khoản hoặc mật khẩu không chính xác"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Tài khoản hiện đang bị khóa");

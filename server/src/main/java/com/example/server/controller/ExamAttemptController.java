@@ -4,11 +4,11 @@ import com.example.server.dto.attempt.AttemptResultResponse;
 import com.example.server.dto.attempt.StartAttemptRequest;
 import com.example.server.dto.attempt.SubmitAnswerRequest;
 import com.example.server.dto.common.ApiResponse;
-import com.example.server.entity.ExamAttemptEntity;
 import com.example.server.service.ExamAttemptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,16 +18,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller quản lý Lượt thi và Chấm điểm kế thừa 5 API CRUD chuẩn từ BaseController
- * và mở rộng các hành vi nộp câu trả lời, nộp bài thi, xem kết quả.
+ * Controller nghiệp vụ chuyên biệt quản lý Lượt thi và Chấm điểm trực tuyến.
+ * Độc lập hoàn toàn với BaseController nhằm bảo vệ tính toàn vẹn và bảo mật dữ liệu bài thi.
  */
 @RestController
 @RequestMapping("/api/attempts")
-@Tag(name = "Exam Attempts", description = "Quản lý lượt thi, nộp bài và kết quả chấm thi (Kế thừa BaseController)")
-public class ExamAttemptController extends BaseController<ExamAttemptEntity, Long, StartAttemptRequest, AttemptResultResponse, ExamAttemptService> {
+@Tag(name = "Exam Attempts", description = "Quản lý lượt thi, ghi nhận câu trả lời, nộp bài và tra cứu kết quả chấm thi")
+public class ExamAttemptController {
+
+    private final ExamAttemptService service;
 
     public ExamAttemptController(ExamAttemptService service) {
-        super(service);
+        this.service = service;
+    }
+
+    @PostMapping("/start")
+    @Operation(summary = "Khởi tạo lượt thi chính thức hoặc luyện tập")
+    public ResponseEntity<ApiResponse<AttemptResultResponse>> startAttempt(@Valid @RequestBody StartAttemptRequest request) {
+        AttemptResultResponse response = service.startAttempt(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Bắt đầu lượt thi thành công", response));
     }
 
     @PostMapping("/{id}/answers")

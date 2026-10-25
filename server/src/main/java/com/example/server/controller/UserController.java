@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "Users", description = "Quản lý tài khoản người dùng và phân quyền (Kế thừa BaseController)")
+@PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Users", description = "Quản lý tài khoản người dùng và phân quyền (Dành riêng cho ADMIN)")
 public class UserController extends BaseController<UserEntity, Long, CreateUserRequest, UserResponse, UserService> {
 
     public UserController(UserService service) {

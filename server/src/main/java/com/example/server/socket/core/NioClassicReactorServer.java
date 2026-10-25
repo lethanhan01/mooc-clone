@@ -34,7 +34,7 @@ public class NioClassicReactorServer implements SmartLifecycle, Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(NioClassicReactorServer.class);
 
-    private final int port;
+    private int port;
     private final RoomEventBus roomEventBus;
     private final PacketFramingDecoder decoder;
 
@@ -64,6 +64,9 @@ public class NioClassicReactorServer implements SmartLifecycle, Runnable {
             serverChannel.configureBlocking(false);
             serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             serverChannel.bind(new InetSocketAddress(port));
+            if (serverChannel.getLocalAddress() instanceof InetSocketAddress localAddress) {
+                this.port = localAddress.getPort();
+            }
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             workerPool = Executors.newFixedThreadPool(

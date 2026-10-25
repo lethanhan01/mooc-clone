@@ -50,9 +50,12 @@ public class SessionTokenAuthenticationFilter extends OncePerRequestFilter {
 
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                        // Cập nhật last_seen_at
-                        session.setLastSeenAt(OffsetDateTime.now());
-                        sessionRepository.save(session);
+                        // Cập nhật last_seen_at có giãn cách (> 5 phút / 300s) để tránh bão ghi CSDL
+                        OffsetDateTime now = OffsetDateTime.now();
+                        if (session.getLastSeenAt() == null || session.getLastSeenAt().isBefore(now.minusSeconds(300))) {
+                            session.setLastSeenAt(now);
+                            sessionRepository.save(session);
+                        }
                     }
                 }
             }

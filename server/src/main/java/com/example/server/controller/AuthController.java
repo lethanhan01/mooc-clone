@@ -6,12 +6,17 @@ import com.example.server.dto.auth.RegisterRequest;
 import com.example.server.dto.auth.UserProfileResponse;
 import com.example.server.dto.common.ApiResponse;
 import com.example.server.service.AuthService;
+import com.example.server.entity.UserEntity;
+import com.example.server.exception.AppException;
+import com.example.server.exception.ErrorCode;
+import com.example.server.security.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,14 +58,24 @@ public class AuthController {
         if (token != null) {
             authService.logout(token);
         }
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công", null));
     }
 
     @GetMapping("/me")
     @Operation(summary = "Lấy thông tin tài khoản đang đăng nhập")
-    public ResponseEntity<ApiResponse<UserProfileResponse>> getMe(HttpServletRequest request) {
-        String token = extractBearerToken(request);
-        UserProfileResponse profile = authService.getMe(token != null ? token : "");
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getMe() {
+        UserEntity user = SecurityUtil.getCurrentUser()
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn"));
+        UserProfileResponse profile = new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getDisplayName(),
+                user.getSystemRole().name(),
+                user.getStatus().name(),
+                user.getCreatedAt()
+        );
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
 

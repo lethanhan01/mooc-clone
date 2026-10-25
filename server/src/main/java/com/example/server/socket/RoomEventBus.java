@@ -75,13 +75,22 @@ public class RoomEventBus {
                     String userId = node.path("userId").asText("user_" + session.getSessionId().substring(0, 5));
                     String userName = node.path("userName").asText("Thí sinh " + userId);
 
-                    session.setCurrentRoomId(roomId);
-                    session.setUserId(userId);
-                    session.setUserName(userName);
-
-                    registerTcpChannelToRoom(roomId, session.getChannel());
-                    roomService.joinRoom(roomId, userId, userName);
-                    broadcastRoomUpdated(roomId);
+                    try {
+                        roomService.joinRoom(roomId, userId, userName);
+                        session.setCurrentRoomId(roomId);
+                        session.setUserId(userId);
+                        session.setUserName(userName);
+                        registerTcpChannelToRoom(roomId, session.getChannel());
+                        broadcastRoomUpdated(roomId);
+                    } catch (com.example.server.exception.AppException ae) {
+                        log.warn("[TCP JoinRoom Rejected] Session {}: {}", session.getSessionId(), ae.getMessage());
+                        String errPayload = objectMapper.writeValueAsString(Map.of(
+                                "error", ae.getErrorCode().name(),
+                                "message", ae.getMessage()
+                        ));
+                        ByteBuffer errFrame = PacketFramingEncoder.encode(ProtocolConstants.OP_ERROR, errPayload);
+                        sendToTcpChannel(session.getChannel(), errFrame);
+                    }
                 }
                 case ProtocolConstants.OP_LEAVE_ROOM -> {
                     String roomId = session.getCurrentRoomId();
@@ -140,12 +149,21 @@ public class RoomEventBus {
                     String userId = userNode.path("id").asText("ws_user_" + wsSession.getId().substring(0, 5));
                     String userName = userNode.path("name").asText("Thí sinh " + userId);
 
-                    wsUserMap.put(wsSession, userId);
-                    wsRoomMap.put(wsSession, roomId);
-
-                    registerWebSessionToRoom(roomId, wsSession);
-                    roomService.joinRoom(roomId, userId, userName);
-                    broadcastRoomUpdated(roomId);
+                    try {
+                        roomService.joinRoom(roomId, userId, userName);
+                        wsUserMap.put(wsSession, userId);
+                        wsRoomMap.put(wsSession, roomId);
+                        registerWebSessionToRoom(roomId, wsSession);
+                        broadcastRoomUpdated(roomId);
+                    } catch (com.example.server.exception.AppException ae) {
+                        log.warn("[WS JoinRoom Rejected] Session {}: {}", wsSession.getId(), ae.getMessage());
+                        String errJson = objectMapper.writeValueAsString(Map.of(
+                                "event", "error",
+                                "error", ae.getErrorCode().name(),
+                                "message", ae.getMessage()
+                        ));
+                        sendToWebSocketSession(wsSession, errJson);
+                    }
                 }
                 case "leave_room" -> {
                     String roomId = data.path("roomId").asText(wsRoomMap.get(wsSession));
@@ -314,6 +332,18 @@ public class RoomEventBus {
                 try {
                     channel.close();
                 } catch (IOException ignored) {}
+            }
+        }
+    }
+
+    private void sendToWebSocketSession(WebSocketSession session, String text) {
+        if (session != null && session.isOpen()) {
+            try {
+                synchronized (session) {
+                    session.sendMessage(new TextMessage(text));
+                }
+            } catch (IOException e) {
+                log.warn("Failed to write to WebSocket session, ignoring: {}", e.getMessage());
             }
         }
     }
