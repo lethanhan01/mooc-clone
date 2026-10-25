@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ExamAttemptServiceImpl implements ExamAttemptService {
+
+    private static final String ATTEMPT_NOT_FOUND_PREFIX = "Không tìm thấy lượt thi với ID: ";
+    private static final String PLEASE_LOGIN_MESSAGE = "Vui lòng đăng nhập";
 
     private final ExamAttemptRepository attemptRepository;
     private final AttemptAnswerRepository answerRepository;
@@ -63,7 +67,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         attempt.setMode(request.mode() != null ? request.mode() : AttemptMode.PRACTICE);
         attempt.setStatus(AttemptStatus.IN_PROGRESS);
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         attempt.setStartedAt(now);
 
         if (request.roomCode() != null && !request.roomCode().isBlank()) {
@@ -97,10 +101,10 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
     @Override
     public void submitAnswer(Long attemptId, Long questionId, Long selectedOptionId) {
         ExamAttemptEntity attempt = attemptRepository.findById(attemptId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy lượt thi với ID: " + attemptId));
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, ATTEMPT_NOT_FOUND_PREFIX + attemptId));
 
         UserEntity currentUser = SecurityUtil.getCurrentUser()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Vui lòng đăng nhập"));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, PLEASE_LOGIN_MESSAGE));
 
         if (!attempt.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền thao tác trên lượt thi của thí sinh khác");
@@ -110,7 +114,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Bài thi đã nộp hoặc đã kết thúc, không thể nộp thêm đáp án");
         }
 
-        if (attempt.getDeadlineAt() != null && OffsetDateTime.now().isAfter(attempt.getDeadlineAt())) {
+        if (attempt.getDeadlineAt() != null && OffsetDateTime.now(ZoneOffset.UTC).isAfter(attempt.getDeadlineAt())) {
             attempt.setStatus(AttemptStatus.TIMED_OUT);
             attemptRepository.save(attempt);
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Đã hết thời gian làm bài thi");
@@ -126,17 +130,17 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         } else {
             answer.setSelectedOption(null);
         }
-        answer.setAnsweredAt(OffsetDateTime.now());
+        answer.setAnsweredAt(OffsetDateTime.now(ZoneOffset.UTC));
         answerRepository.save(answer);
     }
 
     @Override
     public AttemptResultResponse submitExam(Long attemptId) {
         ExamAttemptEntity attempt = attemptRepository.findById(attemptId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy lượt thi với ID: " + attemptId));
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, ATTEMPT_NOT_FOUND_PREFIX + attemptId));
 
         UserEntity currentUser = SecurityUtil.getCurrentUser()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Vui lòng đăng nhập"));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, PLEASE_LOGIN_MESSAGE));
 
         if (!attempt.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền nộp bài thi của thí sinh khác");
@@ -144,7 +148,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
 
         if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
             attempt.setStatus(AttemptStatus.SUBMITTED);
-            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
             attempt.setSubmittedAt(now);
             attempt.setGradedAt(now);
             attemptRepository.save(attempt);
@@ -157,10 +161,10 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
     @Transactional(readOnly = true)
     public AttemptResultResponse getResult(Long attemptId) {
         ExamAttemptEntity attempt = attemptRepository.findById(attemptId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy lượt thi với ID: " + attemptId));
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, ATTEMPT_NOT_FOUND_PREFIX + attemptId));
 
         UserEntity currentUser = SecurityUtil.getCurrentUser()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Vui lòng đăng nhập"));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, PLEASE_LOGIN_MESSAGE));
 
         if (currentUser.getSystemRole() != SystemRole.ADMIN && !attempt.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền xem kết quả bài thi của thí sinh khác");

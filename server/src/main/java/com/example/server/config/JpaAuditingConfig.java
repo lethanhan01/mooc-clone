@@ -6,6 +6,7 @@ import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 @Configuration
@@ -14,6 +15,6 @@ public class JpaAuditingConfig {
 
     @Bean
     public DateTimeProvider dateTimeProvider() {
-        return () -> Optional.of(OffsetDateTime.now());
+        return () -> Optional.of(OffsetDateTime.now(ZoneOffset.UTC));
     }
 }

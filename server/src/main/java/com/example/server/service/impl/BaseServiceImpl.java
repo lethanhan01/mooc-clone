@@ -16,49 +16,49 @@ import java.util.List;
  * Hiện thực hóa Generic CRUD Service với các abstract method chuyển đổi Entity <-> DTO.
  */
 @Transactional
-public abstract class BaseServiceImpl<E extends BaseEntity, ID, ReqDto, ResDto, R extends JpaRepository<E, ID>>
-        implements BaseService<E, ID, ReqDto, ResDto> {
+public abstract class BaseServiceImpl<E extends BaseEntity, I, Q, R, M extends JpaRepository<E, I>>
+        implements BaseService<E, I, Q, R> {
 
-    protected final R repository;
+    protected final M repository;
 
-    protected BaseServiceImpl(R repository) {
+    protected BaseServiceImpl(M repository) {
         this.repository = repository;
     }
 
-    protected abstract E toEntity(ReqDto request);
-    protected abstract ResDto toResponseDto(E entity);
-    protected abstract void updateEntityFromDto(ReqDto request, E entity);
+    protected abstract E toEntity(Q request);
+    protected abstract R toResponseDto(E entity);
+    protected abstract void updateEntityFromDto(Q request, E entity);
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResDto> findAll() {
+    public List<R> findAll() {
         return repository.findAll().stream().map(this::toResponseDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ResDto> findAll(Pageable pageable) {
-        Page<ResDto> page = repository.findAll(pageable).map(this::toResponseDto);
+    public PageResponse<R> findAll(Pageable pageable) {
+        Page<R> page = repository.findAll(pageable).map(this::toResponseDto);
         return PageResponse.from(page);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ResDto findById(ID id) {
+    public R findById(I id) {
         return repository.findById(id)
                 .map(this::toResponseDto)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bản ghi với ID: " + id));
     }
 
     @Override
-    public ResDto create(ReqDto request) {
+    public R create(Q request) {
         E entity = toEntity(request);
         E saved = repository.save(entity);
         return toResponseDto(saved);
     }
 
     @Override
-    public ResDto update(ID id, ReqDto request) {
+    public R update(I id, Q request) {
         E entity = repository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bản ghi với ID: " + id));
         updateEntityFromDto(request, entity);
@@ -67,7 +67,7 @@ public abstract class BaseServiceImpl<E extends BaseEntity, ID, ReqDto, ResDto, 
     }
 
     @Override
-    public void deleteById(ID id) {
+    public void deleteById(I id) {
         if (!repository.existsById(id)) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bản ghi để xóa với ID: " + id);
         }

@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 @Service
@@ -89,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         // Băm SHA-256 để lưu trữ vào bảng sessions 3NF (32 bytes binary)
         byte[] tokenHash = sha256(rawToken);
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         OffsetDateTime expiresAt = now.plusDays(7); // Phiên làm việc 7 ngày
 
         SessionEntity session = new SessionEntity(user, tokenHash, expiresAt);
@@ -109,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String rawToken) {
         byte[] tokenHash = sha256(rawToken);
         sessionRepository.findByTokenHashAndRevokedAtIsNull(tokenHash).ifPresent(session -> {
-            session.setRevokedAt(OffsetDateTime.now());
+            session.setRevokedAt(OffsetDateTime.now(ZoneOffset.UTC));
             sessionRepository.save(session);
         });
     }
@@ -121,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
         SessionEntity session = sessionRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn"));
 
-        if (session.getExpiresAt().isBefore(OffsetDateTime.now())) {
+        if (session.getExpiresAt().isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
             throw new AppException(ErrorCode.UNAUTHENTICATED, "Phiên đăng nhập đã hết hạn");
         }
 

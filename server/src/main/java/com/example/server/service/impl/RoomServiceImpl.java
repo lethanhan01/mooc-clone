@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,7 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
 
         if (room.getStatus() == RoomStatus.WAITING) {
             room.setStatus(RoomStatus.RUNNING);
-            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
             room.setStartedAt(now);
             room.setEndsAt(now.plusSeconds(room.getDurationSeconds()));
             repository.save(room);
@@ -139,7 +140,7 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
         String safeRoomCode = roomCode.length() > 12 ? roomCode.substring(0, 12) : roomCode;
         return repository.findByRoomCode(safeRoomCode).map(room -> {
             room.setStatus(RoomStatus.ENDED);
-            room.setEndedAt(OffsetDateTime.now());
+            room.setEndedAt(OffsetDateTime.now(ZoneOffset.UTC));
             repository.save(room);
             return Collections.<String, Integer>emptyMap();
         }).orElse(Collections.emptyMap());

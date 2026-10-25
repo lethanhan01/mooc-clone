@@ -72,7 +72,9 @@ public class ExamRoomEntity extends AuditableEntity {
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomMemberEntity> members = new ArrayList<>();
 
-    public ExamRoomEntity() {}
+    public ExamRoomEntity() {
+        // Default constructor required by JPA
+    }
 
     public String getRoomCode() { return roomCode; }
     public void setRoomCode(String roomCode) { this.roomCode = roomCode; }

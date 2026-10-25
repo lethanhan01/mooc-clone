@@ -15,6 +15,7 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class ExamAttemptEntity extends BaseEntity {
     private AttemptStatus status = AttemptStatus.IN_PROGRESS;
 
     @Column(name = "started_at", nullable = false)
-    private OffsetDateTime startedAt = OffsetDateTime.now();
+    private OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
     @Column(name = "deadline_at", nullable = false)
     private OffsetDateTime deadlineAt;
@@ -51,13 +52,15 @@ public class ExamAttemptEntity extends BaseEntity {
     private OffsetDateTime gradedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private OffsetDateTime createdAt = OffsetDateTime.now(ZoneOffset.UTC);
 
     @OneToMany(mappedBy = "attempt", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<AttemptAnswerEntity> answers = new ArrayList<>();
 
-    public ExamAttemptEntity() {}
+    public ExamAttemptEntity() {
+        // Default constructor required by JPA
+    }
 
     public UserEntity getUser() { return user; }
     public void setUser(UserEntity user) { this.user = user; }

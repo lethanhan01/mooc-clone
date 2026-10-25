@@ -3,6 +3,7 @@ package com.example.server.dto.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -13,7 +14,7 @@ public class ApiResponse<T> {
     private String message;
     private T data;
     private List<FieldErrorDto> errors;
-    private OffsetDateTime timestamp = OffsetDateTime.now();
+    private OffsetDateTime timestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
     public ApiResponse() {}
 
@@ -23,7 +24,7 @@ public class ApiResponse<T> {
         this.message = message;
         this.data = data;
         this.errors = errors;
-        this.timestamp = timestamp != null ? timestamp : OffsetDateTime.now();
+        this.timestamp = timestamp != null ? timestamp : OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public int getCode() { return code; }
@@ -40,15 +41,15 @@ public class ApiResponse<T> {
     public void setTimestamp(OffsetDateTime timestamp) { this.timestamp = timestamp; }
 
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(200, "SUCCESS", "Thành công", data, null, OffsetDateTime.now());
+        return new ApiResponse<>(200, "SUCCESS", "Thành công", data, null, OffsetDateTime.now(ZoneOffset.UTC));
     }
 
     public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<>(200, "SUCCESS", message, data, null, OffsetDateTime.now());
+        return new ApiResponse<>(200, "SUCCESS", message, data, null, OffsetDateTime.now(ZoneOffset.UTC));
     }
 
     public static <T> ApiResponse<T> error(int code, String message) {
-        return new ApiResponse<>(code, "ERROR", message, null, null, OffsetDateTime.now());
+        return new ApiResponse<>(code, "ERROR", message, null, null, OffsetDateTime.now(ZoneOffset.UTC));
     }
 
     public static <T> ApiResponseBuilder<T> builder() {
@@ -61,7 +62,7 @@ public class ApiResponse<T> {
         private String message;
         private T data;
         private List<FieldErrorDto> errors;
-        private OffsetDateTime timestamp = OffsetDateTime.now();
+        private OffsetDateTime timestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
         public ApiResponseBuilder<T> code(int code) { this.code = code; return this; }
         public ApiResponseBuilder<T> status(String status) { this.status = status; return this; }

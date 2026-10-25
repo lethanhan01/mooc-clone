@@ -48,7 +48,9 @@ public class QuestionEntity extends AuditableEntity {
     @OrderBy("position ASC")
     private List<QuestionOptionEntity> options = new ArrayList<>();
 
-    public QuestionEntity() {}
+    public QuestionEntity() {
+        // Default constructor required by JPA
+    }
 
     public QuestionEntity(String topic, DifficultyLevel difficulty, String content, UserEntity createdBy) {
         this.topic = topic;

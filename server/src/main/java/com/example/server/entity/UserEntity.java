@@ -32,7 +32,9 @@ public class UserEntity extends AuditableEntity {
     @Column(name = "status", length = 16, nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
-    public UserEntity() {}
+    public UserEntity() {
+        // Default constructor required by JPA
+    }
 
     public UserEntity(String username, String email, String passwordHash, String displayName, SystemRole systemRole) {
         this.username = username;

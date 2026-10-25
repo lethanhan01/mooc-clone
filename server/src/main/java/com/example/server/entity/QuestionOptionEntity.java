@@ -24,7 +24,9 @@ public class QuestionOptionEntity extends BaseEntity {
     @Column(name = "is_correct", nullable = false)
     private boolean isCorrect = false;
 
-    public QuestionOptionEntity() {}
+    public QuestionOptionEntity() {
+        // Default constructor required by JPA
+    }
 
     public QuestionOptionEntity(QuestionEntity question, String content, short position, boolean isCorrect) {
         this.question = question;

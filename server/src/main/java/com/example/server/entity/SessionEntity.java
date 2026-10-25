@@ -8,6 +8,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "sessions", schema = "public")
@@ -30,9 +31,11 @@ public class SessionEntity extends BaseEntity {
     private OffsetDateTime lastSeenAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private OffsetDateTime createdAt = OffsetDateTime.now(ZoneOffset.UTC);
 
-    public SessionEntity() {}
+    public SessionEntity() {
+        // Default constructor required by JPA
+    }
 
     public SessionEntity(UserEntity user, byte[] tokenHash, OffsetDateTime expiresAt) {
         this.user = user;

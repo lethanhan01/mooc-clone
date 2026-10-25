@@ -18,7 +18,9 @@ public abstract class BaseEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    public BaseEntity() {}
+    protected BaseEntity() {
+        // Default constructor for JPA subclasses
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

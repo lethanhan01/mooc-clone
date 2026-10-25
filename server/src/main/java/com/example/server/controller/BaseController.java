@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Controller trừu tượng tự động cung cấp 5 API CRUD chuẩn kèm phân trang.
  */
-public abstract class BaseController<E extends BaseEntity, ID, ReqDto, ResDto, S extends BaseService<E, ID, ReqDto, ResDto>> {
+public abstract class BaseController<E extends BaseEntity, I, Q, R, S extends BaseService<E, I, Q, R>> {
 
     protected final S service;
 
@@ -30,34 +30,34 @@ public abstract class BaseController<E extends BaseEntity, ID, ReqDto, ResDto, S
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ResDto>>> getAll() {
+    public ResponseEntity<ApiResponse<List<R>>> getAll() {
         return ResponseEntity.ok(ApiResponse.success(service.findAll()));
     }
 
     @GetMapping("/page")
-    public ResponseEntity<ApiResponse<PageResponse<ResDto>>> getPage(@PageableDefault(size = 20) Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<R>>> getPage(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(service.findAll(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ResDto>> getById(@PathVariable ID id) {
+    public ResponseEntity<ApiResponse<R>> getById(@PathVariable I id) {
         return ResponseEntity.ok(ApiResponse.success(service.findById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ResDto>> create(@Valid @RequestBody ReqDto request) {
-        ResDto created = service.create(request);
+    public ResponseEntity<ApiResponse<R>> create(@Valid @RequestBody Q request) {
+        R created = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Tạo mới thành công", created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ResDto>> update(@PathVariable ID id, @Valid @RequestBody ReqDto request) {
-        ResDto updated = service.update(id, request);
+    public ResponseEntity<ApiResponse<R>> update(@PathVariable I id, @Valid @RequestBody Q request) {
+        R updated = service.update(id, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable ID id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable I id) {
         service.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa bản ghi thành công", null));
     }

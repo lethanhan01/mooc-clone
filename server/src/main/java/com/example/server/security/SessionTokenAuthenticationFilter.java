@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 @Component
@@ -42,7 +43,7 @@ public class SessionTokenAuthenticationFilter extends OncePerRequestFilter {
 
                 if (sessionOpt.isPresent()) {
                     SessionEntity session = sessionOpt.get();
-                    if (session.getExpiresAt().isAfter(OffsetDateTime.now())) {
+                    if (session.getExpiresAt().isAfter(OffsetDateTime.now(ZoneOffset.UTC))) {
                         CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -51,7 +52,7 @@ public class SessionTokenAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
                         // Cập nhật last_seen_at có giãn cách (> 5 phút / 300s) để tránh bão ghi CSDL
-                        OffsetDateTime now = OffsetDateTime.now();
+                        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
                         if (session.getLastSeenAt() == null || session.getLastSeenAt().isBefore(now.minusSeconds(300))) {
                             session.setLastSeenAt(now);
                             sessionRepository.save(session);

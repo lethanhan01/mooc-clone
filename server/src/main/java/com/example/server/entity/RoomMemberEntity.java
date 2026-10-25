@@ -10,6 +10,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "room_members", schema = "public")
@@ -29,9 +30,11 @@ public class RoomMemberEntity {
     private UserEntity user;
 
     @Column(name = "joined_at", nullable = false)
-    private OffsetDateTime joinedAt = OffsetDateTime.now();
+    private OffsetDateTime joinedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
-    public RoomMemberEntity() {}
+    public RoomMemberEntity() {
+        // Default constructor required by JPA
+    }
 
     public RoomMemberEntity(ExamRoomEntity room, UserEntity user) {
         this.room = room;

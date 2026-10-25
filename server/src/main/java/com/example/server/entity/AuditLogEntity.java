@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,9 +44,11 @@ public class AuditLogEntity extends BaseEntity {
     private String metadata = "{}";
 
     @Column(name = "occurred_at", nullable = false)
-    private OffsetDateTime occurredAt = OffsetDateTime.now();
+    private OffsetDateTime occurredAt = OffsetDateTime.now(ZoneOffset.UTC);
 
-    public AuditLogEntity() {}
+    public AuditLogEntity() {
+        // Default constructor required by JPA
+    }
 
     public UserEntity getActor() { return actor; }
     public void setActor(UserEntity actor) { this.actor = actor; }

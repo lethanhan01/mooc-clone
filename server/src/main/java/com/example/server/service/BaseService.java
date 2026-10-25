@@ -9,11 +9,11 @@ import java.util.List;
 /**
  * Hợp đồng Service Generic cung cấp các thao tác CRUD cơ sở.
  */
-public interface BaseService<E extends BaseEntity, ID, ReqDto, ResDto> {
-    List<ResDto> findAll();
-    PageResponse<ResDto> findAll(Pageable pageable);
-    ResDto findById(ID id);
-    ResDto create(ReqDto request);
-    ResDto update(ID id, ReqDto request);
-    void deleteById(ID id);
+public interface BaseService<E extends BaseEntity, I, Q, R> {
+    List<R> findAll();
+    PageResponse<R> findAll(Pageable pageable);
+    R findById(I id);
+    R create(Q request);
+    R update(I id, Q request);
+    void deleteById(I id);
 }

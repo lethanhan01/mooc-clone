@@ -38,7 +38,9 @@ public class AttemptAnswerEntity {
     @Column(name = "answered_at")
     private OffsetDateTime answeredAt;
 
-    public AttemptAnswerEntity() {}
+    public AttemptAnswerEntity() {
+        // Default constructor required by JPA
+    }
 
     public AttemptAnswerEntity(ExamAttemptEntity attempt, QuestionEntity question, int position) {
         this.attempt = attempt;
