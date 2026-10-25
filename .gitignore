@@ -110,6 +110,7 @@ lerna-debug.log*
 
 # Database backups & dumps
 *.sql
+!server/online_exam_schema.sql
 *.dump
 server/backups/
 backups/

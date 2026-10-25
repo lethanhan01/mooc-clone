@@ -16,8 +16,8 @@ mooc-clone/
 │   └── FRONTEND_CONVENTIONS.md  # Bộ quy chuẩn phát triển Frontend
 ├── server/          # Máy chủ Backend & Dịch vụ Socket thời gian thực
 │   ├── src/         # Mã nguồn Java Spring Boot
-│   ├── online_exam_database_design.md  # Thiết kế chi tiết cơ sở dữ liệu
-│   └── online_exam_schema.sql          # Kịch bản khởi tạo CSDL PostgreSQL
+│   ├── docs/        # Tài liệu kiến trúc chuyên sâu & AI Guides
+│   ├── online_exam_schema.sql          # Kịch bản khởi tạo CSDL PostgreSQL
 └── README.md        # Tài liệu tổng quan dự án và thang điểm
 ```
 
@@ -96,6 +96,10 @@ Toàn bộ các tiêu chí tính điểm của hệ thống được quy định
    ```bash
    psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
    ```
+3. (Tùy chọn) Nạp bộ dữ liệu mẫu phục vụ kiểm thử tại [server/online_exam_seed_data.sql](server/online_exam_seed_data.sql):
+   ```bash
+   psql -U postgres -d online_exam_db -f server/online_exam_seed_data.sql
+   ```
 
 ### 4.2 Khởi chạy Máy chủ Backend (Java Spring Boot)
 
@@ -125,5 +129,5 @@ npm run dev
 
 ## 5. Tài liệu Kỹ thuật Liên quan
 
-- **Thiết kế Cơ sở Dữ liệu Backend:** Chi tiết 15 bảng, 4 views và các ràng buộc toàn vẹn tại [server/online_exam_database_design.md](server/online_exam_database_design.md).
+- **Tài liệu & Kiến trúc Backend:** Cẩm nang AI Guides, Kiến trúc Mạng kép, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
 - **Quy chuẩn Phát triển Frontend:** Tiêu chuẩn 19 Master Rules, Design Tokens và Semantic Architecture tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md).
