@@ -61,7 +61,7 @@ class NioClassicReactorIntegrationTest {
         try (SocketChannel client = SocketChannel.open(new InetSocketAddress("localhost", serverPort))) {
             client.configureBlocking(true);
 
-            String joinJson = "{\"roomId\":\"ROOM_INTEGRATION_TEST\",\"userId\":\"student_99\",\"userName\":\"Thí sinh 99\"}";
+            String joinJson = "{\"roomId\":\"ROOM_TEST_99\",\"userId\":\"student_99\",\"userName\":\"Thí sinh 99\"}";
             ByteBuffer joinFrame = PacketFramingEncoder.encode(ProtocolConstants.OP_JOIN_ROOM, joinJson);
             client.write(joinFrame);
 
@@ -77,7 +77,7 @@ class NioClassicReactorIntegrationTest {
             assertThat(responseFrames).isNotEmpty();
             PacketFrame updateFrame = responseFrames.get(0);
             assertThat(updateFrame.getOpcode()).isEqualTo(ProtocolConstants.OP_ROOM_UPDATED);
-            assertThat(updateFrame.getPayloadAsString()).contains("ROOM_INTEGRATION_TEST");
+            assertThat(updateFrame.getPayloadAsString()).contains("ROOM_TEST_99");
         }
     }
 }

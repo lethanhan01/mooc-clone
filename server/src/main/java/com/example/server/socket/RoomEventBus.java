@@ -1,7 +1,7 @@
 package com.example.server.socket;
 
-import com.example.server.exam.ExamRoomService;
-import com.example.server.exam.ExamRoomState;
+import com.example.server.dto.room.RoomSummaryDto;
+import com.example.server.service.RoomService;
 import com.example.server.socket.core.ClientSession;
 import com.example.server.socket.protocol.PacketFrame;
 import com.example.server.socket.protocol.PacketFramingEncoder;
@@ -27,13 +27,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Hội tụ và broadcast sự kiện cho cả 2 kênh:
  * 1. Kênh TCP NIO (Port 9090 - Binary Framed Protocol)
  * 2. Kênh WebSocket (Port 8080 - JSON Text Protocol)
+ * Kết nối với tầng dữ liệu phòng thi qua RoomService (JPA-backed).
  */
 @Component
 public class RoomEventBus {
 
     private static final Logger log = LoggerFactory.getLogger(RoomEventBus.class);
 
-    private final ExamRoomService examRoomService;
+    private final RoomService roomService;
     private final ObjectMapper objectMapper;
 
     // roomId -> Set of TCP SocketChannels
@@ -47,8 +48,8 @@ public class RoomEventBus {
     // WebSocketSession -> roomId
     private final Map<WebSocketSession, String> wsRoomMap = new ConcurrentHashMap<>();
 
-    public RoomEventBus(ExamRoomService examRoomService, ObjectMapper objectMapper) {
-        this.examRoomService = examRoomService;
+    public RoomEventBus(RoomService roomService, ObjectMapper objectMapper) {
+        this.roomService = roomService;
         this.objectMapper = objectMapper;
     }
 
@@ -79,14 +80,14 @@ public class RoomEventBus {
                     session.setUserName(userName);
 
                     registerTcpChannelToRoom(roomId, session.getChannel());
-                    examRoomService.joinRoom(roomId, userId, userName);
+                    roomService.joinRoom(roomId, userId, userName);
                     broadcastRoomUpdated(roomId);
                 }
                 case ProtocolConstants.OP_LEAVE_ROOM -> {
                     String roomId = session.getCurrentRoomId();
                     if (roomId != null) {
                         unregisterTcpChannelFromRoom(roomId, session.getChannel());
-                        examRoomService.leaveRoom(roomId, session.getUserId());
+                        roomService.leaveRoom(roomId, session.getUserId());
                         broadcastRoomUpdated(roomId);
                     }
                 }
@@ -95,13 +96,13 @@ public class RoomEventBus {
                     String roomId = node.path("roomId").asText(session.getCurrentRoomId());
                     String questionId = node.path("questionId").asText();
                     String selectedOption = node.path("selectedOption").asText();
-
-                    examRoomService.submitAnswer(roomId, session.getUserId(), questionId, selectedOption);
+                    log.debug("User {} submitted answer in room {}: q={}, opt={}",
+                            session.getUserId(), roomId, questionId, selectedOption);
                 }
                 case ProtocolConstants.OP_SUBMIT_EXAM -> {
                     JsonNode node = objectMapper.readTree(jsonPayload);
                     String roomId = node.path("roomId").asText(session.getCurrentRoomId());
-                    Map<String, Integer> scores = examRoomService.finishExam(roomId);
+                    Map<String, Integer> scores = roomService.finishRoom(roomId);
                     broadcastExamFinished(roomId, scores);
                 }
                 default -> log.warn("Unknown Opcode received: 0x{}", String.format("%04X", opcode));
@@ -115,7 +116,7 @@ public class RoomEventBus {
         String roomId = session.getCurrentRoomId();
         if (roomId != null) {
             unregisterTcpChannelFromRoom(roomId, session.getChannel());
-            examRoomService.leaveRoom(roomId, session.getUserId());
+            roomService.leaveRoom(roomId, session.getUserId());
             broadcastRoomUpdated(roomId);
         }
     }
@@ -143,7 +144,7 @@ public class RoomEventBus {
                     wsRoomMap.put(wsSession, roomId);
 
                     registerWebSessionToRoom(roomId, wsSession);
-                    examRoomService.joinRoom(roomId, userId, userName);
+                    roomService.joinRoom(roomId, userId, userName);
                     broadcastRoomUpdated(roomId);
                 }
                 case "leave_room" -> {
@@ -151,7 +152,7 @@ public class RoomEventBus {
                     if (roomId != null) {
                         unregisterWebSessionFromRoom(roomId, wsSession);
                         String userId = wsUserMap.get(wsSession);
-                        examRoomService.leaveRoom(roomId, userId);
+                        roomService.leaveRoom(roomId, userId);
                         broadcastRoomUpdated(roomId);
                     }
                 }
@@ -160,12 +161,12 @@ public class RoomEventBus {
                     String questionId = data.path("questionId").asText();
                     String selectedOption = data.path("selectedOption").asText();
                     String userId = wsUserMap.get(wsSession);
-
-                    examRoomService.submitAnswer(roomId, userId, questionId, selectedOption);
+                    log.debug("WS User {} submitted answer in room {}: q={}, opt={}",
+                            userId, roomId, questionId, selectedOption);
                 }
                 case "submit_exam" -> {
                     String roomId = data.path("roomId").asText(wsRoomMap.get(wsSession));
-                    Map<String, Integer> scores = examRoomService.finishExam(roomId);
+                    Map<String, Integer> scores = roomService.finishRoom(roomId);
                     broadcastExamFinished(roomId, scores);
                 }
                 default -> log.warn("Unhandled WebSocket event: {}", event);
@@ -180,7 +181,7 @@ public class RoomEventBus {
         String userId = wsUserMap.remove(wsSession);
         if (roomId != null && userId != null) {
             unregisterWebSessionFromRoom(roomId, wsSession);
-            examRoomService.leaveRoom(roomId, userId);
+            roomService.leaveRoom(roomId, userId);
             broadcastRoomUpdated(roomId);
         }
     }
@@ -200,16 +201,16 @@ public class RoomEventBus {
     }
 
     public void broadcastRoomUpdated(String roomId) {
-        ExamRoomState room = examRoomService.getRoom(roomId);
+        RoomSummaryDto room = roomService.getRoomSummary(roomId).orElse(null);
         if (room == null) return;
 
         Map<String, Object> roomData = Map.of(
-                "roomId", room.getRoomId(),
-                "roomName", room.getRoomName(),
-                "status", room.getStatus(),
-                "timeRemainingSeconds", room.getTimeRemainingSeconds(),
-                "totalQuestions", room.getTotalQuestions(),
-                "participantsCount", room.getParticipantsCount()
+                "roomId", room.roomCode(),
+                "roomName", room.roomName(),
+                "status", room.status(),
+                "durationSeconds", room.durationSeconds(),
+                "totalQuestions", room.totalQuestions(),
+                "participantsCount", room.participantsCount()
         );
 
         // 1. WebSocket
@@ -226,8 +227,8 @@ public class RoomEventBus {
     }
 
     public void broadcastExamFinished(String roomId, Map<String, Integer> scores) {
-        ExamRoomState room = examRoomService.getRoom(roomId);
-        int totalQuestions = room != null ? room.getTotalQuestions() : 10;
+        RoomSummaryDto room = roomService.getRoomSummary(roomId).orElse(null);
+        int totalQuestions = room != null ? room.totalQuestions() : 10;
 
         // WebSocket
         broadcastToWebSocket(roomId, "exam_finished", Map.of(

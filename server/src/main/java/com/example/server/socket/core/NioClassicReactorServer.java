@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -61,6 +62,7 @@ public class NioClassicReactorServer implements SmartLifecycle, Runnable {
             selector = Selector.open();
             serverChannel = ServerSocketChannel.open();
             serverChannel.configureBlocking(false);
+            serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             serverChannel.bind(new InetSocketAddress(port));
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
