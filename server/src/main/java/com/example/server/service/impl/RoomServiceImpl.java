@@ -8,11 +8,13 @@ import com.example.server.entity.RoomMemberEntity;
 import com.example.server.entity.RoomMemberId;
 import com.example.server.entity.UserEntity;
 import com.example.server.entity.enums.RoomStatus;
+import com.example.server.entity.enums.SystemRole;
 import com.example.server.exception.AppException;
 import com.example.server.exception.ErrorCode;
 import com.example.server.repository.ExamRoomRepository;
 import com.example.server.repository.RoomMemberRepository;
 import com.example.server.repository.UserRepository;
+import com.example.server.security.SecurityUtil;
 import com.example.server.service.RoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -169,12 +171,25 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
         entity.setMaxParticipants(request.maxParticipants());
         entity.setStatus(RoomStatus.WAITING);
 
-        // Fallback default owner (Admin / System)
-        UserEntity defaultOwner = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED, "Chưa có tài khoản khởi tạo để làm chủ phòng"));
-        entity.setOwner(defaultOwner);
+        // Gán chủ phòng từ Security Context (người dùng đăng nhập), fallback tài khoản đầu tiên cho test/seed
+        UserEntity owner = SecurityUtil.getCurrentUser()
+                .orElseGet(() -> userRepository.findAll().stream().findFirst()
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED, "Chưa có tài khoản khởi tạo để làm chủ phòng")));
+        entity.setOwner(owner);
 
         return entity;
+    }
+
+    @Override
+    protected void beforeUpdate(Long id, UpdateRoomRequest request, ExamRoomEntity existingEntity) {
+        UserEntity currentUser = SecurityUtil.getCurrentUser().orElse(null);
+        if (currentUser != null) {
+            boolean isAdmin = currentUser.getSystemRole() == SystemRole.ADMIN;
+            boolean isOwner = existingEntity.getOwner() != null && existingEntity.getOwner().getId().equals(currentUser.getId());
+            if (!isAdmin && !isOwner) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Chỉ chủ phòng hoặc ADMIN mới có quyền cập nhật phòng thi");
+            }
+        }
     }
 
     @Override

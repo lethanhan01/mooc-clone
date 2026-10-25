@@ -24,8 +24,8 @@ class SpecificationBuilderTest {
     @DisplayName("SpecificationBuilder.build() trả về Specification khi có điều kiện equal hoặc like")
     void build_WhenHasConditions_ReturnsNonNullSpec() {
         Specification<QuestionEntity> spec = SpecificationBuilder.<QuestionEntity>builder()
-                .equal("status", "ACTIVE")
-                .like("topic", "Java")
+                .withEqual("status", "ACTIVE")
+                .withLike("topic", "Java")
                 .build();
         assertNotNull(spec);
     }

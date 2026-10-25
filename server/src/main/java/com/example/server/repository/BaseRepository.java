@@ -13,6 +13,6 @@ import java.io.Serializable;
  * @param <I> Khóa chính thực thể
  */
 @NoRepositoryBean
-public interface BaseRepository<E,  extends Serializable>
+public interface BaseRepository<E, I extends Serializable>
         extends JpaRepository<E, I>, JpaSpecificationExecutor<E> {
 }

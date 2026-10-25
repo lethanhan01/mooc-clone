@@ -117,11 +117,9 @@ public abstract class BaseServiceImpl<
         if (requests == null || requests.isEmpty()) {
             return List.of();
         }
-        List<R> results = new ArrayList<>();
-        for (C request : requests) {
-            results.add(create(request));
-        }
-        return results;
+        return requests.stream()
+                .map(this::create)
+                .toList();
     }
 
     @Override

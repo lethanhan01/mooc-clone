@@ -21,7 +21,7 @@ public class SpecificationBuilder<E> {
         return new SpecificationBuilder<>();
     }
 
-    public SpecificationBuilder<E> equal(String field, Object value) {
+    public SpecificationBuilder<E> withEqual(String field, Object value) {
         if (value != null && !value.toString().isBlank()) {
             specifications.add((root, query, cb) ->
                     cb.equal(root.get(field).as(String.class), value.toString().trim()));
@@ -29,12 +29,16 @@ public class SpecificationBuilder<E> {
         return this;
     }
 
-    public SpecificationBuilder<E> like(String field, String value) {
+    public SpecificationBuilder<E> withLike(String field, String value) {
         if (value != null && !value.isBlank()) {
             specifications.add((root, query, cb) ->
                     cb.like(cb.lower(root.get(field).as(String.class)), "%" + value.trim().toLowerCase() + "%"));
         }
         return this;
+    }
+
+    public SpecificationBuilder<E> like(String field, String value) {
+        return withLike(field, value);
     }
 
     public Specification<E> build() {
@@ -61,7 +65,7 @@ public class SpecificationBuilder<E> {
             for (String field : exactMatchFields) {
                 String val = request.getParameter(field);
                 if (val != null && !val.isBlank()) {
-                    builder.equal(field, val);
+                    builder.withEqual(field, val);
                 }
             }
         }
