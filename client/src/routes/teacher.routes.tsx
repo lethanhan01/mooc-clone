@@ -12,7 +12,7 @@ const TeacherReportsPage = lazy(() => import('@/pages/teacher/TeacherReportsPage
 const TeacherSystemLogsPage = lazy(() => import('@/pages/teacher/TeacherSystemLogsPage'))
 
 export const teacherRoutes = (
-  <Route element={<ProtectedRoute allowedRoles={['teacher', 'admin']} />}>
+  <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
     <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
     <Route path="/teacher/dashboard" element={<TeacherDashboardPage />} />
     <Route path="/teacher/rooms" element={<TeacherRoomsPage />} />

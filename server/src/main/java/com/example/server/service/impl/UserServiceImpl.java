@@ -49,7 +49,7 @@ public class UserServiceImpl
         entity.setEmail(request.email());
         entity.setPasswordHash(passwordEncoder.encode(request.password()));
         entity.setDisplayName(request.displayName());
-        entity.setSystemRole(request.systemRole() != null ? request.systemRole() : SystemRole.USER);
+        entity.setSystemRole(request.systemRole() != null ? request.systemRole() : SystemRole.STUDENT);
         entity.setStatus(request.status() != null ? request.status() : UserStatus.ACTIVE);
         return entity;
     }

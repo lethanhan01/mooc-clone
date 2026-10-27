@@ -44,7 +44,7 @@ erDiagram
 
 | Tên Bảng (Table) | Mục Đích Kỹ Thuật | Ràng Buộc & Khóa Chính / Ngoại Quan Trọng |
 | :--- | :--- | :--- |
-| `users` | Quản lý tài khoản, mật khẩu băm BCrypt, vai trò (`USER`, `ADMIN`) | Khóa chính `id` (IDENTITY); duy nhất `lower(username)` và `lower(email)`; ràng buộc `status IN ('ACTIVE', 'BLOCKED')` |
+| `users` | Quản lý tài khoản, mật khẩu băm BCrypt, vai trò (`TEACHER`, `STUDENT`) | Khóa chính `id` (IDENTITY); duy nhất `lower(username)` và `lower(email)`; ràng buộc `status IN ('ACTIVE', 'BLOCKED')` |
 | `sessions` | Quản lý phiên làm việc máy chủ bảo mật | Khóa ngoại `user_id`; cột `token_hash` kiểu `BYTEA` (32 bytes SHA-256) duy nhất; kiểm tra `expires_at` và cờ thu hồi `revoked_at` |
 | `questions` | Ngân hàng câu hỏi trắc nghiệm | Khóa chính `id`; `topic` không rỗng; `difficulty IN ('EASY', 'MEDIUM', 'HARD')`; `status IN ('ACTIVE', 'ARCHIVED')` |
 | `question_options`| Danh sách phương án lựa chọn cho câu hỏi | Khóa ngoại `question_id`; duy nhất `(question_id, position)`; chỉ mục partial đảm bảo tối đa 1 đáp án đúng (`is_correct = true`); khóa duy nhất phức hợp `(question_id, id)` |

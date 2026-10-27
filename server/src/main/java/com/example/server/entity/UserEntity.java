@@ -26,7 +26,7 @@ public class UserEntity extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "system_role", length = 10, nullable = false)
-    private SystemRole systemRole = SystemRole.USER;
+    private SystemRole systemRole = SystemRole.STUDENT;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 16, nullable = false)

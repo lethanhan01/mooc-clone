@@ -5,17 +5,13 @@ import type { AuthResponse, AuthUser, Role } from '@/types'
 export type { Role, AuthUser }
 
 export function getHomePathForRoles(roles: Role[] = []): string {
-  if (roles.includes('admin')) return '/admin/users'
   if (roles.includes('teacher')) return '/teacher/dashboard'
   return '/student/dashboard'
 }
 
 export function mapAuthResponseToUser(authData: AuthResponse): AuthUser {
   const rawRole = (authData.role || 'STUDENT').toUpperCase()
-  let mappedRole: Role = 'student'
-  if (rawRole === 'TEACHER') mappedRole = 'teacher'
-  else if (rawRole === 'ADMIN') mappedRole = 'admin'
-  else if (rawRole === 'USER') mappedRole = 'user'
+  const mappedRole: Role = rawRole === 'TEACHER' || rawRole === 'ADMIN' ? 'teacher' : 'student'
 
   const username = authData.username || ''
   const email = username.includes('@') ? username : `${username}@mooc.local`

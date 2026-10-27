@@ -65,10 +65,10 @@ public class DatabaseSeeder implements ApplicationRunner {
         // 1. Đồng bộ tài khoản mẫu chuẩn
         String defaultPasswordHash = passwordEncoder.encode("password123");
 
-        UserEntity admin = syncUser("admin", "admin@mooc.local", defaultPasswordHash, "Quản Trị Viên Hệ Thống", SystemRole.ADMIN);
-        UserEntity teacher = syncUser("teacher_le", "teacher.le@mooc.local", defaultPasswordHash, "Thầy Lê Văn Hướng", SystemRole.USER);
-        UserEntity alice = syncUser("student_alice", "alice@mooc.local", defaultPasswordHash, "Nguyễn Thị Alice", SystemRole.USER);
-        syncUser("student_bob", "bob@mooc.local", defaultPasswordHash, "Trần Văn Bob", SystemRole.USER);
+        UserEntity admin = syncUser("admin", "admin@mooc.local", defaultPasswordHash, "Giáo viên Quản trị", SystemRole.TEACHER);
+        UserEntity teacher = syncUser("teacher_le", "teacher.le@mooc.local", defaultPasswordHash, "Thầy Lê Văn Hướng", SystemRole.TEACHER);
+        UserEntity alice = syncUser("student_alice", "alice@mooc.local", defaultPasswordHash, "Nguyễn Thị Alice", SystemRole.STUDENT);
+        syncUser("student_bob", "bob@mooc.local", defaultPasswordHash, "Trần Văn Bob", SystemRole.STUDENT);
 
         // 2. Đồng bộ Ngân hàng câu hỏi nếu chưa có câu hỏi nào
         if (questionRepository.count() == 0) {

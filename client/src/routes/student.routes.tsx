@@ -14,7 +14,7 @@ const StudentPracticeResultPage = lazy(() => import('@/pages/student/StudentPrac
 const StudentHistoryPage = lazy(() => import('@/pages/student/StudentHistoryPage'))
 
 export const studentDashboardRoutes = (
-  <Route element={<ProtectedRoute allowedRoles={['student', 'user', 'admin']} />}>
+  <Route element={<ProtectedRoute allowedRoles={['student']} />}>
     <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
     <Route path="/student/dashboard" element={<StudentDashboardPage />} />
     <Route path="/student/rooms" element={<StudentRoomsPage />} />
@@ -28,7 +28,7 @@ export const studentDashboardRoutes = (
 )
 
 export const studentExamRoutes = (
-  <Route element={<ProtectedRoute allowedRoles={['student', 'user', 'admin']} />}>
+  <Route element={<ProtectedRoute allowedRoles={['student']} />}>
     <Route path="/student/rooms/:roomId/exam" element={<StudentLiveExamPage />} />
     <Route path="/student/practice/exam" element={<StudentPracticeExamPage />} />
   </Route>

@@ -2,7 +2,7 @@
  * auth.ts - Các kiểu dữ liệu nghiệp vụ xác thực, tài khoản và phiên làm việc.
  */
 
-export type Role = 'student' | 'teacher' | 'admin' | 'user'
+export type Role = 'student' | 'teacher'
 
 export interface AuthUser {
   userId: string

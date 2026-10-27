@@ -37,7 +37,7 @@ sequenceDiagram
     Filter->>Filter: Trích xuất token từ Authorization Header
     Filter->>Filter: Tính hash SHA-256(token) trong RAM -> 32 bytes
     Filter->>SecService: SELECT FROM sessions WHERE token_hash = ? AND expires_at > now() AND revoked_at IS NULL
-    SecService-->>Filter: Phiên hợp lệ kèm UserEntity (ROLE_USER, ROLE_ADMIN)
+    SecService-->>Filter: Phiên hợp lệ kèm UserEntity (ROLE_STUDENT, ROLE_TEACHER)
     Filter->>SecCtx: Nạp Authentication vào SecurityContextHolder
     Filter->>AuthCtrl: Chuyển tiếp Request vào chuỗi Controller
 ```
@@ -114,9 +114,9 @@ Tại mỗi Request gửi tới API:
 1. **Mã Hóa Mật Khẩu (BCrypt):**
    - 100% mật khẩu người dùng được băm qua `BCryptPasswordEncoder` với độ phức tạp (Strength) là 10. Mật khẩu dạng plain-text không bao giờ xuất hiện trong log hoặc CSDL.
 2. **Phân Quyền Vai Trò (System Roles):**
-   - `ROLE_USER`: Thí sinh thông thường, tham gia phòng thi, làm bài thi, xem kết quả cá nhân.
-   - `ROLE_ADMIN`: Quản trị viên, quản lý ngân hàng câu hỏi, tạo phòng thi, xem bảng xếp hạng tổng quan.
-   - Các API nhạy cảm được bảo vệ bằng annotation `@PreAuthorize("hasRole('ADMIN')")` ở tầng Controller.
+   - `ROLE_STUDENT`: Thí sinh thông thường, tham gia phòng thi, làm bài thi, xem kết quả cá nhân.
+   - `ROLE_TEACHER`: Giáo viên, quản lý ngân hàng câu hỏi, tạo phòng thi, xem bảng xếp hạng tổng quan và quản lý người dùng.
+   - Các API nhạy cảm được bảo vệ bằng annotation `@PreAuthorize("hasRole('TEACHER')")` ở tầng Controller.
 
 ---
 

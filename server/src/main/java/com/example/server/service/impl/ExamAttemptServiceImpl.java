@@ -166,7 +166,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         UserEntity currentUser = SecurityUtil.getCurrentUser()
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED, PLEASE_LOGIN_MESSAGE));
 
-        if (currentUser.getSystemRole() != SystemRole.ADMIN && !attempt.getUser().getId().equals(currentUser.getId())) {
+        if (currentUser.getSystemRole() != SystemRole.TEACHER && !attempt.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền xem kết quả bài thi của thí sinh khác");
         }
 

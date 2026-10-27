@@ -31,7 +31,7 @@ export function TopbarAvatarDropdown() {
   const initials = user?.fullName
     ? user.fullName.trim().charAt(0).toUpperCase()
     : 'U'
-  const isTeacher = Boolean(user?.roles.includes('teacher') || user?.roles.includes('admin'))
+  const isTeacher = Boolean(user?.roles.includes('teacher'))
   const roleLabel = isTeacher ? 'Giáo viên' : 'Học sinh'
 
   function goProfile() {

@@ -53,7 +53,7 @@ CREATE TABLE public.users (
     email           VARCHAR(254),
     password_hash   TEXT         NOT NULL,
     display_name    VARCHAR(100) NOT NULL,
-    system_role     VARCHAR(10)  NOT NULL DEFAULT 'USER',
+    system_role     VARCHAR(10)  NOT NULL DEFAULT 'STUDENT',
     status          VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,7 +61,7 @@ CREATE TABLE public.users (
     CONSTRAINT ck_users_username_nonblank CHECK (length(btrim(username)) > 0),
     CONSTRAINT ck_users_display_name_nonblank CHECK (length(btrim(display_name)) > 0),
     CONSTRAINT ck_users_password_hash_nonblank CHECK (length(password_hash) > 0),
-    CONSTRAINT ck_users_system_role CHECK (system_role IN ('USER', 'ADMIN')),
+    CONSTRAINT ck_users_system_role CHECK (system_role IN ('TEACHER', 'STUDENT')),
     CONSTRAINT ck_users_status CHECK (status IN ('ACTIVE', 'SUSPENDED'))
 );
 

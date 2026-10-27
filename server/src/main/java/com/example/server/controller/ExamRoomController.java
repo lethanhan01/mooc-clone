@@ -108,8 +108,8 @@ public class ExamRoomController extends BaseController<ExamRoomEntity, Long, Cre
     }
 
     @Override
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Hủy phòng thi (Dành riêng cho ADMIN)")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Hủy phòng thi (Dành riêng cho TEACHER)")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         return super.delete(id);
     }

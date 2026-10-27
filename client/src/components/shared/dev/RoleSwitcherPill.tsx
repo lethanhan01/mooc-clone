@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeftRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/actions'
-import { useAuthStore, getHomePathForRoles, type Role } from '@/stores/authStore'
+import { useAuthStore, getHomePathForRoles, mapAuthResponseToUser } from '@/stores/authStore'
 import { authService } from '@/services/auth.service'
 import { toast } from '@/lib/toast'
 
@@ -14,7 +14,7 @@ export function RoleSwitcherPill() {
 
   if (!user) return null
 
-  const isTeacher = user.roles.includes('teacher') || user.roles.includes('admin')
+  const isTeacher = user.roles.includes('teacher')
 
   async function switchRole() {
     setLoading(true)
@@ -24,22 +24,12 @@ export function RoleSwitcherPill() {
         usernameOrEmail: username,
         password: 'password123',
       })
-      const roleLower = res.role.toLowerCase()
-      const roles: Role[] = roleLower === 'teacher' || roleLower === 'admin' ? ['teacher'] : ['student']
-      setAuth(
-        {
-          userId: String(res.userId),
-          email: `${res.username}@school.edu.vn`,
-          fullName: res.displayName,
-          roles,
-          studentId: roleLower === 'student' ? res.username : null,
-        },
-        res.token
-      )
+      const loggedInUser = mapAuthResponseToUser(res)
+      setAuth(loggedInUser, res.token)
       toast.success(`Đã chuyển sang ${isTeacher ? 'Học sinh' : 'Giáo viên'}`, {
         description: res.displayName,
       })
-      navigate(getHomePathForRoles(roles), { replace: true })
+      navigate(getHomePathForRoles(loggedInUser.roles), { replace: true })
     } catch {
       toast.error('Không thể chuyển vai trò tự động', {
         description: 'Vui lòng kiểm tra kết nối tới server.',

@@ -13,7 +13,7 @@
 
 | Vai trò (Role) | Tên đăng nhập (Username) | Email | Mật khẩu (Password) | Tên hiển thị (Display Name) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Quản trị viên (ADMIN)** | `admin` | `admin@mooc.local` | `password123` | Quản Trị Viên Hệ Thống |
+| **Giáo viên Quản trị (TEACHER)** | `admin` | `admin@mooc.local` | `password123` | Giáo viên Quản trị |
 | **Giáo viên (TEACHER)** | `teacher_le` | `teacher.le@mooc.local` | `password123` | Thầy Lê Văn Hướng |
 | **Thí sinh 1 (STUDENT)** | `student_alice` | `alice@mooc.local` | `password123` | Nguyễn Thị Alice |
 | **Thí sinh 2 (STUDENT)** | `student_bob` | `bob@mooc.local` | `password123` | Trần Văn Bob |
@@ -166,7 +166,7 @@ Bạn có thể kiểm tra API xác thực tài khoản ngay lập tức bằng 
       "userId": 2,
       "username": "teacher_le",
       "displayName": "Thầy Lê Văn Hướng",
-      "role": "USER",
+      "role": "TEACHER",
       "expiresAt": "2026-11-03T07:15:00Z"
     },
     "errors": null,
