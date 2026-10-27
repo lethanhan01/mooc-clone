@@ -13,7 +13,7 @@ import type { NavSection } from './sidebar.types'
 import type { Role } from '@/stores/authStore'
 
 export function getMoocNavSections(roles: Role[] = ['student']): NavSection[] {
-  const isTeacher = roles.includes('teacher') || roles.includes('admin')
+  const isTeacher = roles.includes('teacher')
 
   if (isTeacher) {
     return [

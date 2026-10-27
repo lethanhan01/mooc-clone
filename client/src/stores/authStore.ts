@@ -1,25 +1,30 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { DEMO_STUDENT, DEMO_TEACHER } from '@/services/mockData'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+import type { AuthResponse, AuthUser, Role } from '@/types'
 
-export type Role = 'student' | 'teacher' | 'admin' | 'user'
+export type { Role, AuthUser }
 
-export interface AuthUser {
-  userId: string
-  email: string
-  fullName: string
-  roles: Role[]
-  avatarUrl?: string | null
-  studentId?: string | null
-  department?: string | null
-  memberId?: string | null
+export function getHomePathForRoles(roles: Role[] = []): string {
+  if (roles.includes('teacher')) return '/teacher/dashboard'
+  return '/student/dashboard'
 }
 
-/** Keep persisted demo sessions in sync when mock display names change. */
+export function mapAuthResponseToUser(authData: AuthResponse): AuthUser {
+  const rawRole = (authData.role || 'STUDENT').toUpperCase()
+  const mappedRole: Role = rawRole === 'TEACHER' || rawRole === 'ADMIN' ? 'teacher' : 'student'
+
+  const username = authData.username || ''
+  const email = username.includes('@') ? username : `${username}@mooc.local`
+
+  return {
+    userId: String(authData.userId),
+    email,
+    fullName: authData.displayName || username,
+    roles: [mappedRole],
+  }
+}
+
 function syncDemoUser(user: AuthUser | null): AuthUser | null {
-  if (!user) return null
-  if (user.userId === DEMO_TEACHER.userId) return { ...user, ...DEMO_TEACHER }
-  if (user.userId === DEMO_STUDENT.userId) return { ...user, ...DEMO_STUDENT }
   return user
 }
 
@@ -43,15 +48,66 @@ export function notifyLogout(): void {
   })
 }
 
+export const AUTH_STORAGE_KEY = 'mooc-auth-storage'
+
+// Cross-tab synchronization via BroadcastChannel
+export const authChannel: BroadcastChannel | null =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('mooc-auth')
+    : null
+
+export const dynamicAuthStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    try {
+      if (typeof window === 'undefined') return null
+      const sessionVal = sessionStorage.getItem(name)
+      if (sessionVal) return sessionVal
+      return localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      if (typeof window === 'undefined') return
+      const parsed = JSON.parse(value)
+      const remember = parsed?.state?.rememberMe ?? false
+      if (remember) {
+        localStorage.setItem(name, value)
+        sessionStorage.removeItem(name)
+      } else {
+        sessionStorage.setItem(name, value)
+        localStorage.removeItem(name)
+      }
+    } catch {
+      try {
+        sessionStorage.setItem(name, value)
+      } catch (error) {
+        void error
+      }
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      if (typeof window === 'undefined') return
+      sessionStorage.removeItem(name)
+      localStorage.removeItem(name)
+    } catch (error) {
+      void error
+    }
+  },
+}
+
 interface AuthState {
   user: AuthUser | null
   token: string | null
+  rememberMe: boolean
   isAuthenticated: boolean
   hasHydrated: boolean
 
-  setAuth: (user: AuthUser, token: string) => void
+  setAuth: (user: AuthUser, token: string, rememberMe?: boolean) => void
   setUser: (user: AuthUser) => void
-  clearAuth: () => void
+  clearAuth: (broadcast?: boolean) => void
   setHasHydrated: (value: boolean) => void
 }
 
@@ -60,34 +116,56 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      rememberMe: false,
       isAuthenticated: false,
       hasHydrated: false,
 
-      setAuth: (user, token) =>
+      setAuth: (user, token, rememberMe = false) =>
         set({
           user,
           token,
+          rememberMe,
           isAuthenticated: true,
         }),
 
       setUser: (user) => set({ user }),
 
-      clearAuth: () => {
+      clearAuth: (broadcast = true) => {
         set({
           user: null,
           token: null,
+          rememberMe: false,
           isAuthenticated: false,
         })
+        try {
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem(AUTH_STORAGE_KEY)
+            localStorage.removeItem(AUTH_STORAGE_KEY)
+          }
+        } catch (error) {
+          void error
+        }
+
         notifyLogout()
+
+        if (broadcast && authChannel) {
+          try {
+            authChannel.postMessage({ type: 'LOGOUT' })
+          } catch (error) {
+            void error
+          }
+        }
       },
 
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
-      name: 'mooc-auth-storage',
+      name: AUTH_STORAGE_KEY,
+      storage: createJSONStorage(() => dynamicAuthStorage),
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        rememberMe: state.rememberMe,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
@@ -103,3 +181,41 @@ export const useAuthStore = create<AuthState>()(
   )
 )
 
+// Setup listeners for multi-tab synchronization
+if (authChannel) {
+  authChannel.onmessage = (event) => {
+    if (event.data?.type === 'LOGOUT') {
+      useAuthStore.getState().clearAuth(false)
+    }
+  }
+}
+
+export function setupStorageListener(): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === AUTH_STORAGE_KEY) {
+      if (!event.newValue) {
+        useAuthStore.getState().clearAuth(false)
+      } else {
+        try {
+          const parsed = JSON.parse(event.newValue)
+          if (!parsed?.state?.user || !parsed?.state?.token) {
+            useAuthStore.getState().clearAuth(false)
+          }
+        } catch {
+          useAuthStore.getState().clearAuth(false)
+        }
+      }
+    }
+  }
+
+  window.addEventListener('storage', handleStorage)
+  return () => {
+    window.removeEventListener('storage', handleStorage)
+  }
+}
+
+if (typeof window !== 'undefined') {
+  setupStorageListener()
+}

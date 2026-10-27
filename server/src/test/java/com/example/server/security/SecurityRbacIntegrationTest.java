@@ -40,8 +40,8 @@ class SecurityRbacIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "student_alice", roles = {"USER"})
-    @DisplayName("Thí sinh (ROLE_USER) cố tình truy cập /api/users bị chặn với mã 403 Forbidden")
+    @WithMockUser(username = "student_alice", roles = {"STUDENT"})
+    @DisplayName("Thí sinh (ROLE_STUDENT) cố tình truy cập /api/users bị chặn với mã 403 Forbidden")
     void testGetUsersForbiddenForUserRole() throws Exception {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isForbidden())
@@ -49,8 +49,8 @@ class SecurityRbacIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "admin_super", roles = {"ADMIN"})
-    @DisplayName("Quản trị viên (ROLE_ADMIN) truy cập /api/users thành công 200 OK")
+    @WithMockUser(username = "teacher_super", roles = {"TEACHER"})
+    @DisplayName("Giáo viên (ROLE_TEACHER) truy cập /api/users thành công 200 OK")
     void testGetUsersAllowedForAdminRole() throws Exception {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -58,8 +58,8 @@ class SecurityRbacIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "student_alice", roles = {"USER"})
-    @DisplayName("Thí sinh (ROLE_USER) cố tình gọi DELETE /api/questions/1 bị chặn với mã 403 Forbidden")
+    @WithMockUser(username = "student_alice", roles = {"STUDENT"})
+    @DisplayName("Thí sinh (ROLE_STUDENT) cố tình gọi DELETE /api/questions/1 bị chặn với mã 403 Forbidden")
     void testDeleteQuestionForbiddenForUserRole() throws Exception {
         mockMvc.perform(delete("/api/questions/1"))
                 .andExpect(status().isForbidden())
@@ -67,8 +67,8 @@ class SecurityRbacIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "student_alice", roles = {"USER"})
-    @DisplayName("Thí sinh (ROLE_USER) cố tình gọi DELETE /api/rooms/1 bị chặn với mã 403 Forbidden")
+    @WithMockUser(username = "student_alice", roles = {"STUDENT"})
+    @DisplayName("Thí sinh (ROLE_STUDENT) cố tình gọi DELETE /api/rooms/1 bị chặn với mã 403 Forbidden")
     void testDeleteRoomForbiddenForUserRole() throws Exception {
         mockMvc.perform(delete("/api/rooms/1"))
                 .andExpect(status().isForbidden())
@@ -84,5 +84,31 @@ class SecurityRbacIntegrationTest {
                         .content(requestJson))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @DisplayName("Chưa đăng nhập truy cập /api/audit-logs bị chặn với mã 401")
+    void testGetAuditLogsUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithMockUser(username = "student_alice", roles = {"STUDENT"})
+    @DisplayName("Thí sinh (ROLE_STUDENT) cố tình truy cập /api/audit-logs bị chặn với mã 403 Forbidden")
+    void testGetAuditLogsForbiddenForStudent() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher_super", roles = {"TEACHER"})
+    @DisplayName("Giáo viên (ROLE_TEACHER) truy cập /api/audit-logs thành công 200 OK")
+    void testGetAuditLogsAllowedForTeacher() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
     }
 }

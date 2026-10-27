@@ -13,15 +13,17 @@ export interface UserAnswerPayload {
   selectedOption: string
 }
 
+export type SocketEventCallback = (...args: unknown[]) => void
+
 export interface SocketConnection {
   connected: boolean
-  on(event: string, callback: (...args: unknown[]) => void): void
-  off(event: string, callback: (...args: unknown[]) => void): void
+  on(event: string, callback: SocketEventCallback): void
+  off(event: string, callback: SocketEventCallback): void
 }
 
 class SocketService implements SocketConnection {
   private ws: WebSocket | null = null
-  private eventListeners: Map<string, Set<(...args: unknown[]) => void>> = new Map()
+  private readonly eventListeners: Map<string, Set<SocketEventCallback>> = new Map()
   public connected: boolean = false
 
   connect(wsUrl?: string, token?: string): SocketConnection {
@@ -52,7 +54,7 @@ class SocketService implements SocketConnection {
       this.ws.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data)
-          if (payload && payload.event) {
+          if (payload?.event) {
             this.emit(payload.event, payload.data)
           }
         } catch (e) {
@@ -70,14 +72,14 @@ class SocketService implements SocketConnection {
     return this.ws ? this : null
   }
 
-  on(event: string, callback: (...args: unknown[]) => void): void {
+  on(event: string, callback: SocketEventCallback): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set())
     }
     this.eventListeners.get(event)!.add(callback)
   }
 
-  off(event: string, callback: (...args: unknown[]) => void): void {
+  off(event: string, callback: SocketEventCallback): void {
     this.eventListeners.get(event)?.delete(callback)
   }
 
@@ -93,7 +95,7 @@ class SocketService implements SocketConnection {
   }
 
   private send(event: string, data: unknown): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ event, data }))
     }
   }
@@ -115,25 +117,29 @@ class SocketService implements SocketConnection {
   }
 
   onTimeTick(callback: (secondsRemaining: number) => void): () => void {
-    this.on('time_tick', callback)
+    const cb = callback as unknown as SocketEventCallback
+    this.on('time_tick', cb)
     return () => {
-      this.off('time_tick', callback)
+      this.off('time_tick', cb)
     }
   }
 
   onRoomUpdated(callback: (room: ExamRoomState) => void): () => void {
-    this.on('room_updated', callback)
+    const cb = callback as unknown as SocketEventCallback
+    this.on('room_updated', cb)
     return () => {
-      this.off('room_updated', callback)
+      this.off('room_updated', cb)
     }
   }
 
   onExamFinished(callback: (results: { score: number; total: number }) => void): () => void {
-    this.on('exam_finished', callback)
+    const cb = callback as unknown as SocketEventCallback
+    this.on('exam_finished', cb)
     return () => {
-      this.off('exam_finished', callback)
+      this.off('exam_finished', cb)
     }
   }
+
 
   disconnect(): void {
     if (this.ws) {
@@ -144,5 +150,12 @@ class SocketService implements SocketConnection {
   }
 }
 
+import { onLogout } from '@/stores/authStore'
+
 export const socketService = new SocketService()
+
+onLogout(() => {
+  socketService.disconnect()
+})
+
 export default socketService

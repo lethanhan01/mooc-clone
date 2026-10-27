@@ -4,29 +4,30 @@ import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input, Checkbox } from '@/components/ui/forms'
 import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore } from '@/stores/authStore'
-import { useMockExamStore } from '@/stores/mockExamStore'
-import { PRACTICE_TOPICS } from '@/services/mockData'
+import { useCreateRoomMutation } from '@/hooks/queries'
 import { toast } from '@/lib/toast'
 
+const DEFAULT_TOPICS = [
+  'Mạng máy tính',
+  'Cơ sở dữ liệu',
+  'Kiến trúc máy tính',
+  'Lập trình Web',
+  'An toàn thông tin',
+]
+
 export default function TeacherRoomCreatePage() {
-  const user = useAuthStore((s) => s.user)
-  const createRoom = useMockExamStore((s) => s.createRoom)
+  const createRoomMutation = useCreateRoomMutation()
   const navigate = useNavigate()
 
-  const [name, setName] = useState('Ôn tập & Thi thử 2025-2: IT4549 - Phát triển ứng dụng Web')
-  const [subject, setSubject] = useState('IT4549')
-  const [topic, setTopic] = useState('Công nghệ PM & Web')
+  const [name, setName] = useState('Ôn tập & Thi thử: IT4549 - Phát triển ứng dụng Web')
+  const [roomCode, setRoomCode] = useState(() => `EXAM-${Math.random().toString(36).substring(2, 6).toUpperCase()}`)
+  const [topic, setTopic] = useState('Công nghệ thông tin')
   const [durationMinutes, setDurationMinutes] = useState(45)
-  const [opensAt, setOpensAt] = useState(() => new Date(Date.now() + 3600_000).toISOString().slice(0, 16))
   const [easy, setEasy] = useState(4)
   const [medium, setMedium] = useState(4)
   const [hard, setHard] = useState(2)
   const [selectedTopics, setSelectedTopics] = useState<string[]>(['Mạng máy tính'])
-  const [practiceMode, setPracticeMode] = useState(false)
-  const [showAnswers, setShowAnswers] = useState(false)
-  const [shuffle, setShuffle] = useState(true)
-  const [lockDevice, setLockDevice] = useState(true)
+  const [isPublic, setIsPublic] = useState(true)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
 
@@ -34,40 +35,41 @@ export default function TeacherRoomCreatePage() {
     setSelectedTopics((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const next: Record<string, string> = {}
     if (!name.trim()) next.name = 'Nhập tên phòng thi'
-    if (durationMinutes < 5) next.duration = 'Tối thiểu 5 phút'
+    if (!roomCode.trim()) next.roomCode = 'Nhập mã phòng thi'
+    if (durationMinutes < 1) next.duration = 'Thời lượng tối thiểu 1 phút'
     if (easy + medium + hard < 1) next.diff = 'Cần ít nhất 1 câu hỏi theo độ khó'
     if (Object.keys(next).length > 0) {
       setErrors(next)
       return
     }
-    if (!user) return
 
     setLoading(true)
     try {
-      const room = createRoom({
+      const room = await createRoomMutation.mutateAsync({
+        roomCode: roomCode.trim().toUpperCase(),
         name: name.trim(),
-        subject: subject.trim() || 'GENERAL',
+        description: `Chủ đề: ${selectedTopics.join(', ') || topic}`,
         topic: topic.trim(),
-        durationMinutes,
-        opensAt: new Date(opensAt).toISOString(),
-        mode: practiceMode ? 'practice' : 'official',
-        difficultyConfig: { EASY: easy, MEDIUM: medium, HARD: hard },
-        topics: selectedTopics,
-        options: {
-          practiceMode,
-          showAnswersAfterSubmit: showAnswers,
-          shuffleQuestions: shuffle,
-          lockDevice,
-        },
-        teacherId: user.userId,
-        teacherName: user.fullName,
-        members: [],
+        easyCount: easy,
+        mediumCount: medium,
+        hardCount: hard,
+        visibility: isPublic ? 'PUBLIC' : 'PRIVATE',
+        durationSeconds: durationMinutes * 60,
+        maxParticipants: 100,
       })
-      toast.success('Đã lưu cấu hình phòng', { description: `Mã ${room.code} · PIN ${room.pin}` })
-      navigate(`/teacher/rooms/${room.id}/questions`)
+      toast.success('Đã lưu cấu hình phòng thi vào database', {
+        description: `Mã phòng: ${room.roomCode}`,
+      })
+      navigate(`/teacher/rooms/${room.roomCode}/questions`)
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Không thể tạo phòng thi'
+          : 'Có lỗi xảy ra khi tạo phòng thi'
+      toast.error('Tạo phòng thất bại', { description: message })
     } finally {
       setLoading(false)
     }
@@ -77,10 +79,10 @@ export default function TeacherRoomCreatePage() {
     <Card as="article" className="p-6 sm:p-8 bg-surface border-line-subtle shadow-card rounded-2xl space-y-6">
       <header>
         <Heading level={1} className="text-xl sm:text-2xl font-extrabold">
-          Cài đặt phòng thi & Phân quyền danh sách học sinh
+          Cài đặt phòng thi mới (Database Sync)
         </Heading>
         <Text size="sm" tone="muted" className="mt-1">
-          Cấu hình số câu theo độ khó (EASY / MEDIUM / HARD). Server sẽ rút đề khi bắt đầu phòng.
+          Cấu hình số câu theo độ khó (Dễ / Trung bình / Khó). Server sẽ rút đề trực tiếp từ ngân hàng câu hỏi.
         </Text>
       </header>
 
@@ -91,8 +93,8 @@ export default function TeacherRoomCreatePage() {
 
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Create-room meta grid] */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField id="room-subject" label="Mã môn / Subject:">
-            <Input id="room-subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <FormField id="room-code" label="Mã phòng thi (duy nhất):" error={errors.roomCode} required>
+            <Input id="room-code" value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} />
           </FormField>
           <FormField id="room-topic" label="Chủ đề phân môn:">
             <Input id="room-topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
@@ -101,34 +103,55 @@ export default function TeacherRoomCreatePage() {
             <Input
               id="room-duration"
               type="number"
-              min={5}
+              min={1}
               value={durationMinutes}
               onChange={(e) => setDurationMinutes(Number(e.target.value))}
             />
           </FormField>
-          <FormField id="room-opens" label="Thời gian mở phòng thi:" required>
-            <Input
-              id="room-opens"
-              type="datetime-local"
-              value={opensAt}
-              onChange={(e) => setOpensAt(e.target.value)}
+          <FormField id="room-visibility" label="Phạm vi phòng thi:">
+            <Checkbox
+              checked={isPublic}
+              onCheckedChange={(v) => setIsPublic(Boolean(v))}
+              label="Công khai cho toàn bộ sinh viên (PUBLIC)"
             />
           </FormField>
         </div>
 
         <fieldset className="border border-line-subtle rounded-xl p-4">
           <legend className="px-2 text-sm font-bold text-text-primary">Số câu theo độ khó *</legend>
-          {errors.diff ? <Text size="xs" className="text-tone-danger mb-2">{errors.diff}</Text> : null}
+          {errors.diff ? (
+            <Text size="xs" className="text-tone-danger mb-2">
+              {errors.diff}
+            </Text>
+          ) : null}
           {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Difficulty counts grid] */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <FormField id="diff-easy" label="Dễ (EASY)">
-              <Input id="diff-easy" type="number" min={0} value={easy} onChange={(e) => setEasy(Number(e.target.value))} />
+              <Input
+                id="diff-easy"
+                type="number"
+                min={0}
+                value={easy}
+                onChange={(e) => setEasy(Number(e.target.value))}
+              />
             </FormField>
             <FormField id="diff-medium" label="Trung bình (MEDIUM)">
-              <Input id="diff-medium" type="number" min={0} value={medium} onChange={(e) => setMedium(Number(e.target.value))} />
+              <Input
+                id="diff-medium"
+                type="number"
+                min={0}
+                value={medium}
+                onChange={(e) => setMedium(Number(e.target.value))}
+              />
             </FormField>
             <FormField id="diff-hard" label="Khó (HARD)">
-              <Input id="diff-hard" type="number" min={0} value={hard} onChange={(e) => setHard(Number(e.target.value))} />
+              <Input
+                id="diff-hard"
+                type="number"
+                min={0}
+                value={hard}
+                onChange={(e) => setHard(Number(e.target.value))}
+              />
             </FormField>
           </div>
           <Text size="xs" tone="muted" className="mt-2">
@@ -137,10 +160,10 @@ export default function TeacherRoomCreatePage() {
         </fieldset>
 
         <fieldset className="border border-line-subtle rounded-xl p-4">
-          <legend className="px-2 text-sm font-bold">Chủ đề allowlist (rút đề)</legend>
+          <legend className="px-2 text-sm font-bold">Chủ đề câu hỏi trong ngân hàng</legend>
           {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Topic chips wrap] */}
           <div className="flex flex-wrap gap-2">
-            {PRACTICE_TOPICS.map((t) => (
+            {DEFAULT_TOPICS.map((t) => (
               <Button
                 key={t}
                 type="button"
@@ -154,25 +177,12 @@ export default function TeacherRoomCreatePage() {
           </div>
         </fieldset>
 
-        <fieldset className="border border-line-subtle rounded-xl p-4">
-          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-action-accent">
-            Tùy chọn bảo mật & hình thức
-          </legend>
-          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Options 2x2 grid] */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Checkbox checked={practiceMode} onCheckedChange={(v) => setPracticeMode(Boolean(v))} label="Chế độ Luyện tập" />
-            <Checkbox checked={showAnswers} onCheckedChange={(v) => setShowAnswers(Boolean(v))} label="Hiển thị đáp án sau khi nộp" />
-            <Checkbox checked={shuffle} onCheckedChange={(v) => setShuffle(Boolean(v))} label="Tự động đảo câu hỏi & đáp án" />
-            <Checkbox checked={lockDevice} onCheckedChange={(v) => setLockDevice(Boolean(v))} label="Khóa 1 thiết bị & Giám sát thi" />
-          </div>
-        </fieldset>
-
         <footer className="flex flex-col sm:flex-row gap-3 sm:justify-between pt-2">
           <ButtonLink to="/teacher/rooms" variant="outline" size="md">
             Hủy bỏ
           </ButtonLink>
           <SubmitButton loading={loading} variant="primary" size="md" className="uppercase tracking-wide">
-            Lưu cấu hình & chuyển sang nạp đề thi »
+            Lưu cấu hình phòng thi »
           </SubmitButton>
         </footer>
       </Form>

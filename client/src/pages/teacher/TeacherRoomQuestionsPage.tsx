@@ -1,101 +1,160 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Plus, Trash2, Upload } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, Play } from 'lucide-react'
 import { Card, Badge } from '@/components/ui/data-display'
 import { Form, FormField, Input, Textarea, Checkbox } from '@/components/ui/forms'
 import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
 import { ConfirmDialog } from '@/components/ui/overlay'
-import { useMockExamStore } from '@/stores/mockExamStore'
-import { SEED_QUESTION_BANK, type Difficulty, type MockQuestion } from '@/services/mockData'
+import {
+  useRoomDetailQuery,
+  useQuestionsListQuery,
+  useCreateQuestionMutation,
+  useDeleteQuestionMutation,
+  useStartRoomMutation,
+} from '@/hooks/queries'
+import type { QuestionResponse, DifficultyLevel } from '@/types'
 import { toast } from '@/lib/toast'
 
-function emptyQuestion(): MockQuestion {
-  const id = `q_${Date.now()}`
+interface DraftQuestion {
+  id?: number
+  content: string
+  topic: string
+  difficulty: DifficultyLevel
+  options: Array<{
+    id?: number
+    content: string
+    position: number
+    isCorrect: boolean
+  }>
+}
+
+function emptyDraft(topic = 'Mạng máy tính'): DraftQuestion {
   return {
-    id,
     content: '',
-    topic: 'Mạng máy tính',
+    topic,
     difficulty: 'EASY',
-    explanation: '',
-    options: (['A', 'B', 'C', 'D'] as const).map((label) => ({
-      id: `${id}_${label}`,
-      label,
-      text: '',
-      isCorrect: label === 'A',
-    })),
+    options: [
+      { content: '', position: 1, isCorrect: true },
+      { content: '', position: 2, isCorrect: false },
+      { content: '', position: 3, isCorrect: false },
+      { content: '', position: 4, isCorrect: false },
+    ],
   }
 }
 
 export default function TeacherRoomQuestionsPage() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
-  const room = useMockExamStore((s) => s.rooms.find((r) => r.id === roomId))
-  const questions = useMockExamStore((s) => s.questionsByRoom[roomId] ?? [])
-  const addQuestion = useMockExamStore((s) => s.addQuestion)
-  const updateQuestion = useMockExamStore((s) => s.updateQuestion)
-  const deleteQuestion = useMockExamStore((s) => s.deleteQuestion)
-  const importQuestions = useMockExamStore((s) => s.importQuestions)
-  const startRoomByTeacher = useMockExamStore((s) => s.startRoomByTeacher)
 
-  const [selectedId, setSelectedId] = useState<string | null>(questions[0]?.id ?? null)
-  const [draft, setDraft] = useState<MockQuestion | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const { data: room, isLoading: isRoomLoading } = useRoomDetailQuery(roomId)
+  const { data: allQuestions = [], isLoading: isQuestionsLoading } = useQuestionsListQuery()
+  const createQuestionMutation = useCreateQuestionMutation()
+  const deleteQuestionMutation = useDeleteQuestionMutation()
+  const startRoomMutation = useStartRoomMutation()
+
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [draft, setDraft] = useState<DraftQuestion | null>(null)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const selected = useMemo(
-    () => draft ?? questions.find((q) => q.id === selectedId) ?? null,
-    [draft, questions, selectedId]
-  )
+  const roomTopic = room?.topic
+  const questions = useMemo(() => {
+    if (!roomTopic) return allQuestions
+    const matching = allQuestions.filter((q) => q.topic.toLowerCase().includes(roomTopic.toLowerCase()))
+    return matching.length > 0 ? matching : allQuestions
+  }, [allQuestions, roomTopic])
 
-  if (!room) {
-    return (
-      <Card as="section" className="p-8 text-center rounded-2xl bg-surface space-y-3">
-        <Text tone="muted">Không tìm thấy phòng</Text>
-        <ButtonLink to="/teacher/rooms" variant="outline">Quay lại</ButtonLink>
-      </Card>
-    )
+
+  const selected = useMemo(() => {
+    if (draft) return draft
+    if (!selectedId) return questions[0] ? toDraft(questions[0]) : null
+    const found = questions.find((q) => q.id === selectedId)
+    return found ? toDraft(found) : null
+  }, [draft, questions, selectedId])
+
+  function toDraft(q: QuestionResponse): DraftQuestion {
+    return {
+      id: q.id,
+      content: q.content,
+      topic: q.topic,
+      difficulty: q.difficulty,
+      options: q.options.map((o, idx) => ({
+        id: o.id,
+        content: o.content,
+        position: o.position ?? idx + 1,
+        isCorrect: Boolean(o.isCorrect),
+      })),
+    }
   }
 
-  function pick(q: MockQuestion) {
-    setSelectedId(q.id)
-    setDraft({ ...q, options: q.options.map((o) => ({ ...o })) })
+  function patchDraft(patch: Partial<DraftQuestion>) {
+    setDraft((prev) => ({ ...(prev ?? selected ?? emptyDraft(room?.topic)), ...patch }))
   }
 
-  function patchDraft(patch: Partial<MockQuestion>) {
-    setDraft((d) => ({ ...(d ?? selected!), ...patch }))
-  }
-
-  function handleSave() {
+  async function handleSave() {
     if (!selected) return
-    const data = draft ?? selected
-    if (!data.content.trim()) {
-      toast.error('Nhập nội dung câu hỏi')
+    if (!selected.content.trim()) {
+      toast.error('Vui lòng nhập nội dung câu hỏi')
       return
     }
+    const hasValidOption = selected.options.some((o) => o.content.trim() !== '')
+    if (!hasValidOption) {
+      toast.error('Vui lòng nhập nội dung cho ít nhất một đáp án')
+      return
+    }
+
     setSaving(true)
     try {
-      if (questions.some((q) => q.id === data.id)) updateQuestion(roomId, data.id, data)
-      else addQuestion(roomId, data)
-      toast.success('Đã lưu câu hỏi')
-      setSelectedId(data.id)
+      await createQuestionMutation.mutateAsync({
+        topic: selected.topic || room?.topic || 'Tổng hợp',
+        difficulty: selected.difficulty,
+        questionType: 'SINGLE_CHOICE',
+        content: selected.content.trim(),
+        options: selected.options.map((o, i) => ({
+          content: o.content.trim() || `Phương án ${i + 1}`,
+          position: o.position ?? i + 1,
+          isCorrect: o.isCorrect,
+        })),
+      })
+      toast.success('Đã lưu câu hỏi mới vào ngân hàng câu hỏi')
       setDraft(null)
+    } catch {
+      toast.error('Không thể lưu câu hỏi vào cơ sở dữ liệu')
     } finally {
       setSaving(false)
     }
   }
 
-  function handleImport() {
-    const batch = SEED_QUESTION_BANK.slice(0, 5).map((q) => ({
-      ...q,
-      id: `${q.id}_imp_${Date.now()}`,
-      options: q.options.map((o) => ({ ...o, id: `${o.id}_${Date.now()}` })),
-    }))
-    importQuestions(roomId, batch)
-    toast.success(`Đã import ${batch.length} câu từ ngân hàng mock`)
+  async function handleStartRoom() {
+    if (!room) return
+    try {
+      await startRoomMutation.mutateAsync(room.roomCode)
+      toast.success('Đã mở phòng thi thành công')
+      navigate(`/teacher/rooms/${room.roomCode}/monitor`)
+    } catch {
+      toast.error('Không thể mở phòng thi. Vui lòng kiểm tra quyền hạn.')
+    }
   }
 
-  const editing = draft ?? selected
+  if (isRoomLoading || isQuestionsLoading) {
+    return (
+      <Card as="section" className="p-8 text-center rounded-2xl bg-surface space-y-3">
+        <Text tone="muted">Đang tải dữ liệu phòng thi từ máy chủ...</Text>
+      </Card>
+    )
+  }
+
+  if (!room) {
+    return (
+      <Card as="section" className="p-8 text-center rounded-2xl bg-surface space-y-3">
+        <Text tone="muted">Không tìm thấy phòng thi với mã {roomId}</Text>
+        <ButtonLink to="/teacher/rooms" variant="outline">
+          Quay lại danh sách
+        </ButtonLink>
+      </Card>
+    )
+  }
 
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Two-column editor page] */
@@ -103,38 +162,39 @@ export default function TeacherRoomQuestionsPage() {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Title stack] */}
         <div>
-          <Heading level={1} className="text-xl font-extrabold">Soạn đề · {room.code}</Heading>
-          <Text size="sm" tone="muted">{room.name} · {questions.length} câu</Text>
+          <Heading level={1} className="text-xl font-extrabold">
+            Soạn đề & Quản lý câu hỏi · {room.roomCode}
+          </Heading>
+          <Text size="sm" tone="muted">
+            {room.name} · Ngân hàng hiện có {questions.length} câu phù hợp
+          </Text>
         </div>
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Toolbar] */}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" variant="outline" leftIcon={<Upload size={14} />} onClick={handleImport}>
-            Import mock JSON
-          </Button>
+          <ButtonLink to="/teacher/rooms" variant="outline" size="sm" leftIcon={<ArrowLeft size={14} />}>
+            Quay lại
+          </ButtonLink>
           <Button
             type="button"
             size="sm"
             variant="primary"
             leftIcon={<Plus size={14} />}
             onClick={() => {
-              const q = emptyQuestion()
+              const q = emptyDraft(room.topic)
               setDraft(q)
-              setSelectedId(q.id)
+              setSelectedId(null)
             }}
           >
-            Thêm câu
+            Thêm câu mới
           </Button>
           <Button
             type="button"
             size="sm"
             variant="secondary"
-            onClick={() => {
-              startRoomByTeacher(roomId)
-              toast.success('Đã mở phòng thi')
-              navigate(`/teacher/rooms/${roomId}/monitor`)
-            }}
+            leftIcon={<Play size={14} />}
+            onClick={handleStartRoom}
           >
-            Mở phòng
+            Mở phòng thi
           </Button>
         </div>
       </header>
@@ -146,72 +206,101 @@ export default function TeacherRoomQuestionsPage() {
             <Button
               key={q.id}
               type="button"
-              variant={selectedId === q.id ? 'primary' : 'outline'}
+              variant={selected?.id === q.id ? 'primary' : 'outline'}
               className="w-full justify-start h-auto py-3 text-left whitespace-normal"
-              onClick={() => pick(q)}
+              onClick={() => {
+                setSelectedId(q.id)
+                setDraft(null)
+              }}
             >
               {i + 1}. {q.content.slice(0, 56)}
               {q.content.length > 56 ? '…' : ''}
             </Button>
           ))}
-          {questions.length === 0 ? <Text size="sm" tone="muted">Chưa có câu — thêm hoặc import.</Text> : null}
+          {questions.length === 0 ? (
+            <Text size="sm" tone="muted">
+              Chưa có câu hỏi trong CSDL — hãy bấm Thêm câu mới.
+            </Text>
+          ) : null}
         </aside>
 
         <Card as="section" className="p-5 sm:p-6 bg-surface border-line-subtle shadow-card rounded-2xl">
-          {!editing ? (
-            <Text tone="muted">Chọn hoặc thêm câu hỏi để chỉnh sửa</Text>
+          {!selected ? (
+            <Text tone="muted">Chọn hoặc thêm câu hỏi để cấu hình</Text>
           ) : (
             <Form onSubmit={handleSave} noValidate className="space-y-4">
-              <FormField id="q-content" label="Nội dung câu hỏi" required>
-                <Textarea id="q-content" rows={3} value={editing.content} onChange={(e) => patchDraft({ content: e.target.value })} />
+              <FormField id="q-content" label="Nội dung câu hỏi trắc nghiệm" required>
+                <Textarea
+                  id="q-content"
+                  rows={3}
+                  value={selected.content}
+                  onChange={(e) => patchDraft({ content: e.target.value })}
+                />
               </FormField>
+
               {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Meta grid] */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField id="q-topic" label="Chủ đề">
-                  <Input id="q-topic" value={editing.topic} onChange={(e) => patchDraft({ topic: e.target.value })} />
+                <FormField id="q-topic" label="Chủ đề kiến thức">
+                  <Input
+                    id="q-topic"
+                    value={selected.topic}
+                    onChange={(e) => patchDraft({ topic: e.target.value })}
+                  />
                 </FormField>
-                <FormField id="q-diff" label="Độ khó (EASY/MEDIUM/HARD)">
+                <FormField id="q-diff" label="Độ khó (EASY / MEDIUM / HARD)">
                   <Input
                     id="q-diff"
-                    value={editing.difficulty}
-                    onChange={(e) => patchDraft({ difficulty: e.target.value as Difficulty })}
+                    value={selected.difficulty}
+                    onChange={(e) => patchDraft({ difficulty: e.target.value as DifficultyLevel })}
                   />
                 </FormField>
               </div>
+
               <fieldset className="space-y-2">
-                <legend className="text-sm font-medium mb-1">Đáp án</legend>
-                {editing.options.map((opt, oi) => (
+                <legend className="text-sm font-medium mb-1">Phương án lựa chọn</legend>
+                {selected.options.map((opt, oi) => (
                   /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Option editor row] */
-                  <div key={opt.id} className="flex gap-2 items-start">
-                    <Badge tone="neutral" size="sm" className="mt-2">{opt.label}</Badge>
+                  <div key={opt.id ?? oi} className="flex gap-2 items-start">
+                    <Badge tone="neutral" size="sm" className="mt-2">
+                      {String.fromCharCode(65 + oi)}
+                    </Badge>
                     <Input
-                      aria-label={`Đáp án ${opt.label}`}
-                      value={opt.text}
+                      aria-label={`Đáp án ${String.fromCharCode(65 + oi)}`}
+                      value={opt.content}
                       className="flex-1"
                       onChange={(e) => {
-                        const options = editing.options.map((o, j) => (j === oi ? { ...o, text: e.target.value } : o))
+                        const options = selected.options.map((o, j) =>
+                          j === oi ? { ...o, content: e.target.value } : o
+                        )
                         patchDraft({ options })
                       }}
                     />
                     <Checkbox
-                      label="Đúng"
+                      label="Đáp án đúng"
                       checked={opt.isCorrect}
                       onCheckedChange={(checked) => {
-                        const options = editing.options.map((o, j) => ({ ...o, isCorrect: j === oi ? checked : false }))
+                        const options = selected.options.map((o, j) => ({
+                          ...o,
+                          isCorrect: j === oi ? Boolean(checked) : false,
+                        }))
                         patchDraft({ options })
                       }}
                     />
                   </div>
                 ))}
               </fieldset>
-              <FormField id="q-exp" label="Giải thích">
-                <Textarea id="q-exp" rows={2} value={editing.explanation ?? ''} onChange={(e) => patchDraft({ explanation: e.target.value })} />
-              </FormField>
-              <footer className="flex flex-wrap gap-2">
-                <SubmitButton loading={saving}>Lưu câu hỏi</SubmitButton>
-                {questions.some((q) => q.id === editing.id) ? (
-                  <Button type="button" variant="danger" size="md" leftIcon={<Trash2 size={14} />} onClick={() => setDeleteId(editing.id)}>
-                    Xóa
+
+              <footer className="flex flex-wrap gap-2 pt-2">
+                <SubmitButton loading={saving}>Lưu câu hỏi vào CSDL</SubmitButton>
+                {selected.id ? (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="md"
+                    leftIcon={<Trash2 size={14} />}
+                    onClick={() => setDeleteId(selected.id!)}
+                  >
+                    Xóa câu hỏi
                   </Button>
                 ) : null}
               </footer>
@@ -223,16 +312,20 @@ export default function TeacherRoomQuestionsPage() {
       <ConfirmDialog
         open={Boolean(deleteId)}
         onClose={() => setDeleteId(null)}
-        title="Xóa câu hỏi?"
-        description="Thao tác không hoàn tác trong phiên mock hiện tại."
+        title="Xóa câu hỏi khỏi cơ sở dữ liệu?"
+        description="Thao tác này sẽ xóa vĩnh viễn câu hỏi khỏi ngân hàng đề thi."
         variant="danger"
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!deleteId) return
-          deleteQuestion(roomId, deleteId)
-          toast.success('Đã xóa câu hỏi')
-          setDeleteId(null)
-          setDraft(null)
-          setSelectedId(null)
+          try {
+            await deleteQuestionMutation.mutateAsync(deleteId)
+            toast.success('Đã xóa câu hỏi khỏi cơ sở dữ liệu')
+            setDeleteId(null)
+            setDraft(null)
+            setSelectedId(null)
+          } catch {
+            toast.error('Không thể xóa câu hỏi')
+          }
         }}
       />
     </div>

@@ -1,25 +1,25 @@
 import api from './api'
-import type { AuthUser } from '@/stores/authStore'
+import type { ApiResponse, AuthResponse, AuthUser, LoginRequest, RegisterRequest, UserProfileResponse } from '@/types'
 
-export interface LoginRequest {
-  email: string
-  password: string
-}
+export type { LoginRequest, AuthResponse, RegisterRequest, UserProfileResponse }
+export type LoginResponse = AuthResponse
 
-export interface LoginResponse {
-  token: string
-  user: AuthUser
-}
+import { useAuthStore } from '@/stores/authStore'
 
 export const authService = {
-  async login(payload: LoginRequest): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>('/auth/login', payload)
-    return response.data
+  async register(payload: RegisterRequest): Promise<UserProfileResponse> {
+    const response = await api.post<ApiResponse<UserProfileResponse>>('/auth/register', payload)
+    return response.data.data
+  },
+
+  async login(payload: LoginRequest): Promise<AuthResponse> {
+    const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', payload)
+    return response.data.data
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    const response = await api.get<AuthUser>('/auth/me')
-    return response.data
+    const response = await api.get<ApiResponse<AuthUser>>('/auth/me')
+    return response.data.data
   },
 
   async logout(): Promise<void> {
@@ -27,6 +27,9 @@ export const authService = {
       await api.post('/auth/logout')
     } catch {
       // Ignore network errors during logout
+    } finally {
+      useAuthStore.getState().clearAuth(true)
     }
   },
 }
+

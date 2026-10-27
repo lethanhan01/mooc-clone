@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
                 request.email(),
                 passwordEncoder.encode(request.password()),
                 request.displayName(),
-                SystemRole.USER
+                SystemRole.STUDENT
         );
         UserEntity saved = userRepository.save(user);
 

@@ -35,6 +35,18 @@
     font: inherit;
   }
 
+  /* Autofill normalization — Loại bỏ vệt nền màu lệch chuẩn do WebKit/Chromium tự động áp dụng */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-fg-primary);
+    caret-color: var(--color-fg-primary);
+    -webkit-box-shadow: 0 0 0 1000px transparent inset;
+    box-shadow: 0 0 0 1000px transparent inset;
+    transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s;
+  }
+
   button,
   a {
     -webkit-tap-highlight-color: transparent;

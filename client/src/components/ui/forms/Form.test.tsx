@@ -60,8 +60,11 @@ describe('Form Primitive Component', () => {
     expect(formEl).not.toHaveAttribute('role')
   })
 
-  it('TC-FORM-07: triggers onSubmit callback when submitted', () => {
-    const handleSubmit = vi.fn((e) => e.preventDefault())
+  it('TC-FORM-07: triggers onSubmit callback and automatically prevents native submission', () => {
+    let wasDefaultPrevented = false
+    const handleSubmit = vi.fn((e) => {
+      wasDefaultPrevented = e.defaultPrevented
+    })
     render(
       <Form onSubmit={handleSubmit}>
         <button type="submit">Submit</button>
@@ -70,6 +73,7 @@ describe('Form Primitive Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
     expect(handleSubmit).toHaveBeenCalledTimes(1)
+    expect(wasDefaultPrevented).toBe(true)
   })
 
   it('TC-FORM-08: prevents Enter key submission on input elements when preventEnterSubmit is true, but allows Enter in textarea and on submit button', () => {

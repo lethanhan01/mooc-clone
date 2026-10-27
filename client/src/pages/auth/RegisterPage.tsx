@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore, type Role } from '@/stores/authStore'
+import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
 import { toast } from '@/lib/toast'
 
 export default function RegisterPage() {
@@ -15,14 +16,22 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
-  const setAuth = useAuthStore((s) => s.setAuth)
+  const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (hasHydrated && user) {
+      navigate(getHomePathForRoles(user.roles), { replace: true })
+    }
+  }, [hasHydrated, user, navigate])
 
   function clearError(field: string) {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: SyntheticEvent<HTMLFormElement>) {
+    e?.preventDefault()
     const next: Record<string, string> = {}
     if (!fullName.trim()) next.fullName = 'Vui lòng nhập họ và tên'
     if (!username.trim()) next.username = 'Vui lòng nhập tên đăng nhập'
@@ -36,18 +45,20 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      setAuth(
-        {
-          userId: `u_${Date.now()}`,
-          email: email.trim(),
-          fullName: fullName.trim(),
-          roles: ['student'] as Role[],
-          studentId: username.trim(),
-        },
-        `mock_token_student_${Date.now()}`
-      )
-      toast.success('Đăng ký thành công', { description: 'Đã tạo tài khoản học sinh demo' })
-      navigate('/student/dashboard')
+      await authService.register({
+        username: username.trim(),
+        email: email.trim(),
+        password,
+        displayName: fullName.trim(),
+      })
+      toast.success('Đăng ký thành công', { description: 'Vui lòng đăng nhập với tài khoản mới tạo' })
+      navigate('/login', { replace: true })
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+          : 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.'
+      toast.error('Đăng ký không thành công', { description: message })
     } finally {
       setLoading(false)
     }
@@ -68,6 +79,7 @@ export default function RegisterPage() {
         <FormField id="reg-fullname" label="Họ và tên học sinh:" error={errors.fullName} required>
           <Input
             id="reg-fullname"
+            name="fullName"
             value={fullName}
             placeholder="Nguyễn Văn A"
             onChange={(e) => {
@@ -79,6 +91,7 @@ export default function RegisterPage() {
         <FormField id="reg-username" label="Tên đăng nhập:" error={errors.username} required>
           <Input
             id="reg-username"
+            name="username"
             value={username}
             placeholder="hocsinh_vana"
             onChange={(e) => {
@@ -90,6 +103,7 @@ export default function RegisterPage() {
         <FormField id="reg-email" label="Địa chỉ Email:" error={errors.email} required>
           <Input
             id="reg-email"
+            name="email"
             type="email"
             value={email}
             placeholder="nguyenvana@gmail.com"
@@ -105,6 +119,7 @@ export default function RegisterPage() {
           <FormField id="reg-password" label="Mật khẩu:" error={errors.password} required>
             <Input
               id="reg-password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => {
@@ -116,6 +131,7 @@ export default function RegisterPage() {
           <FormField id="reg-confirm" label="Xác nhận mật khẩu:" error={errors.confirm} required>
             <Input
               id="reg-confirm"
+              name="confirm"
               type="password"
               value={confirm}
               onChange={(e) => {

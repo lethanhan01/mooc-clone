@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 
-const DEFAULT_API_PROXY_TARGET = 'http://localhost:5000'
+const DEFAULT_API_PROXY_TARGET = 'http://localhost:8080'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')

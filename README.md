@@ -96,10 +96,6 @@ Toàn bộ các tiêu chí tính điểm của hệ thống được quy định
    ```bash
    psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
    ```
-3. (Tùy chọn) Nạp bộ dữ liệu mẫu phục vụ kiểm thử tại [server/online_exam_seed_data.sql](server/online_exam_seed_data.sql):
-   ```bash
-   psql -U postgres -d online_exam_db -f server/online_exam_seed_data.sql
-   ```
 
 ### 4.2 Khởi chạy Máy chủ Backend (Java Spring Boot)
 

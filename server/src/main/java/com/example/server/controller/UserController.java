@@ -25,8 +25,8 @@ import java.util.Set;
  */
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "Users", description = "Quản lý tài khoản người dùng và phân quyền (Dành riêng cho ADMIN)")
+@PreAuthorize("hasRole('TEACHER')")
+@Tag(name = "Users", description = "Quản lý tài khoản người dùng và phân quyền (Dành riêng cho TEACHER)")
 public class UserController extends BaseController<UserEntity, Long, CreateUserRequest, UpdateUserRequest, UserResponse, UserService> {
 
     public UserController(UserService service) {

@@ -104,9 +104,9 @@ Khi vi phạm Bean Validation (`@NotBlank`, `@Size`, `@NotNull`), mã `code` là
 - `GET /api/questions`: Lấy toàn bộ danh sách câu hỏi hoạt động.
 - `GET /api/questions/page?page=0&size=20`: Phân trang danh sách câu hỏi.
 - `GET /api/questions/{id}`: Tra cứu chi tiết một câu hỏi kèm các phương án lựa chọn.
-- `POST /api/questions`: *(Quyền ADMIN)* Tạo câu hỏi mới kèm tối thiểu 2 phương án và 1 phương án đúng.
-- `PUT /api/questions/{id}`: *(Quyền ADMIN)* Cập nhật nội dung câu hỏi và các phương án.
-- `DELETE /api/questions/{id}`: *(Quyền ADMIN)* Xóa mềm câu hỏi (`status = 'ARCHIVED'`).
+- `POST /api/questions`: *(Quyền TEACHER)* Tạo câu hỏi mới kèm tối thiểu 2 phương án và 1 phương án đúng.
+- `PUT /api/questions/{id}`: *(Quyền TEACHER)* Cập nhật nội dung câu hỏi và các phương án.
+- `DELETE /api/questions/{id}`: *(Quyền TEACHER)* Xóa mềm câu hỏi (`status = 'ARCHIVED'`).
 - `GET /api/questions/topic/{topic}`: Lọc câu hỏi theo chủ đề chuyên biệt.
 
 ### 3.3. Phân Hệ Phòng Thi (`/api/rooms`) — Kế thừa `BaseController`

@@ -52,22 +52,22 @@ public class QuestionController extends BaseController<QuestionEntity, Long, Cre
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Tạo câu hỏi mới kèm danh sách phương án (Dành riêng cho ADMIN)")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Tạo câu hỏi mới kèm danh sách phương án (Dành riêng cho TEACHER)")
     public ResponseEntity<ApiResponse<QuestionResponse>> create(@Valid @RequestBody CreateQuestionRequest request) {
         return super.create(request);
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Cập nhật nội dung câu hỏi (Dành riêng cho ADMIN)")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Cập nhật nội dung câu hỏi (Dành riêng cho TEACHER)")
     public ResponseEntity<ApiResponse<QuestionResponse>> update(@PathVariable Long id, @Valid @RequestBody UpdateQuestionRequest request) {
         return super.update(id, request);
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Xóa mềm câu hỏi khỏi ngân hàng đề thi (Dành riêng cho ADMIN)")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Xóa mềm câu hỏi khỏi ngân hàng đề thi (Dành riêng cho TEACHER)")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         return super.delete(id);
     }

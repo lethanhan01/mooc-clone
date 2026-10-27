@@ -3,8 +3,8 @@ import { useLocation, NavLink } from 'react-router-dom'
 import { GraduationCap } from 'lucide-react'
 import { SidebarNav } from './SidebarNav'
 import { getMoocNavSections } from './sidebar.config'
-import { useAuthStore, type Role } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles, type Role } from '@/stores/authStore'
+
 import type { SidebarProps } from './sidebar.types'
 
 export function Sidebar({
@@ -51,7 +51,6 @@ export function Sidebar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       aria-label="Thanh điều hướng chính"
-      aria-expanded={showLabels}
     >
       {/* Brand Header */}
       <div

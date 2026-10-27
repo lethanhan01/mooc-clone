@@ -5,14 +5,14 @@ import { Card, Badge } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
+
 import { toast } from '@/lib/toast'
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
   const navigate = useNavigate()
 
   const [fullName, setFullName] = useState(user?.fullName ?? '')
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const roleLabel = user?.roles.includes('teacher') ? 'Giáo viên' : 'Học sinh'
   const username = user?.studentId || user?.email?.split('@')[0] || 'user'
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const next: Record<string, string> = {}
     if (!fullName.trim()) next.fullName = 'Họ tên không được trống'
     if (!email.trim()) next.email = 'Email không được trống'
@@ -45,8 +45,8 @@ export default function ProfilePage() {
     try {
       setUser({ ...user, fullName: fullName.trim(), email: email.trim() })
       if (newPassword) {
-        toast.success('Đã đổi mật khẩu', { description: 'Bạn sẽ được đăng xuất trên mọi thiết bị (mock)' })
-        clearAuth()
+        toast.success('Đã đổi mật khẩu', { description: 'Bạn sẽ được đăng xuất trên mọi thiết bị' })
+        await authService.logout()
         navigate('/login', { replace: true })
         return
       }

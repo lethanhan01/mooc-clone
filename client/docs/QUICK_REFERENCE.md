@@ -1,9 +1,8 @@
 # 🚀 Quick Reference Sheet: Sổ Tay Tra Cứu Nhanh Chuẩn Frontend Doanh Nghiệp
 
-> **Dành cho:** Kỹ sư Frontend mới gia nhập dự án, Reviewers kiểm tra Pull Request và AI Pair-programming Assistants.  
-> **Mục tiêu:** Tra cứu nhanh quy chuẩn cốt lõi, công thức viết code chuẩn và checklist nghiệm thu PR trong 15 phút.  
-> **Cổng vào tài liệu chuyên sâu:** [`FRONTEND_CONVENTIONS.md`](../FRONTEND_CONVENTIONS.md) | [`Bản đồ 15 Chuyên đề`](./README.md)  
-> **Phiên bản:** 8.0 (Enterprise Quality Standard)
+> **Dự án:** mooc-clone — Hệ thống Thi Trắc nghiệm Trực tuyến  
+> **Cổng vào tài liệu chuyên sâu:** [`FRONTEND_CONVENTIONS.md`](../FRONTEND_CONVENTIONS.md) | [`Bản đồ 17 Chuyên đề`](./README.md)  
+> **Phiên bản:** 1.0.0
 
 ---
 

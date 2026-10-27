@@ -184,10 +184,10 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
     protected void beforeUpdate(Long id, UpdateRoomRequest request, ExamRoomEntity existingEntity) {
         UserEntity currentUser = SecurityUtil.getCurrentUser().orElse(null);
         if (currentUser != null) {
-            boolean isAdmin = currentUser.getSystemRole() == SystemRole.ADMIN;
+            boolean isTeacher = currentUser.getSystemRole() == SystemRole.TEACHER;
             boolean isOwner = existingEntity.getOwner() != null && existingEntity.getOwner().getId().equals(currentUser.getId());
-            if (!isAdmin && !isOwner) {
-                throw new AppException(ErrorCode.UNAUTHORIZED, "Chỉ chủ phòng hoặc ADMIN mới có quyền cập nhật phòng thi");
+            if (!isTeacher && !isOwner) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "Chỉ chủ phòng hoặc TEACHER mới có quyền cập nhật phòng thi");
             }
         }
     }

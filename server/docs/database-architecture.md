@@ -2,7 +2,7 @@
 
 > **Phân hệ:** Máy chủ Backend (`server/`) — PostgreSQL 14+ (Supabase Cloud Database)  
 > **Schema:** Toàn bộ bảng, khung nhìn (views) và chỉ mục được tổ chức trong schema `public`  
-> **Kịch bản SQL:** [online_exam_schema.sql](../online_exam_schema.sql) (Khởi tạo Schema DDL) và [online_exam_seed_data.sql](../online_exam_seed_data.sql) (Dữ liệu mẫu kiểm thử)
+> **Kịch bản SQL:** [online_exam_schema.sql](../online_exam_schema.sql) (Khởi tạo Schema DDL)
 
 ---
 
@@ -44,7 +44,7 @@ erDiagram
 
 | Tên Bảng (Table) | Mục Đích Kỹ Thuật | Ràng Buộc & Khóa Chính / Ngoại Quan Trọng |
 | :--- | :--- | :--- |
-| `users` | Quản lý tài khoản, mật khẩu băm BCrypt, vai trò (`USER`, `ADMIN`) | Khóa chính `id` (IDENTITY); duy nhất `lower(username)` và `lower(email)`; ràng buộc `status IN ('ACTIVE', 'BLOCKED')` |
+| `users` | Quản lý tài khoản, mật khẩu băm BCrypt, vai trò (`TEACHER`, `STUDENT`) | Khóa chính `id` (IDENTITY); duy nhất `lower(username)` và `lower(email)`; ràng buộc `status IN ('ACTIVE', 'BLOCKED')` |
 | `sessions` | Quản lý phiên làm việc máy chủ bảo mật | Khóa ngoại `user_id`; cột `token_hash` kiểu `BYTEA` (32 bytes SHA-256) duy nhất; kiểm tra `expires_at` và cờ thu hồi `revoked_at` |
 | `questions` | Ngân hàng câu hỏi trắc nghiệm | Khóa chính `id`; `topic` không rỗng; `difficulty IN ('EASY', 'MEDIUM', 'HARD')`; `status IN ('ACTIVE', 'ARCHIVED')` |
 | `question_options`| Danh sách phương án lựa chọn cho câu hỏi | Khóa ngoại `question_id`; duy nhất `(question_id, position)`; chỉ mục partial đảm bảo tối đa 1 đáp án đúng (`is_correct = true`); khóa duy nhất phức hợp `(question_id, id)` |
@@ -98,16 +98,12 @@ Hệ thống không lưu trữ các trường dữ liệu phái sinh nhằm trá
 
 ---
 
-## 6. Hướng Dẫn Khởi Tạo CSDL & Nạp Dữ Liệu Mẫu
+## 6. Hướng Dẫn Khởi Tạo CSDL
 
-1. **Thực thi kịch bản tạo Schema DDL:**
-   ```bash
-   psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
-   ```
-2. **Thực thi kịch bản nạp dữ liệu mẫu ban đầu (Seed Data):**
-   ```bash
-   psql -U postgres -d online_exam_db -f server/online_exam_seed_data.sql
-   ```
+**Thực thi kịch bản tạo Schema DDL:**
+```bash
+psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
+```
 
 ---
 

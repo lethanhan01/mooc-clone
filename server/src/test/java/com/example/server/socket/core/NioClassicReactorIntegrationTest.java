@@ -47,7 +47,7 @@ class NioClassicReactorIntegrationTest {
             u.setDisplayName("Thí sinh 99");
             u.setEmail("student_99@mooc.local");
             u.setPasswordHash("$2a$10$dummyHashPass");
-            u.setSystemRole(SystemRole.USER);
+            u.setSystemRole(SystemRole.STUDENT);
             u.setStatus(UserStatus.ACTIVE);
             return userRepository.save(u);
         });

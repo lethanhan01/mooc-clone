@@ -87,7 +87,7 @@ export const inputContainerVariants = cva(
 )
 
 export const inputFieldVariants = cva(
-  'w-full bg-transparent border-0 p-0 text-inherit placeholder:text-fg-muted outline-hidden focus:outline-hidden disabled:cursor-not-allowed font-body'
+  'w-full h-full bg-transparent border-0 p-0 text-inherit placeholder:text-fg-muted outline-hidden focus:outline-hidden disabled:cursor-not-allowed font-body'
 )
 
 export interface InputContextValue {
