@@ -159,7 +159,7 @@ export default function StudentLiveExamPage() {
                   className="w-full justify-start min-h-11 text-left whitespace-normal h-auto py-3"
                   onClick={() => handleSelectOption(opt.id)}
                 >
-                  <strong className="mr-2">{String.fromCharCode(65 + oi)}.</strong> {opt.content}
+                  <strong className="mr-2">{String.fromCodePoint(65 + oi)}.</strong> {opt.content}
                 </Button>
               )
             })}
@@ -213,12 +213,15 @@ export default function StudentLiveExamPage() {
           {questions.map((item, i) => {
             const has = Boolean(answers[item.id])
             const isFlagged = flagged.includes(item.id)
+            let buttonVariant: 'primary' | 'secondary' | 'outline' = 'outline'
+            if (i === currentIndex) buttonVariant = 'primary'
+            else if (has) buttonVariant = 'secondary'
             return (
               <Button
                 key={item.id}
                 type="button"
                 size="sm"
-                variant={i === currentIndex ? 'primary' : has ? 'secondary' : 'outline'}
+                variant={buttonVariant}
                 className={`min-h-10 ${isFlagged ? 'ring-2 ring-status-warning-fg' : ''}`}
                 onClick={() => setCurrentIndex(i)}
                 aria-label={`Câu ${i + 1}`}

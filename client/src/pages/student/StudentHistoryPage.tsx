@@ -7,6 +7,24 @@ import { formatDuration, roomStatusLabel, roomStatusTone } from '@/lib/room-stat
 export default function StudentHistoryPage() {
   const { data: rooms = [], isLoading } = useRoomsListQuery()
 
+  function renderStatusMessage() {
+    if (isLoading) {
+      return (
+        <Text size="sm" tone="muted" className="text-center py-6">
+          Đang tải dữ liệu lịch sử thi từ máy chủ...
+        </Text>
+      )
+    }
+    if (rooms.length === 0) {
+      return (
+        <Text size="sm" tone="muted" className="text-center py-6">
+          Chưa có bài thi nào được ghi nhận.
+        </Text>
+      )
+    }
+    return null
+  }
+
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
     <div className="space-y-6">
@@ -58,15 +76,7 @@ export default function StudentHistoryPage() {
             ))}
           </TableBody>
         </Table>
-        {isLoading ? (
-          <Text size="sm" tone="muted" className="text-center py-6">
-            Đang tải dữ liệu lịch sử thi từ máy chủ...
-          </Text>
-        ) : rooms.length === 0 ? (
-          <Text size="sm" tone="muted" className="text-center py-6">
-            Chưa có bài thi nào được ghi nhận.
-          </Text>
-        ) : null}
+        {renderStatusMessage()}
       </Card>
     </div>
   )

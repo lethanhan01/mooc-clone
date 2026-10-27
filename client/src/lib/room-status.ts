@@ -1,6 +1,6 @@
 import type { RoomStatus } from '@/types'
 
-export function roomStatusLabel(status: RoomStatus | string): string {
+export function roomStatusLabel(status: RoomStatus): string {
   const normalized = status?.toLowerCase()
   switch (normalized) {
     case 'waiting':
@@ -18,7 +18,7 @@ export function roomStatusLabel(status: RoomStatus | string): string {
   }
 }
 
-export function roomStatusTone(status: RoomStatus | string): 'accent' | 'warning' | 'neutral' | 'danger' {
+export function roomStatusTone(status: RoomStatus): 'accent' | 'warning' | 'neutral' | 'danger' {
   const normalized = status?.toLowerCase()
   switch (normalized) {
     case 'waiting':

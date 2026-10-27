@@ -15,23 +15,16 @@ export default function StudentExamSummaryPage() {
   const { data: room } = useRoomDetailQuery(roomId)
   const { data: result, isLoading } = useAttemptResultQuery(attemptId)
 
-  return (
-    /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <header className="space-y-1">
-        <Heading level={1} className="text-2xl font-extrabold">
-          Kết quả chấm thi trực tuyến
-        </Heading>
-        <Text size="sm" tone="muted">
-          {room?.name ?? 'Phòng thi'} · {room?.roomCode ?? roomId}
-        </Text>
-      </header>
-
-      {isLoading ? (
+  function renderResultContent() {
+    if (isLoading) {
+      return (
         <Card as="section" className="p-8 text-center bg-surface border-line-subtle rounded-2xl">
           <Text tone="muted">Đang chấm điểm và tổng hợp kết quả thi...</Text>
         </Card>
-      ) : result ? (
+      )
+    }
+    if (result) {
+      return (
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Điểm của bạn">
           <StatCard
             label="Điểm số (Thang 10)"
@@ -52,13 +45,30 @@ export default function StudentExamSummaryPage() {
             hint={`Chế độ: ${result.mode}`}
           />
         </section>
-      ) : (
-        <Card as="section" className="p-5 bg-surface border-line-subtle rounded-2xl text-center space-y-3">
-          <Text size="sm" tone="muted">
-            Bài thi đã được ghi nhận vào hệ thống.
-          </Text>
-        </Card>
-      )}
+      )
+    }
+    return (
+      <Card as="section" className="p-5 bg-surface border-line-subtle rounded-2xl text-center space-y-3">
+        <Text size="sm" tone="muted">
+          Bài thi đã được ghi nhận vào hệ thống.
+        </Text>
+      </Card>
+    )
+  }
+
+  return (
+    /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <header className="space-y-1">
+        <Heading level={1} className="text-2xl font-extrabold">
+          Kết quả chấm thi trực tuyến
+        </Heading>
+        <Text size="sm" tone="muted">
+          {room?.name ?? 'Phòng thi'} · {room?.roomCode ?? roomId}
+        </Text>
+      </header>
+
+      {renderResultContent()}
 
       <footer className="flex flex-wrap gap-3">
         <ButtonLink to={`/student/rooms/${roomId}/review?attemptId=${attemptId ?? ''}`} variant="primary" size="md">

@@ -22,10 +22,10 @@ export default function TeacherSystemLogsPage() {
     const q = query.trim().toLowerCase()
     if (!q) return true
     return (
-      (log.actorDisplayName && log.actorDisplayName.toLowerCase().includes(q)) ||
+      Boolean(log.actorDisplayName?.toLowerCase().includes(q)) ||
       log.action.toLowerCase().includes(q) ||
-      (log.entityType && log.entityType.toLowerCase().includes(q)) ||
-      (log.metadata && log.metadata.toLowerCase().includes(q))
+      Boolean(log.entityType?.toLowerCase().includes(q)) ||
+      Boolean(log.metadata?.toLowerCase().includes(q))
     )
   })
 

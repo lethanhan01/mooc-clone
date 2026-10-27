@@ -23,7 +23,7 @@ export function useCreateQuestionMutation() {
   return useMutation({
     mutationFn: (payload: CreateQuestionRequest) => questionService.createQuestion(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.questions.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.questions.all })
     },
   })
 }
@@ -33,7 +33,7 @@ export function useDeleteQuestionMutation() {
   return useMutation({
     mutationFn: (id: number) => questionService.deleteQuestion(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.questions.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.questions.all })
     },
   })
 }

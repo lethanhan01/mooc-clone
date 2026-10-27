@@ -51,7 +51,6 @@ export function Sidebar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       aria-label="Thanh điều hướng chính"
-      aria-expanded={showLabels}
     >
       {/* Brand Header */}
       <div

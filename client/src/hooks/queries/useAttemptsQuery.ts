@@ -8,7 +8,7 @@ export function useStartAttemptMutation() {
   return useMutation({
     mutationFn: (payload: StartAttemptRequest) => attemptService.startAttempt(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attempts.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.attempts.all })
     },
   })
 }
@@ -25,7 +25,7 @@ export function useSubmitExamMutation() {
   return useMutation({
     mutationFn: (attemptId: number) => attemptService.submitExam(attemptId),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attempts.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.attempts.all })
       queryClient.setQueryData(queryKeys.attempts.detail(String(data.attemptId)), data)
     },
   })

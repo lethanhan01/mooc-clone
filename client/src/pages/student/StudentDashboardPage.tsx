@@ -42,6 +42,58 @@ export default function StudentDashboardPage() {
     }
   }
 
+  function renderActiveRoomsContent() {
+    if (isLoading) {
+      return (
+        <Text size="sm" tone="muted">
+          Đang tải danh sách phòng thi...
+        </Text>
+      )
+    }
+    if (activeRooms.length === 0) {
+      return (
+        <Text size="sm" tone="muted">
+          Hiện không có phòng thi nào đang mở. Thử nhập mã phòng hoặc chọn luyện tập tự do.
+        </Text>
+      )
+    }
+    return (
+      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-none p-0 m-0">
+        {activeRooms.map((room) => {
+          const isRunning = room.status?.toUpperCase() === 'RUNNING' || room.status === 'in_progress'
+          return (
+            <li key={room.id}>
+              <Card as="article" className="p-5 border border-line-subtle bg-surface shadow-card rounded-2xl space-y-3">
+                <header className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-semibold text-text-primary leading-snug">{room.roomName}</p>
+                  <Badge tone={roomStatusTone(room.status)} size="sm">
+                    {roomStatusLabel(room.status)}
+                  </Badge>
+                </header>
+                <p className="text-xs text-text-muted">
+                  Mã: {room.roomCode} · {room.totalQuestions} câu · {formatDuration(room.durationSeconds)} · {room.participantsCount} thí sinh
+                </p>
+                <Badge tone={isRunning ? 'accent' : 'warning'} size="sm">
+                  {isRunning ? 'Đang diễn ra' : 'Đang chờ thí sinh'}
+                </Badge>
+                <footer>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="primary"
+                    onClick={() => navigate(isRunning ? `/student/rooms/${room.roomCode}/exam` : `/student/rooms/${room.roomCode}/waiting`)}
+                  >
+                    {isRunning ? 'Vào làm bài thi' : 'Vào phòng chờ'}
+                  </Button>
+                </footer>
+              </Card>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
     <div className="space-y-6">
@@ -93,49 +145,7 @@ export default function StudentDashboardPage() {
           </ButtonLink>
         </header>
 
-        {isLoading ? (
-          <Text size="sm" tone="muted">
-            Đang tải danh sách phòng thi...
-          </Text>
-        ) : activeRooms.length === 0 ? (
-          <Text size="sm" tone="muted">
-            Hiện không có phòng thi nào đang mở. Thử nhập mã phòng hoặc chọn luyện tập tự do.
-          </Text>
-        ) : (
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-none p-0 m-0">
-            {activeRooms.map((room) => {
-              const isRunning = room.status?.toUpperCase() === 'RUNNING' || room.status === 'in_progress'
-              return (
-                <li key={room.id}>
-                  <Card as="article" className="p-5 border border-line-subtle bg-surface shadow-card rounded-2xl space-y-3">
-                    <header className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="font-semibold text-text-primary leading-snug">{room.roomName}</p>
-                      <Badge tone={roomStatusTone(room.status)} size="sm">
-                        {roomStatusLabel(room.status)}
-                      </Badge>
-                    </header>
-                    <p className="text-xs text-text-muted">
-                      Mã: {room.roomCode} · {room.totalQuestions} câu · {formatDuration(room.durationSeconds)} · {room.participantsCount} thí sinh
-                    </p>
-                    <Badge tone={isRunning ? 'accent' : 'warning'} size="sm">
-                      {isRunning ? 'Đang diễn ra' : 'Đang chờ thí sinh'}
-                    </Badge>
-                    <footer>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="primary"
-                        onClick={() => navigate(isRunning ? `/student/rooms/${room.roomCode}/exam` : `/student/rooms/${room.roomCode}/waiting`)}
-                      >
-                        {isRunning ? 'Vào làm bài thi' : 'Vào phòng chờ'}
-                      </Button>
-                    </footer>
-                  </Card>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        {renderActiveRoomsContent()}
       </section>
     </div>
   )

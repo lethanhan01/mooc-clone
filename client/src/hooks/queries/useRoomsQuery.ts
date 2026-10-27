@@ -23,7 +23,7 @@ export function useCreateRoomMutation() {
   return useMutation({
     mutationFn: (payload: CreateRoomRequest) => roomService.createRoom(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -34,7 +34,7 @@ export function useUpdateRoomMutation() {
     mutationFn: ({ id, payload }: { id: number; payload: UpdateRoomRequest }) =>
       roomService.updateRoom(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -44,7 +44,7 @@ export function useDeleteRoomMutation() {
   return useMutation({
     mutationFn: (id: number) => roomService.deleteRoom(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -54,7 +54,7 @@ export function useJoinRoomMutation() {
   return useMutation({
     mutationFn: (roomCode: string) => roomService.joinRoom(roomCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -64,7 +64,7 @@ export function useLeaveRoomMutation() {
   return useMutation({
     mutationFn: (roomCode: string) => roomService.leaveRoom(roomCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -74,7 +74,7 @@ export function useStartRoomMutation() {
   return useMutation({
     mutationFn: (roomCode: string) => roomService.startRoom(roomCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
@@ -84,7 +84,7 @@ export function useFinishRoomMutation() {
   return useMutation({
     mutationFn: (roomCode: string) => roomService.finishRoom(roomCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all })
     },
   })
 }
