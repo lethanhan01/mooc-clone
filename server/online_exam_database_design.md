@@ -8,4 +8,4 @@ Vui lòng truy cập theo đường dẫn trên để xem đầy đủ:
 - Sơ đồ thực thể Mermaid ERD 9 bảng cốt lõi.
 - Đặc tả chi tiết 9 bảng 3NF và các ràng buộc toàn vẹn.
 - Chi tiết 5 Dynamic Views tính điểm tức thì.
-- Kịch bản SQL Schema ([online_exam_schema.sql](online_exam_schema.sql)) và Seed Data ([online_exam_seed_data.sql](online_exam_seed_data.sql)).
+- Kịch bản SQL Schema ([online_exam_schema.sql](online_exam_schema.sql)).
