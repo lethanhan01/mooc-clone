@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { User, LogOut, KeyRound, Sun, Moon, Monitor, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
 import { useTheme, type Theme } from '@/stores/themeStore'
 import { Avatar } from '@/components/ui/data-display'
 import {
@@ -22,7 +23,6 @@ const THEME_OPTIONS: { value: Theme; icon: typeof Sun; labelKey: 'light' | 'dark
 
 export function TopbarAvatarDropdown() {
   const user = useAuthStore((state) => state.user)
-  const clearAuth = useAuthStore((state) => state.clearAuth)
   const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
@@ -39,9 +39,9 @@ export function TopbarAvatarDropdown() {
     navigate('/profile')
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     setOpen(false)
-    clearAuth()
+    await authService.logout()
     navigate('/login', { replace: true })
   }
 

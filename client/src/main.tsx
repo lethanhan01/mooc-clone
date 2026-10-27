@@ -18,9 +18,13 @@ const queryClient = new QueryClient({
   },
 })
 
-// Clear query cache on logout to avoid session leaks
+// Clear query cache and session storage on logout to avoid session leaks
 onLogout(() => {
   queryClient.clear()
+  try {
+    sessionStorage.removeItem('mooc-practice-meta')
+    sessionStorage.removeItem('chunk_reload_flag')
+  } catch {}
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -85,4 +85,30 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401));
     }
+
+    @Test
+    @DisplayName("Chưa đăng nhập truy cập /api/audit-logs bị chặn với mã 401")
+    void testGetAuditLogsUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithMockUser(username = "student_alice", roles = {"STUDENT"})
+    @DisplayName("Thí sinh (ROLE_STUDENT) cố tình truy cập /api/audit-logs bị chặn với mã 403 Forbidden")
+    void testGetAuditLogsForbiddenForStudent() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher_super", roles = {"TEACHER"})
+    @DisplayName("Giáo viên (ROLE_TEACHER) truy cập /api/audit-logs thành công 200 OK")
+    void testGetAuditLogsAllowedForTeacher() throws Exception {
+        mockMvc.perform(get("/api/audit-logs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
 }

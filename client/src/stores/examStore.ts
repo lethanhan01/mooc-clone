@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { onLogout } from './authStore'
 
 export interface ExamSessionState {
   activeAttemptId: number | null
@@ -61,7 +62,13 @@ export const useExamStore = create<ExamSessionState>()(
           remainingSeconds: Math.max(0, state.remainingSeconds - 1),
         })),
 
-      clearSession: () =>
+      clearSession: () => {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('mooc_exam_active_session')
+            sessionStorage.removeItem('mooc_exam_active_session')
+          }
+        } catch {}
         set({
           activeAttemptId: null,
           activeRoomCode: null,
@@ -69,10 +76,15 @@ export const useExamStore = create<ExamSessionState>()(
           answers: {},
           flaggedQuestionIds: [],
           remainingSeconds: 0,
-        }),
+        })
+      },
     }),
     {
       name: 'mooc_exam_active_session',
     }
   )
 )
+
+onLogout(() => {
+  useExamStore.getState().clearSession()
+})

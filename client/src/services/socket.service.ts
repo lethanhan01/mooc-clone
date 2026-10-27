@@ -150,5 +150,12 @@ class SocketService implements SocketConnection {
   }
 }
 
+import { onLogout } from '@/stores/authStore'
+
 export const socketService = new SocketService()
+
+onLogout(() => {
+  socketService.disconnect()
+})
+
 export default socketService

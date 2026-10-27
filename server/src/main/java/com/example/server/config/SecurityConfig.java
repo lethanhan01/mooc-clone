@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         .requestMatchers("/api/users/**").hasRole("TEACHER")
+                        .requestMatchers("/api/audit-logs/**").hasRole("TEACHER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(sessionTokenFilter, UsernamePasswordAuthenticationFilter.class);

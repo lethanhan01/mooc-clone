@@ -4,6 +4,8 @@ import type { ApiResponse, AuthResponse, AuthUser, LoginRequest, RegisterRequest
 export type { LoginRequest, AuthResponse, RegisterRequest, UserProfileResponse }
 export type LoginResponse = AuthResponse
 
+import { useAuthStore } from '@/stores/authStore'
+
 export const authService = {
   async register(payload: RegisterRequest): Promise<UserProfileResponse> {
     const response = await api.post<ApiResponse<UserProfileResponse>>('/auth/register', payload)
@@ -25,6 +27,8 @@ export const authService = {
       await api.post('/auth/logout')
     } catch {
       // Ignore network errors during logout
+    } finally {
+      useAuthStore.getState().clearAuth(true)
     }
   },
 }

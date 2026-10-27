@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Lock, Mail } from 'lucide-react'
 import { Card } from '@/components/ui/data-display'
-import { Form, FormField, Input } from '@/components/ui/forms'
+import { Checkbox, Form, FormField, Input } from '@/components/ui/forms'
 import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
 import { getHomePathForRoles, mapAuthResponseToUser, useAuthStore, type Role } from '@/stores/authStore'
@@ -12,6 +12,7 @@ import { toast } from '@/lib/toast'
 export default function LoginPage() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ usernameOrEmail?: string; password?: string }>({})
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -23,11 +24,27 @@ export default function LoginPage() {
   const getDestination = useCallback(
     (roles: Role[] = []) => {
       const stateFrom = (location.state as { from?: { pathname?: string; search?: string; hash?: string } | string })?.from
+      let targetPath = ''
       if (typeof stateFrom === 'string' && stateFrom.length > 0) {
-        return stateFrom
+        targetPath = stateFrom
+      } else if (stateFrom && typeof stateFrom === 'object' && stateFrom.pathname) {
+        targetPath = `${stateFrom.pathname}${stateFrom.search || ''}${stateFrom.hash || ''}`
       }
-      if (stateFrom && typeof stateFrom === 'object' && stateFrom.pathname) {
-        return `${stateFrom.pathname}${stateFrom.search || ''}${stateFrom.hash || ''}`
+
+      if (targetPath) {
+        // Sanitize destination to prevent unauthorized redirects
+        const isTeacherTarget = targetPath.startsWith('/teacher')
+        const isStudentTarget = targetPath.startsWith('/student')
+        const userIsTeacher = roles.includes('teacher')
+        const userIsStudent = roles.includes('student')
+
+        if (isTeacherTarget && !userIsTeacher) {
+          return getHomePathForRoles(roles)
+        }
+        if (isStudentTarget && !userIsStudent && !userIsTeacher) {
+          return getHomePathForRoles(roles)
+        }
+        return targetPath
       }
       return getHomePathForRoles(roles)
     },
@@ -78,7 +95,7 @@ export default function LoginPage() {
         password: p,
       })
       const loggedInUser = mapAuthResponseToUser(authData)
-      setAuth(loggedInUser, authData.token)
+      setAuth(loggedInUser, authData.token, rememberMe)
       toast.success('Đăng nhập thành công!')
       navigate(getDestination(loggedInUser.roles), { replace: true })
     } catch (err: unknown) {
@@ -146,6 +163,17 @@ export default function LoginPage() {
             autoComplete="current-password"
           />
         </FormField>
+
+        <div className="pt-1 pb-1">
+          <Checkbox
+            id="login-remember-me"
+            name="rememberMe"
+            checked={rememberMe}
+            onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+            label="Ghi nhớ đăng nhập trên thiết bị này"
+            size="sm"
+          />
+        </div>
 
         <SubmitButton
           loading={loading}
