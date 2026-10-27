@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import RegisterPage from './RegisterPage'
 import { useAuthStore } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -13,6 +14,15 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+vi.mock('@/services/auth.service', () => ({
+  authService: {
+    register: vi.fn(),
+    login: vi.fn(),
+    getCurrentUser: vi.fn(),
+    logout: vi.fn(),
+  },
+}))
 
 describe('RegisterPage', () => {
   beforeEach(() => {
@@ -53,8 +63,17 @@ describe('RegisterPage', () => {
     expect(await screen.findByText(/vui lòng nhập email/i)).toBeInTheDocument()
   })
 
-  it('submits registration successfully and navigates to student dashboard', async () => {
+  it('submits registration successfully and navigates to login page', async () => {
     const user = userEvent.setup()
+    vi.mocked(authService.register).mockResolvedValueOnce({
+      id: 99,
+      username: 'hocsinh_binh',
+      email: 'binh@mooc.local',
+      displayName: 'Trần Văn Bình',
+      role: 'STUDENT',
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+    })
 
     render(
       <MemoryRouter>
@@ -71,9 +90,13 @@ describe('RegisterPage', () => {
     await user.click(screen.getByRole('button', { name: /đăng ký học sinh/i }))
 
     await waitFor(() => {
-      expect(useAuthStore.getState().isAuthenticated).toBe(true)
-      expect(useAuthStore.getState().user?.fullName).toBe('Trần Văn Bình')
-      expect(mockNavigate).toHaveBeenCalledWith('/student/dashboard', { replace: true })
+      expect(authService.register).toHaveBeenCalledWith({
+        username: 'hocsinh_binh',
+        email: 'binh@mooc.local',
+        password: 'password123',
+        displayName: 'Trần Văn Bình',
+      })
+      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true })
     })
   })
 

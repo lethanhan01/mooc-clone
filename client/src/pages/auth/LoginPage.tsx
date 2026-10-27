@@ -1,13 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Lock, Mail } from 'lucide-react'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { mapAuthResponseToUser, useAuthStore, type Role } from '@/stores/authStore'
+import { getHomePathForRoles, mapAuthResponseToUser, useAuthStore, type Role } from '@/stores/authStore'
 import { authService } from '@/services/auth.service'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
 import { toast } from '@/lib/toast'
 
 export default function LoginPage() {
@@ -21,25 +20,28 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  function getDestination(roles: Role[] = []) {
-    const stateFrom = (location.state as { from?: { pathname?: string; search?: string; hash?: string } | string })?.from
-    if (typeof stateFrom === 'string' && stateFrom.length > 0) {
-      return stateFrom
-    }
-    if (stateFrom && typeof stateFrom === 'object' && stateFrom.pathname) {
-      return `${stateFrom.pathname}${stateFrom.search || ''}${stateFrom.hash || ''}`
-    }
-    return getHomePathForRoles(roles)
-  }
+  const getDestination = useCallback(
+    (roles: Role[] = []) => {
+      const stateFrom = (location.state as { from?: { pathname?: string; search?: string; hash?: string } | string })?.from
+      if (typeof stateFrom === 'string' && stateFrom.length > 0) {
+        return stateFrom
+      }
+      if (stateFrom && typeof stateFrom === 'object' && stateFrom.pathname) {
+        return `${stateFrom.pathname}${stateFrom.search || ''}${stateFrom.hash || ''}`
+      }
+      return getHomePathForRoles(roles)
+    },
+    [location.state]
+  )
 
   // Tự động chuyển hướng đến Dashboard nếu người dùng đã đăng nhập từ trước
   useEffect(() => {
     if (hasHydrated && user) {
       navigate(getDestination(user.roles), { replace: true })
     }
-  }, [hasHydrated, user, navigate, location.state])
+  }, [hasHydrated, user, navigate, getDestination])
 
-  async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e?: SyntheticEvent<HTMLFormElement>) {
     e?.preventDefault()
     let u = usernameOrEmail.trim()
     let p = password
@@ -47,8 +49,10 @@ export default function LoginPage() {
     // Fallback: Đọc dữ liệu từ form native phòng trường hợp browser autofill không kích hoạt React onChange
     if (e?.currentTarget) {
       const formData = new FormData(e.currentTarget)
-      const formU = String(formData.get('usernameOrEmail') || '').trim()
-      const formP = String(formData.get('password') || '')
+      const rawU = formData.get('usernameOrEmail')
+      const rawP = formData.get('password')
+      const formU = typeof rawU === 'string' ? rawU.trim() : ''
+      const formP = typeof rawP === 'string' ? rawP : ''
       if (formU && !u) {
         u = formU
         setUsernameOrEmail(formU)

@@ -4,3 +4,7 @@
 
 export * from './api'
 export * from './auth'
+export * from './room'
+export * from './question'
+export * from './attempt'
+export * from './audit'

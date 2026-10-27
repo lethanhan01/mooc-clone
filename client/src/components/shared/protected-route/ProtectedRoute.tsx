@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuthStore, type Role } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles, type Role } from '@/stores/authStore'
+
 import type { ProtectedRouteProps } from './protected-route.types'
 
 export function ProtectedRoute({ allowedRoles, children }: Readonly<ProtectedRouteProps> = {}) {

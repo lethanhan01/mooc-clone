@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, RefreshCw } from 'lucide-react'
 import { Card, Badge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/data-display'
 import { Input } from '@/components/ui/forms'
 import { Button } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useMockExamStore } from '@/stores/mockExamStore'
-import { roomStatusLabel, roomStatusTone } from '@/lib/room-status'
-import type { RoomStatus } from '@/services/mockData'
+import { useRoomsListQuery } from '@/hooks/queries'
+import { roomStatusLabel, roomStatusTone, formatDuration } from '@/lib/room-status'
+import type { RoomStatus } from '@/types'
 
-const FILTERS: Array<{ id: 'all' | RoomStatus; label: string }> = [
+const FILTERS: Array<{ id: 'all' | 'waiting' | 'in_progress' | 'finished'; label: string }> = [
   { id: 'all', label: 'Tất cả' },
   { id: 'waiting', label: 'Chờ mở' },
   { id: 'in_progress', label: 'Đang thi' },
@@ -17,39 +17,67 @@ const FILTERS: Array<{ id: 'all' | RoomStatus; label: string }> = [
 ]
 
 export default function StudentRoomsPage() {
-  const rooms = useMockExamStore((s) => s.rooms)
-  const submissions = useMockExamStore((s) => s.submissions)
-  const [filter, setFilter] = useState<'all' | RoomStatus>('all')
+  const { data: rooms = [], isLoading, refetch } = useRoomsListQuery()
+  const [filter, setFilter] = useState<'all' | 'waiting' | 'in_progress' | 'finished'>('all')
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
 
   const filtered = rooms.filter((r) => {
-    if (filter !== 'all' && r.status !== filter) return false
+    const s = r.status?.toUpperCase()
+    if (filter === 'waiting' && s !== 'WAITING' && r.status !== 'waiting') return false
+    if (filter === 'in_progress' && s !== 'RUNNING' && r.status !== 'in_progress') return false
+    if (filter === 'finished' && s !== 'ENDED' && r.status !== 'finished') return false
+
     const q = query.trim().toLowerCase()
     if (!q) return true
-    return r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || r.topic.toLowerCase().includes(q)
+    return (
+      r.roomName.toLowerCase().includes(q) ||
+      r.roomCode.toLowerCase().includes(q) ||
+      (r.ownerDisplayName && r.ownerDisplayName.toLowerCase().includes(q))
+    )
   })
 
-  function goRoom(roomId: string, status: RoomStatus) {
-    if (status === 'waiting') navigate(`/student/rooms/${roomId}/waiting`)
-    else if (status === 'in_progress') navigate(`/student/rooms/${roomId}/exam`)
-    else navigate(`/student/rooms/${roomId}/summary`)
+  function goRoom(roomCode: string, status: RoomStatus | string) {
+    const s = status?.toUpperCase()
+    if (s === 'WAITING' || status === 'waiting') {
+      navigate(`/student/rooms/${roomCode}/waiting`)
+    } else if (s === 'RUNNING' || status === 'in_progress') {
+      navigate(`/student/rooms/${roomCode}/exam`)
+    } else {
+      navigate(`/student/rooms/${roomCode}/summary`)
+    }
   }
 
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
     <div className="space-y-6">
       <header className="flex flex-col gap-3">
-        <Heading level={1} className="text-2xl font-extrabold">
-          Danh sách phòng thi
-        </Heading>
-        <Text size="sm" tone="muted">
-          Chọn phòng theo trạng thái: chờ · đang thi · xem kết quả
-        </Text>
+        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Header bar] */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <Heading level={1} className="text-2xl font-extrabold">
+              Danh sách phòng thi trực tuyến
+            </Heading>
+            <Text size="sm" tone="muted">
+              Chọn phòng theo trạng thái: chờ thi · đang thi · xem điểm kết quả
+            </Text>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+            leftIcon={<RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />}
+            onClick={() => refetch()}
+          >
+            Làm mới
+          </Button>
+        </div>
+
         <Input
           id="student-room-search"
           aria-label="Tìm phòng thi"
-          placeholder="Tìm theo tên, mã, chủ đề..."
+          placeholder="Tìm theo tên, mã phòng..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           leftIcon={<Search size={16} />}
@@ -75,56 +103,46 @@ export default function StudentRoomsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Mã</TableHead>
-              <TableHead>Tên & chủ đề</TableHead>
-              <TableHead>Hình thức</TableHead>
-              <TableHead>Trạng thái</TableHead>
+              <TableHead>Mã phòng</TableHead>
+              <TableHead>Tên phòng thi & Giáo viên</TableHead>
+              <TableHead className="text-center">Số câu</TableHead>
+              <TableHead>Thời gian</TableHead>
+              <TableHead className="text-center">Trạng thái</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((room) => {
-              const hasSub = submissions.some((s) => s.roomId === room.id)
+              const isRunning = room.status?.toUpperCase() === 'RUNNING' || room.status === 'in_progress'
+              const isWaiting = room.status?.toUpperCase() === 'WAITING' || room.status === 'waiting'
+
               return (
                 <TableRow key={room.id}>
-                  <TableCell className="font-mono font-bold text-action-accent">{room.code}</TableCell>
+                  <TableCell className="font-mono font-bold text-action-accent">{room.roomCode}</TableCell>
                   <TableCell>
-                    <p className="font-medium">{room.name}</p>
+                    <p className="font-medium">{room.roomName}</p>
                     <p className="text-xs text-text-muted">
-                      {room.topic} · {room.questionCount} câu · {room.durationMinutes} phút
+                      Chủ phòng: {room.ownerDisplayName || 'Hệ thống'} · {room.participantsCount} thí sinh
                     </p>
                   </TableCell>
-                  <TableCell>
-                    <Badge tone={room.mode === 'official' ? 'danger' : 'warning'} size="sm">
-                      {room.mode === 'official' ? 'Chính thức' : 'Luyện tập'}
-                    </Badge>
+                  <TableCell className="text-center">{room.totalQuestions}</TableCell>
+                  <TableCell className="text-sm text-text-secondary">
+                    {formatDuration(room.durationSeconds)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge tone={roomStatusTone(room.status)} size="sm">
                       {roomStatusLabel(room.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Row actions] */}
-                    <div className="flex flex-wrap justify-end gap-1">
-                      <Button type="button" size="sm" variant="primary" onClick={() => goRoom(room.id, room.status)}>
-                        {room.status === 'waiting'
-                          ? 'Phòng chờ'
-                          : room.status === 'in_progress'
-                            ? 'Làm bài'
-                            : 'Kết quả'}
-                      </Button>
-                      {room.status === 'finished' || hasSub ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/student/rooms/${room.id}/review`)}
-                        >
-                          Xem lại
-                        </Button>
-                      ) : null}
-                    </div>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={isRunning ? 'primary' : 'outline'}
+                      onClick={() => goRoom(room.roomCode, room.status)}
+                    >
+                      {isRunning ? 'Làm bài' : isWaiting ? 'Vào phòng chờ' : 'Xem kết quả'}
+                    </Button>
                   </TableCell>
                 </TableRow>
               )
@@ -133,7 +151,7 @@ export default function StudentRoomsPage() {
         </Table>
         {filtered.length === 0 ? (
           <Text size="sm" tone="muted" className="text-center py-8">
-            Không có phòng phù hợp
+            Không có phòng thi nào phù hợp bộ lọc
           </Text>
         ) : null}
       </Card>

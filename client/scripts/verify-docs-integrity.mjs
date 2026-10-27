@@ -186,13 +186,9 @@ function strictGfmSlug(text) {
   return text
     .toLowerCase()
     .trim()
-    .replace(/<[^>]+>/g, '') // Remove HTML tags
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
     .replace(/[^\p{L}\p{M}\p{N}\p{Pc}\-\s]/gu, '') // Remove punctuation
     .replace(/\s+/g, '-'); // Collapse whitespace to single hyphen
-}
-
-function slugify(text) {
-  return strictGfmSlug(text);
 }
 
 function validateTargetFile(filePath) {
@@ -277,13 +273,28 @@ function checkMermaidSyntax(fileName, content) {
 
     const lines = code.split('\n');
     lines.forEach((line, lineIdx) => {
-      if (/\(\[[^"]*?\([^"]*?\]\)/.test(line)) {
-        console.error(`❌ [${fileName}] Khối Mermaid #${idx + 1} dòng ${lineIdx + 1}: Chứa dấu ngoặc đơn chưa bọc nháy kép trong stadium node ([...])!`);
-        errors++;
+      const openStadium = line.indexOf('([');
+      if (openStadium !== -1) {
+        const closeStadium = line.indexOf('])', openStadium);
+        if (closeStadium !== -1) {
+          const inner = line.slice(openStadium + 2, closeStadium);
+          if ((inner.includes('(') || inner.includes(')')) && !inner.includes('"')) {
+            console.error(`❌ [${fileName}] Khối Mermaid #${idx + 1} dòng ${lineIdx + 1}: Chứa dấu ngoặc đơn chưa bọc nháy kép trong stadium node ([...])!`);
+            errors++;
+          }
+        }
       }
-      if (/-->\|[^"|\n]*?\([^"|\n]*?\|/.test(line)) {
-        console.error(`❌ [${fileName}] Khối Mermaid #${idx + 1} dòng ${lineIdx + 1}: Chứa dấu ngoặc đơn chưa bọc nháy kép trong nhãn cạnh (-->|...|)!`);
-        errors++;
+
+      const edgeStart = line.indexOf('-->|');
+      if (edgeStart !== -1) {
+        const edgeEnd = line.indexOf('|', edgeStart + 4);
+        if (edgeEnd !== -1) {
+          const label = line.slice(edgeStart + 4, edgeEnd);
+          if ((label.includes('(') || label.includes(')')) && !label.includes('"')) {
+            console.error(`❌ [${fileName}] Khối Mermaid #${idx + 1} dòng ${lineIdx + 1}: Chứa dấu ngoặc đơn chưa bọc nháy kép trong nhãn cạnh (-->|...|)!`);
+            errors++;
+          }
+        }
       }
     });
   });
@@ -314,10 +325,12 @@ function getFileAnchors(fPath, fileAnchorsCache) {
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
     if (trimmed.startsWith('#')) {
-      const match = trimmed.match(/^#{1,6}\s+(.+)$/);
-      if (match) {
-        const cleanHeading = match[1].replace(/<[^>]*>/g, '').trim();
-        anchors.add(strictGfmSlug(cleanHeading));
+      const hashEnd = trimmed.search(/[^#]/);
+      if (hashEnd >= 1 && hashEnd <= 6 && trimmed[hashEnd] === ' ') {
+        const cleanHeading = trimmed.slice(hashEnd).replace(/<[^>]*>/g, '').trim();
+        if (cleanHeading) {
+          anchors.add(strictGfmSlug(cleanHeading));
+        }
       }
     }
   }
@@ -429,6 +442,73 @@ const BANNED_PHRASES = [
   { phrase: 'thư mục nhập khẩu', pattern: /thư\s*mục\s+nhập\s*khẩu/i, message: 'Dùng "thư mục import" thay thế' },
 ];
 
+function parseTocAndHeadings(lines) {
+  let inToc = false;
+  const headings = [];
+  const explicitAnchors = new Set();
+  const tocLinks = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Explicit HTML anchors
+    for (const m of line.matchAll(/<a\s+(?:id|name)=["']([^"']+)["']/gi)) {
+      explicitAnchors.add(m[1].toLowerCase());
+    }
+
+    // Detect TOC section
+    if (line.startsWith('## ') && (line.toUpperCase().includes('MỤC LỤC') || line.toUpperCase().includes('TABLE OF CONTENTS'))) {
+      inToc = true;
+      continue;
+    }
+    if (inToc) {
+      if ((line.startsWith('## ') && !line.toUpperCase().includes('MỤC LỤC')) || (line.startsWith('---') && i > 15)) {
+        inToc = false;
+      } else {
+        for (const m of line.matchAll(/\[([^\]]+)\]\(#([^)]+)\)/g)) {
+          tocLinks.push({ line: i + 1, text: m[1].trim(), href: m[2].trim() });
+        }
+      }
+    }
+
+    if (line.startsWith('#')) {
+      const hashEnd = line.search(/[^#]/);
+      if (hashEnd >= 1 && hashEnd <= 6 && line[hashEnd] === ' ') {
+        headings.push({
+          line: i + 1,
+          clean: line.slice(hashEnd).replace(/<[^>]*>/g, '').trim(),
+        });
+      }
+    }
+  }
+  return { explicitAnchors, tocLinks, headings };
+}
+
+function verifyTocLinks(fileName, tocLinks, explicitAnchors, headings) {
+  let errors = 0;
+  for (const link of tocLinks) {
+    const target = decodeURIComponent(link.href).toLowerCase();
+    if (explicitAnchors.has(target)) continue;
+
+    const isHeadingMatch = headings.some(h => strictGfmSlug(h.clean) === target);
+    if (!isHeadingMatch) {
+      const cleanLower = link.text.toLowerCase().replace(/^\d+(\.\d+)*\.\s*/, '').replace(/chương\s+\d+:\s*/i, '');
+      const match = headings.find(h => {
+        const hLower = h.clean.toLowerCase();
+        return hLower.includes(cleanLower.slice(0, 15)) || cleanLower.includes(hLower.slice(0, 15));
+      });
+      console.error(`❌ [${fileName}:${link.line}] Lỗi điều hướng Mục lục: [${link.text}](#${link.href})`);
+      if (match) {
+        console.error(`   👉 Tiêu đề khớp tại dòng ${match.line}: "${match.clean}" -> Slug chuẩn: "#${strictGfmSlug(match.clean)}"`);
+      } else {
+        console.error(`   👉 Không tìm thấy tiêu đề tương ứng trong tệp!`);
+      }
+      errors++;
+    }
+  }
+  return errors;
+}
+
 function checkTableOfContentsIntegrity(targetFiles) {
   console.log('\n🔍 Kiểm tra tính toàn vẹn của Mục lục (Table of Contents Integrity)...');
   let errors = 0;
@@ -440,66 +520,11 @@ function checkTableOfContentsIntegrity(targetFiles) {
     const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n');
 
-    let inToc = false;
-    const headings = [];
-    const explicitAnchors = new Set();
-    const tocLinks = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Explicit HTML anchors
-      for (const m of line.matchAll(/<a\s+(?:id|name)=["']([^"']+)["']/gi)) {
-        explicitAnchors.add(m[1].toLowerCase());
-      }
-
-      // Detect TOC section
-      if (/^##\s+(MỤC LỤC|TABLE OF CONTENTS)/i.test(line)) {
-        inToc = true;
-        continue;
-      }
-      if (inToc) {
-        if ((/^##\s+[^M]/i.test(line) && !line.includes('MỤC LỤC')) || (/^---/.test(line) && i > 15)) {
-          inToc = false;
-        } else {
-          for (const m of line.matchAll(/\[([^\]]+)\]\(#([^)]+)\)/g)) {
-            tocLinks.push({ line: i + 1, text: m[1].trim(), href: m[2].trim() });
-          }
-        }
-      }
-
-      const h = line.match(/^(#{1,6})\s+(.+)$/);
-      if (h) {
-        headings.push({
-          line: i + 1,
-          clean: h[2].replace(/<[^>]*>/g, '').trim(),
-        });
-      }
-    }
-
+    const { explicitAnchors, tocLinks, headings } = parseTocAndHeadings(lines);
     if (tocLinks.length === 0) continue;
 
-    for (const link of tocLinks) {
-      totalTocLinks++;
-      const target = decodeURIComponent(link.href).toLowerCase();
-      if (explicitAnchors.has(target)) continue;
-
-      const isHeadingMatch = headings.some(h => strictGfmSlug(h.clean) === target);
-      if (!isHeadingMatch) {
-        const cleanLower = link.text.toLowerCase().replace(/^\d+(\.\d+)*\.\s*/, '').replace(/chương\s+\d+:\s*/i, '');
-        const match = headings.find(h => {
-          const hLower = h.clean.toLowerCase();
-          return hLower.includes(cleanLower.slice(0, 15)) || cleanLower.includes(hLower.slice(0, 15));
-        });
-        console.error(`❌ [${fileName}:${link.line}] Lỗi điều hướng Mục lục: [${link.text}](#${link.href})`);
-        if (match) {
-          console.error(`   👉 Tiêu đề khớp tại dòng ${match.line}: "${match.clean}" -> Slug chuẩn: "#${strictGfmSlug(match.clean)}"`);
-        } else {
-          console.error(`   👉 Không tìm thấy tiêu đề tương ứng trong tệp!`);
-        }
-        errors++;
-      }
-    }
+    totalTocLinks += tocLinks.length;
+    errors += verifyTocLinks(fileName, tocLinks, explicitAnchors, headings);
   }
 
   console.log(`✅ [TOC Integrity] Đã kiểm tra ${totalTocLinks} liên kết trong Mục lục (${errors} lỗi).`);
@@ -558,6 +583,44 @@ function checkAppendixBSync(targetFiles) {
   return { errors: 0, warnings: 0 };
 }
 
+function lintCodeBlockLine(trimmed, fileName, actualLineNumber) {
+  const isNegativeExample =
+    trimmed.startsWith('// ❌') ||
+    trimmed.startsWith('// TRÁNH') ||
+    trimmed.toLowerCase().includes('anti-pattern') ||
+    trimmed.toLowerCase().includes('antipattern') ||
+    trimmed.toLowerCase().includes('bad-example') ||
+    trimmed.toLowerCase().includes('cũ:') ||
+    trimmed.toLowerCase().includes('sai:') ||
+    trimmed.toLowerCase().includes('legacy') ||
+    trimmed.toLowerCase().includes('không nên');
+
+  if (isNegativeExample) return 0;
+  let errors = 0;
+
+  if (trimmed.includes("from '@/lib/utils'") || trimmed.includes('from "@/lib/utils"')) {
+    console.error(`❌ [${fileName}:${actualLineNumber}] Import lỗi thời "@/lib/utils". Bắt buộc đổi sang "@/utils/cn" hoặc "@/utils/*"!`);
+    errors++;
+  }
+  if (trimmed.includes("from '@/lib/pii-masker'") || trimmed.includes('from "@/lib/pii-masker"')) {
+    console.error(`❌ [${fileName}:${actualLineNumber}] Import lỗi thời "@/lib/pii-masker". Bắt buộc đổi sang "@/utils/pii-masker"!`);
+    errors++;
+  }
+  if (/(?:text|bg|border|ring)-slate-\d+/.test(trimmed)) {
+    if (!trimmed.includes('rogym-convention-exempt') && !trimmed.includes('//')) {
+      console.error(`❌ [${fileName}:${actualLineNumber}] Sử dụng màu thô Slate ("${trimmed}"). Bắt buộc dùng Semantic Tokens (text-muted-foreground, bg-card, border-border)!`);
+      errors++;
+    }
+  }
+  if (trimmed.includes('console.log(')) {
+    if (!trimmed.startsWith('//') && !trimmed.includes('logger.')) {
+      console.error(`❌ [${fileName}:${actualLineNumber}] Sử dụng trực tiếp "console.log". Bắt buộc dùng "logger.info / logger.debug" từ "@/lib/logger"!`);
+      errors++;
+    }
+  }
+  return errors;
+}
+
 function checkMarkdownCodeBlocks(targetFiles) {
   console.log('\n🔍 Kiểm tra tuân thủ quy chuẩn mã nguồn trong các khối code Markdown (Code Block Standards)...');
   let errors = 0;
@@ -591,42 +654,7 @@ function checkMarkdownCodeBlocks(targetFiles) {
         inCodeBlock = false;
         if (['tsx', 'ts', 'jsx', 'js'].includes(codeLang)) {
           blockLines.forEach((bLine, bIdx) => {
-            const actualLineNumber = blockStartLine + bIdx + 1;
-            const trimmed = bLine.trim();
-
-            const isNegativeExample =
-              trimmed.startsWith('// ❌') ||
-              trimmed.startsWith('// TRÁNH') ||
-              trimmed.toLowerCase().includes('anti-pattern') ||
-              trimmed.toLowerCase().includes('antipattern') ||
-              trimmed.toLowerCase().includes('bad-example') ||
-              trimmed.toLowerCase().includes('cũ:') ||
-              trimmed.toLowerCase().includes('sai:') ||
-              trimmed.toLowerCase().includes('legacy') ||
-              trimmed.toLowerCase().includes('không nên');
-
-            if (isNegativeExample) return;
-
-            if (/from\s+['"]@\/lib\/utils['"]/.test(trimmed)) {
-              console.error(`❌ [${fileName}:${actualLineNumber}] Import lỗi thời "@\/lib\/utils". Bắt buộc đổi sang "@\/utils\/cn" hoặc "@\/utils/*"!`);
-              errors++;
-            }
-            if (/from\s+['"]@\/lib\/pii-masker['"]/.test(trimmed)) {
-              console.error(`❌ [${fileName}:${actualLineNumber}] Import lỗi thời "@\/lib\/pii-masker". Bắt buộc đổi sang "@\/utils\/pii-masker"!`);
-              errors++;
-            }
-            if (/(?:text|bg|border|ring)-slate-\d+/.test(trimmed)) {
-              if (!trimmed.includes('rogym-convention-exempt') && !trimmed.includes('//')) {
-                console.error(`❌ [${fileName}:${actualLineNumber}] Sử dụng màu thô Slate ("${trimmed}"). Bắt buộc dùng Semantic Tokens (text-muted-foreground, bg-card, border-border)!`);
-                errors++;
-              }
-            }
-            if (/console\.log\(/.test(trimmed)) {
-              if (!trimmed.startsWith('//') && !trimmed.includes('logger.')) {
-                console.error(`❌ [${fileName}:${actualLineNumber}] Sử dụng trực tiếp "console.log". Bắt buộc dùng "logger.info / logger.debug" từ "@\/lib\/logger"!`);
-                errors++;
-              }
-            }
+            errors += lintCodeBlockLine(bLine.trim(), fileName, blockStartLine + bIdx + 1);
           });
         }
         continue;
@@ -658,7 +686,7 @@ function verifyFiles() {
       continue;
     }
     const fileName = path.basename(filePath);
-    const relKey = path.relative(CLIENT_DIR, filePath).replace(/\\/g, '/');
+    const relKey = path.relative(CLIENT_DIR, filePath).replaceAll('\\', '/');
     const displayKey = relKey.startsWith('src/') ? relKey : fileName;
     fileStats[displayKey] = collectFileMetrics(fileData.lines);
     totalWarnings += checkDocKeywords(relKey, fileData.content, fileName);

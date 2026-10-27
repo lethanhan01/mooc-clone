@@ -1,10 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { Suspense } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppRoutes } from './AppRoutes'
 import { useAuthStore } from '@/stores/authStore'
 import '@/pages/auth/LoginPage'
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 describe('AppRoutes', () => {
   beforeEach(() => {
@@ -12,7 +24,7 @@ describe('AppRoutes', () => {
   })
 
   it('renders login page when navigating to /login', async () => {
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/login']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -29,7 +41,7 @@ describe('AppRoutes', () => {
   })
 
   it('redirects to /login when unauthenticated user accesses /dashboard', async () => {
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -56,7 +68,7 @@ describe('AppRoutes', () => {
       'valid_token'
     )
 
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -78,7 +90,7 @@ describe('AppRoutes', () => {
       'valid_token'
     )
 
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/profile']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -105,7 +117,7 @@ describe('AppRoutes', () => {
       'valid_token'
     )
 
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/student']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -132,7 +144,7 @@ describe('AppRoutes', () => {
       'valid_token'
     )
 
-    render(
+    renderWithClient(
       <MemoryRouter initialEntries={['/teacher']}>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
@@ -148,4 +160,3 @@ describe('AppRoutes', () => {
     expect(heading).toBeInTheDocument()
   })
 })
-

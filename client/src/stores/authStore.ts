@@ -1,10 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { DEMO_STUDENT, DEMO_TEACHER } from '@/services/mockData'
-
 import type { AuthResponse, AuthUser, Role } from '@/types'
 
 export type { Role, AuthUser }
+
+export function getHomePathForRoles(roles: Role[] = []): string {
+  if (roles.includes('admin')) return '/admin/users'
+  if (roles.includes('teacher')) return '/teacher/dashboard'
+  return '/student/dashboard'
+}
 
 export function mapAuthResponseToUser(authData: AuthResponse): AuthUser {
   const rawRole = (authData.role || 'STUDENT').toUpperCase()
@@ -24,11 +28,7 @@ export function mapAuthResponseToUser(authData: AuthResponse): AuthUser {
   }
 }
 
-/** Keep persisted demo sessions in sync when mock display names change. */
 function syncDemoUser(user: AuthUser | null): AuthUser | null {
-  if (!user) return null
-  if (user.userId === DEMO_TEACHER.userId) return { ...user, ...DEMO_TEACHER }
-  if (user.userId === DEMO_STUDENT.userId) return { ...user, ...DEMO_STUDENT }
   return user
 }
 

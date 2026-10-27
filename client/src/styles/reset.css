@@ -40,11 +40,11 @@
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-text-fill-color: var(--color-fg-primary) !important;
-    caret-color: var(--color-fg-primary) !important;
-    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
-    box-shadow: 0 0 0 1000px transparent inset !important;
-    transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--color-fg-primary);
+    caret-color: var(--color-fg-primary);
+    -webkit-box-shadow: 0 0 0 1000px transparent inset;
+    box-shadow: 0 0 0 1000px transparent inset;
+    transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s;
   }
 
   button,

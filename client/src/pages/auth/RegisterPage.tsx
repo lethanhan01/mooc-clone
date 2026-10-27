@@ -1,11 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore, type Role } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
 import { toast } from '@/lib/toast'
 
 export default function RegisterPage() {
@@ -16,7 +16,6 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
-  const setAuth = useAuthStore((s) => s.setAuth)
   const user = useAuthStore((s) => s.user)
   const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const navigate = useNavigate()
@@ -31,7 +30,7 @@ export default function RegisterPage() {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e?: SyntheticEvent<HTMLFormElement>) {
     e?.preventDefault()
     const next: Record<string, string> = {}
     if (!fullName.trim()) next.fullName = 'Vui lòng nhập họ và tên'
@@ -46,18 +45,20 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      setAuth(
-        {
-          userId: `u_${Date.now()}`,
-          email: email.trim(),
-          fullName: fullName.trim(),
-          roles: ['student'] as Role[],
-          studentId: username.trim(),
-        },
-        `mock_token_student_${Date.now()}`
-      )
-      toast.success('Đăng ký thành công', { description: 'Đã tạo tài khoản học sinh demo' })
-      navigate('/student/dashboard', { replace: true })
+      await authService.register({
+        username: username.trim(),
+        email: email.trim(),
+        password,
+        displayName: fullName.trim(),
+      })
+      toast.success('Đăng ký thành công', { description: 'Vui lòng đăng nhập với tài khoản mới tạo' })
+      navigate('/login', { replace: true })
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+          : 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.'
+      toast.error('Đăng ký không thành công', { description: message })
     } finally {
       setLoading(false)
     }

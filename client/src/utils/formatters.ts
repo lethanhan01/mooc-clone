@@ -9,23 +9,22 @@ const dateTimeFormatCache = new Map<string, Intl.DateTimeFormat>()
 
 function getNumberFormatter(locale: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
   const cacheKey = `${locale}-${JSON.stringify(options)}`
-  let formatter = numberFormatCache.get(cacheKey)
-  if (!formatter) {
-    formatter = new Intl.NumberFormat(locale, options)
-    numberFormatCache.set(cacheKey, formatter)
-  }
+  const cached = numberFormatCache.get(cacheKey)
+  if (cached) return cached
+  const formatter = new Intl.NumberFormat(locale, options)
+  numberFormatCache.set(cacheKey, formatter)
   return formatter
 }
 
 function getDateTimeFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
   const cacheKey = `${locale}-${JSON.stringify(options)}`
-  let formatter = dateTimeFormatCache.get(cacheKey)
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat(locale, options)
-    dateTimeFormatCache.set(cacheKey, formatter)
-  }
+  const cached = dateTimeFormatCache.get(cacheKey)
+  if (cached) return cached
+  const formatter = new Intl.DateTimeFormat(locale, options)
+  dateTimeFormatCache.set(cacheKey, formatter)
   return formatter
 }
+
 
 /**
  * Formats an amount with the specified currency and locale.

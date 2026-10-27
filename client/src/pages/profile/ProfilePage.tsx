@@ -5,8 +5,8 @@ import { Card, Badge } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
+
 import { toast } from '@/lib/toast'
 
 export default function ProfilePage() {

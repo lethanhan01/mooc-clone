@@ -1,8 +1,8 @@
 import { lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/shared/protected-route/ProtectedRoute'
-import { useAuthStore } from '@/stores/authStore'
-import { getHomePathForRoles } from '@/stores/mockExamStore'
+import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
+
 import { authRoutes } from './auth.routes'
 import { teacherRoutes } from './teacher.routes'
 import { studentDashboardRoutes, studentExamRoutes } from './student.routes'

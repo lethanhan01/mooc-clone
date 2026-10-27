@@ -3,9 +3,9 @@ import {
   useCallback,
   useEffect,
   useRef,
-  type FormEvent,
   type FormHTMLAttributes,
   type KeyboardEvent,
+  type SyntheticEvent,
 } from 'react'
 import { cn } from '@/utils'
 
@@ -94,7 +94,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
       }
     }, [])
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       onSubmit?.(e as Parameters<NonNullable<FormProps['onSubmit']>>[0])
     }
