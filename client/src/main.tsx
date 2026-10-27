@@ -24,7 +24,9 @@ onLogout(() => {
   try {
     sessionStorage.removeItem('mooc-practice-meta')
     sessionStorage.removeItem('chunk_reload_flag')
-  } catch {}
+  } catch (error) {
+    void error
+  }
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

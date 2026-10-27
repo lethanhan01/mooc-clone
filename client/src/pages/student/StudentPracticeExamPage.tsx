@@ -5,7 +5,11 @@ import { Card, Badge } from '@/components/ui/data-display'
 import { Button, ButtonLink } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
 import { ConfirmDialog } from '@/components/ui/overlay'
-import { useQuestionsListQuery, useSubmitAnswerMutation, useSubmitExamMutation } from '@/hooks/queries'
+import {
+  useQuestionsListQuery,
+  useSubmitAnswerMutation,
+  useSubmitExamMutation,
+} from '@/hooks/queries'
 import { useExamStore } from '@/stores/examStore'
 import { formatDuration } from '@/lib/room-status'
 import { toast } from '@/lib/toast'
@@ -134,7 +138,10 @@ export default function StudentPracticeExamPage() {
           </p>
         </header>
 
-        <Card as="article" className="p-5 bg-surface border-line-subtle shadow-card rounded-2xl space-y-4">
+        <Card
+          as="article"
+          className="p-5 bg-surface border-line-subtle shadow-card rounded-2xl space-y-4"
+        >
           <header className="flex justify-between gap-2">
             <Heading level={2} className="text-base font-semibold leading-relaxed">
               {currentQuestion.content}
@@ -155,7 +162,7 @@ export default function StudentPracticeExamPage() {
                   className="w-full justify-start min-h-11 h-auto py-3 text-left whitespace-normal"
                   onClick={() => handleSelectOption(opt.id)}
                 >
-                  <strong className="mr-2">{String.fromCharCode(65 + oi)}.</strong> {opt.content}
+                  <strong className="mr-2">{String.fromCodePoint(65 + oi)}.</strong> {opt.content}
                 </Button>
               )
             })}

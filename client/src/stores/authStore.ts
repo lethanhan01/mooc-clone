@@ -82,7 +82,9 @@ export const dynamicAuthStorage: StateStorage = {
     } catch {
       try {
         sessionStorage.setItem(name, value)
-      } catch {}
+      } catch (error) {
+        void error
+      }
     }
   },
   removeItem: (name: string): void => {
@@ -90,7 +92,9 @@ export const dynamicAuthStorage: StateStorage = {
       if (typeof window === 'undefined') return
       sessionStorage.removeItem(name)
       localStorage.removeItem(name)
-    } catch {}
+    } catch (error) {
+      void error
+    }
   },
 }
 
@@ -138,14 +142,18 @@ export const useAuthStore = create<AuthState>()(
             sessionStorage.removeItem(AUTH_STORAGE_KEY)
             localStorage.removeItem(AUTH_STORAGE_KEY)
           }
-        } catch {}
+        } catch (error) {
+          void error
+        }
 
         notifyLogout()
 
         if (broadcast && authChannel) {
           try {
             authChannel.postMessage({ type: 'LOGOUT' })
-          } catch {}
+          } catch (error) {
+            void error
+          }
         }
       },
 

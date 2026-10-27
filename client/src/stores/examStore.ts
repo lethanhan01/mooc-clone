@@ -68,7 +68,9 @@ export const useExamStore = create<ExamSessionState>()(
             localStorage.removeItem('mooc_exam_active_session')
             sessionStorage.removeItem('mooc_exam_active_session')
           }
-        } catch {}
+        } catch (error) {
+          void error
+        }
         set({
           activeAttemptId: null,
           activeRoomCode: null,
