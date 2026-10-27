@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
 import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
 import { useAuthStore, type Role } from '@/stores/authStore'
+import { getHomePathForRoles } from '@/stores/mockExamStore'
 import { toast } from '@/lib/toast'
 
 export default function RegisterPage() {
@@ -16,13 +17,22 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
   const setAuth = useAuthStore((s) => s.setAuth)
+  const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (hasHydrated && user) {
+      navigate(getHomePathForRoles(user.roles), { replace: true })
+    }
+  }, [hasHydrated, user, navigate])
 
   function clearError(field: string) {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault()
     const next: Record<string, string> = {}
     if (!fullName.trim()) next.fullName = 'Vui lòng nhập họ và tên'
     if (!username.trim()) next.username = 'Vui lòng nhập tên đăng nhập'
@@ -47,7 +57,7 @@ export default function RegisterPage() {
         `mock_token_student_${Date.now()}`
       )
       toast.success('Đăng ký thành công', { description: 'Đã tạo tài khoản học sinh demo' })
-      navigate('/student/dashboard')
+      navigate('/student/dashboard', { replace: true })
     } finally {
       setLoading(false)
     }
@@ -68,6 +78,7 @@ export default function RegisterPage() {
         <FormField id="reg-fullname" label="Họ và tên học sinh:" error={errors.fullName} required>
           <Input
             id="reg-fullname"
+            name="fullName"
             value={fullName}
             placeholder="Nguyễn Văn A"
             onChange={(e) => {
@@ -79,6 +90,7 @@ export default function RegisterPage() {
         <FormField id="reg-username" label="Tên đăng nhập:" error={errors.username} required>
           <Input
             id="reg-username"
+            name="username"
             value={username}
             placeholder="hocsinh_vana"
             onChange={(e) => {
@@ -90,6 +102,7 @@ export default function RegisterPage() {
         <FormField id="reg-email" label="Địa chỉ Email:" error={errors.email} required>
           <Input
             id="reg-email"
+            name="email"
             type="email"
             value={email}
             placeholder="nguyenvana@gmail.com"
@@ -105,6 +118,7 @@ export default function RegisterPage() {
           <FormField id="reg-password" label="Mật khẩu:" error={errors.password} required>
             <Input
               id="reg-password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => {
@@ -116,6 +130,7 @@ export default function RegisterPage() {
           <FormField id="reg-confirm" label="Xác nhận mật khẩu:" error={errors.confirm} required>
             <Input
               id="reg-confirm"
+              name="confirm"
               type="password"
               value={confirm}
               onChange={(e) => {

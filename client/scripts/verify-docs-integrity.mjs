@@ -643,7 +643,7 @@ function checkMarkdownCodeBlocks(targetFiles) {
 }
 
 function verifyFiles() {
-  console.log('🔍 Bắt đầu kiểm tra tính toàn vẹn và đối chiếu tài liệu RoGym...');
+  console.log('🔍 Bắt đầu kiểm tra tính toàn vẹn và đối chiếu tài liệu mooc-clone...');
   let totalErrors = 0;
   let totalWarnings = 0;
   const fileStats = {};

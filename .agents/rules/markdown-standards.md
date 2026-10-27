@@ -1,8 +1,8 @@
-# RoGym Markdown Documentation & Link Architecture Standards
+# mooc-clone Markdown Documentation & Link Architecture Standards
 
-> **Tiêu chuẩn Kỹ thuật Tài liệu Markdown & Cấu trúc Đường dẫn RoGym**  
+> **Tiêu chuẩn Kỹ thuật Tài liệu Markdown & Cấu trúc Đường dẫn mooc-clone**  
 > *Phiên bản:* 1.0.0 (Strict Enterprise Rule)  
-> *Phạm vi áp dụng:* Toàn bộ lập trình viên, AI Agents, công cụ tự động hóa khi tạo mới, biên tập hoặc kiểm tra các tệp tài liệu Markdown (`.md`) trong kho mã nguồn RoGym.
+> *Phạm vi áp dụng:* Toàn bộ lập trình viên, AI Agents, công cụ tự động hóa khi tạo mới, biên tập hoặc kiểm tra các tệp tài liệu Markdown (`.md`) trong kho mã nguồn mooc-clone.
 
 ---
 

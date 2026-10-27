@@ -95,6 +95,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
     }, [])
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
       onSubmit?.(e as Parameters<NonNullable<FormProps['onSubmit']>>[0])
     }
 

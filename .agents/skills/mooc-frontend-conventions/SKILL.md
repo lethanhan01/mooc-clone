@@ -6,7 +6,7 @@ description: >-
   Enforces Semantic HTML Primitive Boundary (banning raw interactive or unannotated nonsemantic tags on pages),
   Semantic Design System 2-layer tokens (100% HEX in primitive styles, 100% Semantic tokens in components), Form architecture (<Form>, <FormField>, <SubmitButton>),
   CVA multi-axis variants (tone, emphasis, size), TanStack Query v5 (10 domains queryKeys) & Zustand state management,
-  i18n & date formatting, LINE LIFF/mobile standards, WCAG 2.1 AA a11y, and static conventions audit rules with baseline snapshot.
+  i18n & date formatting, responsive mobile & touch accessibility standards, WCAG 2.1 AA a11y, and static conventions audit rules with baseline snapshot.
 ---
 
 # mooc-clone Frontend Conventions Suite
@@ -51,7 +51,7 @@ Quy chuẩn lập trình Frontend bắt buộc cho toàn bộ dự án mooc-clon
   - **CẤM TRIỆT ĐỂ**: `rgba()`, `rgb()`, `hsla()`, `hsl()`, `color-mix()`, và mã 3-digit shorthand `#fff`.
 - **CẤM TUYỆT ĐỐI Mã Màu Thô trong JSX/TSX**:
   - Cấm Tailwind arbitrary: `bg-[#0f1c16]`, `text-[rgb(6,195,132)]`, `border-[rgba(...)]`.
-  - Cấm inline style: `style={{ color: '#06c384' }}` (chỉ cho phép gán CSS variable `--rogym-tone`).
+  - Cấm inline style: `style={{ color: '#06c384' }}` (chỉ cho phép gán CSS dynamic variables nếu có lý do kỹ thuật).
   - Cấm props màu: `fill="#..."`, `stroke="#..."` (ngoại trừ import từ `TOKEN_COLORS` trong `@/styles/token-values.ts`).
   - Bắt buộc dùng Semantic Tokens: `bg-card`, `text-primary`, `border-border`.
 - **Các Nguyên Tắc Tránh Lỗi Tương Đương & Giữ Mã Nguồn Dễ Bảo Trì**:
@@ -68,7 +68,7 @@ Quy chuẩn lập trình Frontend bắt buộc cho toàn bộ dự án mooc-clon
 ## 4. Phân Tầng State 4 Lớp & Derived State
 
 1. **Server State**: TanStack Query v5 (`useQuery`, `useMutation`). Bắt buộc dùng Query Key Factory từ `@/lib/query-keys` (10 domains cốt lõi). Cấm gọi API trực tiếp trong `useEffect`.
-2. **Global Client State**: Zustand stores (`useAuthStore`, `useSubscriptionStore`).
+2. **Global Client State**: Zustand stores (`useAuthStore`, `useExamStore`, `mockExamStore`).
 3. **URL State**: `useSearchParams` cho tab, bộ lọc, trang phân trang.
 4. **Local State**: `useState` / `useReducer` cho UI toggles nội bộ.
 - **Derived State**: *"Compute, Don't Duplicate"* — Tính toán trực tiếp trong render. Không dùng `useEffect` để đồng bộ state phụ; không dùng premature `useMemo` cho chuỗi đơn giản.
@@ -86,12 +86,12 @@ Quy chuẩn lập trình Frontend bắt buộc cho toàn bộ dự án mooc-clon
 
 ---
 
-## 6. LINE LIFF & Mobile Browser Experience
+## 6. Trải Nghiệm Giao Diện Di Động & Vùng Chạm Cảm Ứng (Touch Target & Mobile View)
 
 - Viewport cơ sở 375px (Mobile-First); breakpoints `sm:`, `md:`, `lg:`.
-- **Touch Target**: Mọi phần tử tương tác (button, input, switch, chip) phải có kích thước tối thiểu **$44 \times 44\text{px}$** (`min-h-[44px]`, `touch-manipulation`).
-- **Safe Area Insets**: Hỗ trợ `env(safe-area-inset-top)` và `env(safe-area-inset-bottom)` cho trình duyệt in-app của LINE.
-- **Testing**: Sử dụng `@line/liff-mock` khi chạy Vitest; không gọi trực tiếp API LINE LIFF thật trong test.
+- **Touch Target**: Mọi phần tử tương tác (button, input, switch, chip, thẻ phương án trắc nghiệm A/B/C/D) phải có kích thước tối thiểu **$44 \times 44\text{px}$** (`min-h-[44px]`, `touch-manipulation`).
+- **Safe Area Insets**: Hỗ trợ `env(safe-area-inset-top)` và `env(safe-area-inset-bottom)` cho thanh điều hướng và nút nộp bài cố định trên di động.
+- **Responsive Testing**: Kiểm thử giao diện hiển thị tối ưu trên cả thiết bị di động (Học viên thi/luyện tập) và máy tính (Giáo viên quản lý đề/giám sát).
 
 ---
 
@@ -103,9 +103,12 @@ Quy chuẩn lập trình Frontend bắt buộc cho toàn bộ dự án mooc-clon
 
 ---
 
-## 8. Phân Quyền RBAC 5 Vai Trò
+## 8. Phân Quyền Người Dùng Hệ Thống mooc-clone
 
-- 5 vai trò hệ thống: `admin`, `owner`, `staff`, `trainer`, `member`.
+- Các vai trò trong hệ thống: `teacher`, `student`, `admin`, `user`.
+- **Giáo viên (`teacher`)**: Quản lý đề thi, ngân hàng câu hỏi, tạo và giám sát phòng thi realtime, trích xuất báo cáo kết quả.
+- **Học viên (`student`)**: Tham gia phòng thi qua socket/mã phòng, làm bài thi trực tuyến, làm bài luyện tập, xem kết quả và giải thích.
+- **Quản trị viên (`admin`)**: Quản trị tài khoản người dùng, cấu hình thông số hệ thống, theo dõi nhật ký hoạt động (System Log).
 - Sử dụng các guards và shell có sẵn tại `@/components/shared/` (`RoleNavGuard`, `ProtectedRoute`, `RequireRole`).
 - Sử dụng hook `useRoleAccess` để kiểm tra quyền hạn trước khi render các hành động nhạy cảm.
 
@@ -133,16 +136,13 @@ Trước khi hoàn tất bất kỳ thay đổi nào trong `client/`, bắt bu�
 npm --prefix client run audit:summary
 npm --prefix client run audit:strict
 
-# 2. Kiểm tra bộ CSS HEX và Primitive Form
-npm --prefix client run verify:batch-1
+# 2. Kiểm tra tính toàn vẹn tài liệu Markdown & Link Paths
+npm --prefix client run verify:docs
 
-# 3. Kiểm tra tính toàn vẹn tài liệu & anti-patterns Batch 3
-npm --prefix client run verify:batch-3
-
-# 4. Chạy toàn bộ test suites Vitest
+# 3. Chạy toàn bộ test suites Vitest
 npm --prefix client test
 
-# 5. Kiểm tra TypeScript & Vite build
+# 4. Kiểm tra TypeScript & Vite build
 npm --prefix client run type-check
 npm --prefix client run build
 ```

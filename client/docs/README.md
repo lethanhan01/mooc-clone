@@ -1,10 +1,10 @@
 # Bản Đồ Tài Liệu & Lộ Trình Đọc Bộ Quy Chuẩn Frontend Doanh Nghiệp (Enterprise Blueprint Roadmap)
 
-> **Dự án:** Khung Tiêu Chuẩn Doanh Nghiệp & Hồ Sơ Dự Án RoGym  
+> **Dự án:** mooc-clone — Hệ thống Thi Trắc nghiệm Trực tuyến  
 > **Phạm vi kỹ thuật:** Hệ sinh thái tài liệu quy chuẩn kỹ thuật `docs/` (17 Chuyên đề Doanh nghiệp)  
 > **Cổng thông tin quy chuẩn trung tâm:** [`FRONTEND_CONVENTIONS.md`](../FRONTEND_CONVENTIONS.md)  
 > **Cơ sở tham chiếu quốc tế:** [Bulletproof React](https://github.com/alan2207/bulletproof-react), [TkDodo's Practical React Query](https://tkdodo.eu/blog), [W3C WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/), [OWASP](https://owasp.org), [Web.dev](https://web.dev), [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807), [Vercel React Best Practices](https://vercel.com).  
-> **Phiên bản:** 8.0 (Enterprise Quality Standard — 17 Spokes & Universal Decoupling)  
+> **Phiên bản:** 1.0.0  
 > **Áp dụng cho:** Kỹ sư Frontend, Kỹ sư Fullstack, QA / Test Engineers, Tech Leads, SecOps / DevOps và AI Assistants pair-programming.  
 
 > [!TIP]
@@ -16,7 +16,7 @@
 ## MỤC LỤC
 0. [🚀 Quick Reference Sheet (Tra cứu nhanh 15 phút)](./QUICK_REFERENCE.md)
 1. [Giới Thiệu & Triết Lý Kiến Trúc Hub & Spokes](#1-giới-thiệu-triết-lý-kiến-trúc-hub-spokes)
-2. [Bối Cảnh Kỹ Thuật Dự Án RoGym Frontend](#2-bối-cảnh-kỹ-thuật-dự-án-rogym-frontend)
+2. [Bối Cảnh Kỹ Thuật Dự Án mooc-clone Frontend](#2-bối-cảnh-kỹ-thuật-dự-án-mooc-clone-frontend)
 3. [Sitemaps Toàn Bộ Hệ Thống Tài Liệu Quy Chuẩn (17 Chuyên Đề)](#3-sitemaps-toàn-bộ-hệ-thống-tài-liệu-quy-chuẩn-17-chuyên-đề)
 4. [Khung Cấu Trúc 6 Phần Doanh Nghiệp Của Bộ Chuyên Đề (Unified 6-Part Anatomy)](#4-khung-cấu-trúc-6-phần-doanh-nghiệp-của-bộ-chuyên-đề-unified-6-part-anatomy)
 5. [4 Lộ Trình Đọc Tài Liệu Theo Vai Trò](#5-4-lộ-trình-đọc-tài-liệu-theo-vai-trò)
@@ -108,12 +108,13 @@ flowchart TD
 
 ---
 
-## 2. Bối Cảnh Kỹ Thuật Dự Án RoGym Frontend
+## 2. Bối Cảnh Kỹ Thuật Dự Án mooc-clone Frontend
 
-RoGym là nền tảng quản lý phòng tập thể hình quy mô doanh nghiệp với kiến trúc Single Page Application (SPA). Toàn bộ hệ thống frontend được xây dựng trên stack công nghệ hiện đại:
-- **Ngôn ngữ & Runtime:** React 18.3, TypeScript 5.4, Vite 5.2.
-- **Quản lý Dữ liệu & State:** TanStack Query v5.35 (Server Cache), Zustand 4.5 (Client Session), React Router DOM (URL State).
-- **Giao diện & Styling:** Tailwind CSS 3.4 kết hợp CSS Design Tokens thuần 100% HEX, Radix UI Primitives, Lucide React Icons.
+mooc-clone là nền tảng thi trắc nghiệm trực tuyến thời gian thực (Online Examination System) theo kiến trúc Single Page Application (SPA). Toàn bộ hệ thống frontend được xây dựng trên stack công nghệ hiện đại:
+- **Ngôn ngữ & Runtime:** React 19, TypeScript 5.4, Vite 5.2.
+- **Quản lý Dữ liệu & State:** TanStack Query v5.35 (Server Cache), Zustand 4.5 (Client Session), React Router DOM v6 (URL State).
+- **Giao tiếp Realtime:** Socket.IO client v4 (Đồng bộ phòng thi, đếm ngược thời gian làm bài, sự kiện nộp bài).
+- **Giao diện & Styling:** Tailwind CSS v4 kết hợp CSS Design Tokens thuần 100% HEX, Radix UI Primitives, Lucide React Icons.
 - **Kiểm thử tự động:** Vitest 2.1 runner, React Testing Library, jsdom environment, tích hợp CI GitHub Actions và script kiểm toán tĩnh `audit-conventions.mjs`.
 
 ---
@@ -126,12 +127,12 @@ Dưới đây là danh mục chi tiết 17 chuyên đề kỹ thuật thuộc b�
 | :---: | :--- | :--- | :--- |
 | **01** | [`01-architecture-and-structure.md`](./01-architecture-and-structure.md) | Bản đồ 12 thư mục `src/`, quy tắc Co-location theo Bulletproof React, Rule of Three và Component Anatomy 4 khối chuẩn mực. | [Bulletproof React](https://github.com/alan2207/bulletproof-react) (Alan Eicker / Sandro Roth) |
 | **02** | [`02-state-management.md`](./02-state-management.md) | Phân tầng State 4 lớp (Server, Global, URL, Local UI), nguyên tắc Derived State "Compute, Don't Duplicate", State Decision Tree. | [TkDodo's Practical React Query](https://tkdodo.eu/blog) & [React.dev](https://react.dev/learn/you-might-not-need-an-effect) |
-| **03** | [`03-coding-standards.md`](./03-coding-standards.md) | Chi tiết 19 Tiêu chuẩn Coding Standards Doanh nghiệp, Bảng ánh xạ 1-1 Native sang Primitive và quy chuẩn chú thích ngoại lệ. | [W3C WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/) & [TypeScript Handbook](https://www.typescriptlang.org/docs/) |
+| **03** | [`03-coding-standards.md`](./03-coding-standards.md) | Chi tiết 19 Tiêu chuẩn Coding Standards Doanh nghiệp, Bảng ánh xạ 1-1 Native sang Primitive và quy chuẩn chú thích ngoại lệ rogym-convention-exempt. | [W3C WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/) & [TypeScript Handbook](https://www.typescriptlang.org/docs/) |
 | **04** | [`04-component-patterns.md`](./04-component-patterns.md) | React Design Patterns: Compound Components, Container/Presentational, Error Boundaries phân cấp, Polymorphic UI Primitives (`as`). | [Patterns.dev](https://www.patterns.dev/react) |
 | **05** | [`05-forms-and-validation.md`](./05-forms-and-validation.md) | Form Architecture Tầng 1 (Primitive `<Form>`, `<FormField>`, `<SubmitButton>`), Wizard Form nhiều bước, dynamic `useFieldArray`. | [W3C Form Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/examples/form.html) |
-| **06** | [`06-styling-and-design-tokens.md`](./06-styling-and-design-tokens.md) | Quy chuẩn 100% mã màu HEX trong CSS (6-digit & 8-digit alpha), hệ thống tokens trung tính, Container Queries `@container`. | RoGym Design Token Specification V1.0 |
+| **06** | [`06-styling-and-design-tokens.md`](./06-styling-and-design-tokens.md) | Quy chuẩn 100% mã màu HEX trong CSS (6-digit & 8-digit alpha), hệ thống tokens trung tính, Container Queries `@container`. | Design Token Specification V1.0 |
 | **07** | [`07-testing-and-quality-assurance.md`](./07-testing-and-quality-assurance.md) | Kim tự tháp kiểm thử 4 tầng: Vitest 2.1, RTL, MSW Mocking, Playwright E2E và PR Definition of Done 12 tiêu chí. | [Testing Library](https://testing-library.com/) & [Vitest Docs](https://vitest.dev) |
-| **08** | [`08-semantic-design-system.md`](./08-semantic-design-system.md) | Nguồn dữ liệu chuẩn cho Semantic Design System: 4 trụ cột S1–S4, Token naming `--color-<category>-<role>`, CVA variants, Quản trị vòng đời quy chuẩn `SEM-*`. | RoGym Semantic Design System V1.0 |
+| **08** | [`08-semantic-design-system.md`](./08-semantic-design-system.md) | Nguồn dữ liệu chuẩn cho Semantic Design System: 4 trụ cột S1–S4, Token naming `--color-<category>-<role>`, CVA variants, Quản trị vòng đời quy chuẩn `SEM-*`. | Semantic Design System V1.0 |
 | **09** | [`09-accessibility.md`](./09-accessibility.md) | Tiêu chuẩn Tiếp cận W3C WAI-ARIA APG, Form a11y, Contrast Matrix AA, Touch target $\ge 44\text{px}$, Focus visibility, và tự động hóa với `vitest-axe`. | [W3C WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/) & WCAG 2.2 AA |
 | **10** | [`10-frontend-security-and-auth.md`](./10-frontend-security-and-auth.md) | OWASP Client-Side Top 10, Cấu hình CSP headers, In-memory Access Token + HttpOnly Refresh Token Cookie, PII Masking. | [OWASP Foundation](https://owasp.org) & [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) |
 | **11** | [`11-performance-and-web-vitals.md`](./11-performance-and-web-vitals.md) | Bộ ba chỉ số Core Web Vitals (LCP, INP, CLS), Bundle Budget $\le 180\text{KB}$, Route-based Lazy loading, Virtualization `@tanstack/react-virtual`. | [Google Web Vitals](https://web.dev/vitals/) & [Web.dev](https://web.dev) |
@@ -140,7 +141,7 @@ Dưới đây là danh mục chi tiết 17 chuyên đề kỹ thuật thuộc b�
 | **14** | [`14-internationalization-and-localization.md`](./14-internationalization-and-localization.md) | Nguyên tắc Zero Hardcoded Strings, Khóa dịch phân cấp, Bản địa hóa tiền tệ/ngày giờ qua `Intl` API, CSS Logical Properties hỗ trợ RTL. | [i18next](https://www.i18next.com) & [MDN Intl API](https://developer.mozilla.org) |
 | **15** | [`15-release-engineering-and-devops.md`](./15-release-engineering-and-devops.md) | Xác thực biến môi trường qua Zod schema, Dockerfile multi-stage Nginx Alpine, Chiến lược Cache-Busting, Feature Flags, SemVer 2.0.0. | [12-Factor App](https://12factor.net) & [Docker](https://docker.com) |
 | **16** | [`16-view-transitions-and-motion.md`](./16-view-transitions-and-motion.md) | Chuyển cảnh trang W3C Native View Transitions, FLIP Morphing, Quy tắc ưu tiên chuyển động 4 tầng, CSS Recipes & `@media (prefers-reduced-motion)`. | [W3C View Transitions](https://www.w3.org/TR/css-view-transitions-1/) & [Vercel View Transitions](https://github.com/vercel-labs/react-view-transitions) |
-| **17** | [`17-mobile-and-native-architecture.md`](./17-mobile-and-native-architecture.md) | Kiến trúc di động đa nền tảng Universal Component Tree, WebView Bridge LINE LIFF, Expo / React Native, Quy chuẩn Touch target $\ge 44\text{px}$, Virtualization di động. | [React Native Architecture](https://reactnative.dev) & [LINE Developers LIFF](https://developers.line.biz/en/docs/liff/) |
+| **17** | [`17-mobile-and-native-architecture.md`](./17-mobile-and-native-architecture.md) | Kiến trúc di động đa nền tảng Responsive Mobile View, Quy chuẩn Touch target $\ge 44\text{px}$, Virtualization danh sách câu hỏi. | [React Documentation](https://react.dev) |
 
 ### 3.1. Danh Mục Tài Liệu Kiến Trúc Module Cấp Cao (`src/*/README.md`)
 

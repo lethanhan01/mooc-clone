@@ -15,13 +15,13 @@ export interface UserAnswerPayload {
 
 export interface SocketConnection {
   connected: boolean
-  on(event: string, callback: (...args: unknown[]) => void): void
-  off(event: string, callback: (...args: unknown[]) => void): void
+  on(event: string, callback: (...args: any[]) => void): void
+  off(event: string, callback: (...args: any[]) => void): void
 }
 
 class SocketService implements SocketConnection {
   private ws: WebSocket | null = null
-  private eventListeners: Map<string, Set<(...args: unknown[]) => void>> = new Map()
+  private eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map()
   public connected: boolean = false
 
   connect(wsUrl?: string, token?: string): SocketConnection {
@@ -70,14 +70,14 @@ class SocketService implements SocketConnection {
     return this.ws ? this : null
   }
 
-  on(event: string, callback: (...args: unknown[]) => void): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set())
     }
     this.eventListeners.get(event)!.add(callback)
   }
 
-  off(event: string, callback: (...args: unknown[]) => void): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     this.eventListeners.get(event)?.delete(callback)
   }
 

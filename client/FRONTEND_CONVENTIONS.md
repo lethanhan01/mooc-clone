@@ -1,10 +1,10 @@
 # Quy Chuẩn Lập Trình Frontend Doanh Nghiệp (Enterprise Frontend Conventions Blueprint)
 
-> **Dự án:** Khung Tiêu Chuẩn Doanh Nghiệp & Hồ Sơ Dự Án RoGym  
-> **Phạm vi kỹ thuật:** Frontend SPA (`client/`) — React 18.3 & React 19 Ready, TypeScript 5.4, Vite 5.2, Tailwind CSS 3.4, TanStack Query 5.35, Zustand 4.5, Radix UI, Vitest 2.1  
+> **Dự án:** mooc-clone — Hệ thống Thi Trắc nghiệm Trực tuyến  
+> **Phạm vi kỹ thuật:** Frontend SPA (`client/`) — React 19, TypeScript 5.4, Vite 5.2, Tailwind CSS v4, TanStack Query v5, Zustand v4, Radix UI, Socket.IO client, Vitest 2.1  
 > **Cổng vào tài liệu chuyên sâu:** [Bản Đồ Tài Liệu & 4 Lộ Trình Đọc](./docs/README.md)  
 > **Cơ sở tham chiếu quốc tế:** [React.dev](https://react.dev), [Bulletproof React](https://github.com/alan2207/bulletproof-react), [TkDodo's Practical React Query](https://tkdodo.eu/blog), [W3C WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/), [OWASP](https://owasp.org), [Web.dev Core Web Vitals](https://web.dev/vitals/), [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807), [Vercel React Best Practices](https://vercel.com)  
-> **Phiên bản:** 8.0 (Enterprise Quality Standard — 17 Spokes & Universal Decoupling)  
+> **Phiên bản:** 1.0.0  
 > **Trạng thái:** Bắt buộc tuân thủ 100% đối với toàn bộ kỹ sư, AI Assistant và quy trình Code Review / CI Scan
 
 > [!TIP]
@@ -18,11 +18,11 @@
 0. [🚀 Quick Reference Sheet (Tra cứu nhanh 15 phút)](./docs/QUICK_REFERENCE.md)
 1. [Nguyên Tắc 4 Trụ Cột Kỹ Thuật](#1-nguyên-tắc-4-trụ-cột-kỹ-thuật)
 2. [Cơ Sở Tham Chiếu Chuẩn Quốc Tế (Authoritative References)](#2-cơ-sở-tham-chiếu-chuẩn-quốc-tế-authoritative-references)
-3. [Chiến Lược Tách Bạch 2 Lớp (Decoupling Architecture)](#3-chiến-lược-tách-bạch-2-lớp-decoupling-architecture)
+3. [Kiến Trúc Tổng Thể Frontend mooc-clone (Frontend System Architecture)](#3-kiến-trúc-tổng-thể-frontend-mooc-clone-frontend-system-architecture)
 4. [Tháp Phân Tầng Ngữ Nghĩa (Semantic Hierarchy & Boundaries)](#4-tháp-phân-tầng-ngữ-nghĩa-semantic-hierarchy-boundaries)
 5. [Ma Trận 19 Tiêu Chuẩn Doanh Nghiệp & Hệ Thống Rule IDs](#5-ma-trận-19-tiêu-chuẩn-doanh-nghiệp-hệ-thống-rule-ids)
 6. [Hệ Thống Thực Thi 3 Tuyến Phòng Thủ (3-Tier Defense Enforcement)](#6-hệ-thống-thực-thi-3-tuyến-phòng-thủ-3-tier-defense-enforcement)
-7. [Cơ Chế Ngoại Lệ Có Cấu Trúc (Structured rogym-convention-exempt)](#7-cơ-chế-ngoại-lệ-có-cấu-trúc-structured-rogym-convention-exempt)
+7. [Cơ Chế Ngoại Lệ Có Cấu Trúc (Structured Convention Exemption)](#7-cơ-chế-ngoại-lệ-có-cấu-trúc-structured-convention-exemption)
 8. [Hệ Thống Kiểm Toán Tự Động & Baseline Snapshot (Tooling Integration)](#8-hệ-thống-kiểm-toán-tự-động-baseline-snapshot-tooling-integration)
 9. [Checklist 12 Tiêu Chí PR Definition of Done (DoD)](#9-checklist-12-tiêu-chí-pr-definition-of-done-dod)
 10. [Bản Đồ 17 Chuyên Đề Chuyên Sâu Doanh Nghiệp](#10-bản-đồ-17-chuyên-đề-chuyên-sâu-doanh-nghiệp)
@@ -78,36 +78,39 @@ flowchart TD
 
 ---
 
-## 3. Chiến Lược Tách Bạch 2 Lớp (Decoupling Architecture)
+## 3. Kiến Trúc Tổng Thể Frontend mooc-clone (Frontend System Architecture)
 
-Nhằm đảm bảo bộ tài liệu vừa giải quyết hoàn hảo bài toán dự án hiện tại, vừa dùng làm chuẩn mực cho mọi dự án doanh nghiệp sau này (FinTech, E-Commerce, B2B SaaS, ERP), hệ thống quy chuẩn được phân định thành **2 Tầng độc lập**:
+Phân hệ Frontend (`client/`) được thiết kế theo kiến trúc Single Page Application (SPA) hiệu năng cao trên nền tảng React 19 và Tailwind CSS v4, phục vụ hai luồng nghiệp vụ cốt lõi: Giáo viên (Teacher) và Học viên (Student):
 
 ```mermaid
-classDiagram
-    class CoreUniversalSpec {
-        <<Tầng 1: Tiêu Chuẩn Doanh Nghiệp Dùng Chung>>
-        +Nguyên lý kiến trúc chung
-        +Quy tắc cấm & khuyến nghị (Don't / Do)
-        +Mô hình dữ liệu & Token trừu tượng
-        +Bảng tiêu chí định lượng & Checklist DoD
-    }
+flowchart TD
 
-    class ProjectImplementationProfile {
-        <<Tầng 2: Hồ Sơ Áp Dụng Thực Tế & Case Study>>
-        +Case Study hệ thống thật (RoGym System Profile)
-        +File minh họa thực tế trong repo
-        +Các quyết định kỹ thuật đặc thù dự án
-    }
+    subgraph CLIENT ["PHÂN HỆ CLIENT SPA (React 19 + Vite 5 + Tailwind v4)"]
+        direction TB
+        PAGES["High-Level Pages & Layouts<br/>(Teacher / Student / Auth / Dev)"]
+        STATE["Quản Trị State 4 Lớp<br/>(Server: TanStack Query v5 | Global: Zustand v4 | URL | Local)"]
+        SOCKET["Socket.IO Client Layer<br/>(Đồng bộ phòng thi, đếm giờ, kết nối mạng thời gian thực)"]
+        PRIMITIVES["UI Primitives & Shared Shells<br/>(Radix UI + CVA Design Tokens 100% HEX)"]
+    end
 
-    CoreUniversalSpec <|-- ProjectImplementationProfile : Hiện thực hóa cụ thể
+    SERVER["Backend Dịch Vụ & Máy Chủ Socket (Spring Boot)"]
+
+    PAGES --> STATE
+    STATE --> SOCKET
+    PAGES --> PRIMITIVES
+    SOCKET <-->|"WebSocket / HTTP"| SERVER
 ```
 
-- **Tầng 1 — Core Universal Specification (Chuẩn Mực Chung):**
-  - Sử dụng văn phong trung tính của kỹ sư trưởng doanh nghiệp.
-  - Mọi định danh mang tính quy ước chuẩn (`--color-primary`, `components/ui/`, `features/auth/`, `features/billing/`).
-  - Áp dụng được ngay cho mọi dự án SaaS / ERP / E-Commerce mà không phải sửa đổi nội dung nguyên lý.
-- **Tầng 2 — Reference Case Study Profile (Hồ Sơ Áp Dụng Thực Tế & Case Study):**
-  - Trích dẫn trực tiếp các file có thật trong repository làm minh chứng thực tế (ví dụ: màn hình lịch tập, form thanh toán, kiểm thử nút bấm). Điều này giúp tài liệu có sức thuyết phục tuyệt đối, chứng minh rằng các quy chuẩn này đã chạy thành công trong sản phẩm thật chứ không phải lý thuyết giáo điều.
+- **Tầng Giao Diện Cấp Cao (High-Level Pages & Layouts):**
+  - Màn hình dành cho Giáo viên: Quản trị phòng thi, soạn và nạp câu hỏi (CSV/JSON), giám sát phòng thi realtime, biểu đồ thống kê kết quả.
+  - Màn hình dành cho Học viên: Phòng chờ thi, làm bài thi thời gian thực kèm đồng hồ đếm ngược đồng bộ socket, chế độ luyện tập cá nhân, xem lại lịch sử và giải thích đáp án.
+- **Tầng Quản Trị State & Mạng Thời Gian Thực:**
+  - TanStack Query v5 đóng vai trò bộ nhớ đệm Server State, quản lý truy vấn dữ liệu học liệu, danh sách phòng và bảng điểm.
+  - Socket.IO client bảo đảm tính tức thời: đồng bộ thời gian đếm ngược, khóa đề thi khi hết giờ và thông báo nộp bài tự động.
+  - Zustand v4 duy trì trạng thái phiên đăng nhập người dùng và trạng thái thi cục bộ.
+- **Tầng UI Primitives & Design System:**
+  - Ranh giới bảo vệ Primitive Boundary: 100% tương tác thông qua các thành phần nền tảng (`Button`, `FormField`, `SubmitButton`, `Card`).
+  - Hệ thống Design Tokens thuần 100% HEX màu sắc, triệt tiêu mã màu thô trong JSX.
 
 ---
 
@@ -245,7 +248,7 @@ flowchart LR
 
 ---
 
-## 7. Cơ Chế Ngoại Lệ Có Cấu Trúc (Structured rogym-convention-exempt)
+## 7. Cơ Chế Ngoại Lệ Có Cấu Trúc (Structured Convention Exemption)
 
 Trong quá trình phát triển thực tế, có những tình huống bắt buộc kỹ thuật khiến việc tuân thủ quy chuẩn tuyệt đối không khả thi:
 
@@ -352,7 +355,7 @@ Trước khi commit mã nguồn hoặc tạo Pull Request, mọi kỹ sư bắt 
 2. **Quản Lý State 4 Lớp:** [`docs/02-state-management.md`](./docs/02-state-management.md) | [**Hướng Dẫn Custom Hooks & Server State** (`src/hooks/README.md`)](./src/hooks/README.md) | [**Hướng Dẫn Quản Lý Client State Bằng Zustand** (`src/stores/README.md`)](./src/stores/README.md) — 4 Lớp State, TanStack Query, Zustand, BroadcastChannel & Persistent Cache.
 3. **19 Tiêu Chuẩn Coding Standards:** [`docs/03-coding-standards.md`](./docs/03-coding-standards.md) — TypeScript Strict, AbortController, UTC Discipline & Primitive Boundary.
 4. **React Component Design Patterns:** [`docs/04-component-patterns.md`](./docs/04-component-patterns.md) | [**Kiến Trúc UI Components & Primitives** (`src/components/README.md`)](./src/components/README.md) — Compound Components, Headless UI, Portal Stacking & Error Boundary.
-5. **Kiến Trúc Di Động Đa Nền Tảng & React Native:** [`docs/17-mobile-and-native-architecture.md`](./docs/17-mobile-and-native-architecture.md) — Universal Component Tree, LINE LIFF Bridge, Expo / React Native, Touch Target $\ge 44\text{px}$.
+5. **Kiến Trúc Giao Diện Di Động & Trải Nghiệm Cảm Ứng:** [`docs/17-mobile-and-native-architecture.md`](./docs/17-mobile-and-native-architecture.md) — Responsive Mobile Exam View, Virtualization, Touch Target $\ge 44\text{px}$ cho phương án trắc nghiệm.
 
 ### Nhóm 2: Giao Diện, Design System & Tương Tác
 
@@ -394,6 +397,6 @@ Toàn bộ các mô hình AI (Claude, Gemini, Copilot) khi hỗ trợ lập trì
 9. **Cấm sinh code `dangerouslySetInnerHTML` thô**: Bắt buộc bọc qua `DOMPurify.sanitize(...)`.
 10. **Bắt buộc truyền `signal` vào các API call**: Luôn hỗ trợ cơ chế hủy request `AbortController`.
 11. **Dùng ternary `? : null` thay vì `&&`**: Tránh tuyệt đối rò rỉ `0` hoặc `NaN` ra giao diện (`STD-VCL-001`).
-12. **React 19 Ref as Prop & ForwardRef**: Trong React 19, `ref` là prop trực tiếp; các component mới không cần bọc `forwardRef` trừ khi duy trì tính tương thích ngược với React 18 (`STD-REF-001`).
+12. **React 19 Ref as Prop & ForwardRef**: Trong React 19, `ref` là prop trực tiếp trên function component (`STD-REF-001`). Không bắt buộc bọc `forwardRef` cho các component mới trừ khi duy trì tính tương thích.
 13. **Tuân thủ Vercel Best Practices & View Transitions**: Sử dụng `document.startViewTransition()` cho điều hướng màn hình và bọc toàn bộ animation trong `@media (prefers-reduced-motion: reduce)` (`MOTION-001..008`).
 

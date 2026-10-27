@@ -2,17 +2,26 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { DEMO_STUDENT, DEMO_TEACHER } from '@/services/mockData'
 
-export type Role = 'student' | 'teacher' | 'admin' | 'user'
+import type { AuthResponse, AuthUser, Role } from '@/types'
 
-export interface AuthUser {
-  userId: string
-  email: string
-  fullName: string
-  roles: Role[]
-  avatarUrl?: string | null
-  studentId?: string | null
-  department?: string | null
-  memberId?: string | null
+export type { Role, AuthUser }
+
+export function mapAuthResponseToUser(authData: AuthResponse): AuthUser {
+  const rawRole = (authData.role || 'STUDENT').toUpperCase()
+  let mappedRole: Role = 'student'
+  if (rawRole === 'TEACHER') mappedRole = 'teacher'
+  else if (rawRole === 'ADMIN') mappedRole = 'admin'
+  else if (rawRole === 'USER') mappedRole = 'user'
+
+  const username = authData.username || ''
+  const email = username.includes('@') ? username : `${username}@mooc.local`
+
+  return {
+    userId: String(authData.userId),
+    email,
+    fullName: authData.displayName || username,
+    roles: [mappedRole],
+  }
 }
 
 /** Keep persisted demo sessions in sync when mock display names change. */

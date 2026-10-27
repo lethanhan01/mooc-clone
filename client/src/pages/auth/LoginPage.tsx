@@ -1,34 +1,67 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { GraduationCap, Lock, Mail, UserRound, BookOpen } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Lock, Mail } from 'lucide-react'
 import { Card } from '@/components/ui/data-display'
 import { Form, FormField, Input } from '@/components/ui/forms'
-import { Button, ButtonLink, SubmitButton } from '@/components/ui/actions'
+import { ButtonLink, SubmitButton } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useAuthStore } from '@/stores/authStore'
-import { DEMO_ACCOUNTS } from '@/services/mockData'
+import { mapAuthResponseToUser, useAuthStore, type Role } from '@/stores/authStore'
+import { authService } from '@/services/auth.service'
 import { getHomePathForRoles } from '@/stores/mockExamStore'
 import { toast } from '@/lib/toast'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ usernameOrEmail?: string; password?: string }>({})
   const setAuth = useAuthStore((s) => s.setAuth)
+  const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const navigate = useNavigate()
+  const location = useLocation()
 
-  function loginAs(kind: 'teacher' | 'student') {
-    const account = DEMO_ACCOUNTS[kind]
-    setAuth(account.user, `mock_token_${kind}`)
-    toast.success('Đăng nhập demo thành công')
-    navigate(getHomePathForRoles(account.user.roles))
+  function getDestination(roles: Role[] = []) {
+    const stateFrom = (location.state as { from?: { pathname?: string; search?: string; hash?: string } | string })?.from
+    if (typeof stateFrom === 'string' && stateFrom.length > 0) {
+      return stateFrom
+    }
+    if (stateFrom && typeof stateFrom === 'object' && stateFrom.pathname) {
+      return `${stateFrom.pathname}${stateFrom.search || ''}${stateFrom.hash || ''}`
+    }
+    return getHomePathForRoles(roles)
   }
 
-  async function handleSubmit() {
-    const newErrors: { email?: string; password?: string } = {}
-    if (!email.trim()) newErrors.email = 'Vui lòng nhập tên đăng nhập hoặc email'
-    if (!password) newErrors.password = 'Vui lòng nhập mật khẩu'
+  // Tự động chuyển hướng đến Dashboard nếu người dùng đã đăng nhập từ trước
+  useEffect(() => {
+    if (hasHydrated && user) {
+      navigate(getDestination(user.roles), { replace: true })
+    }
+  }, [hasHydrated, user, navigate, location.state])
+
+  async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault()
+    let u = usernameOrEmail.trim()
+    let p = password
+
+    // Fallback: Đọc dữ liệu từ form native phòng trường hợp browser autofill không kích hoạt React onChange
+    if (e?.currentTarget) {
+      const formData = new FormData(e.currentTarget)
+      const formU = String(formData.get('usernameOrEmail') || '').trim()
+      const formP = String(formData.get('password') || '')
+      if (formU && !u) {
+        u = formU
+        setUsernameOrEmail(formU)
+      }
+      if (formP && !p) {
+        p = formP
+        setPassword(formP)
+      }
+    }
+
+    const newErrors: { usernameOrEmail?: string; password?: string } = {}
+    if (!u) newErrors.usernameOrEmail = 'Vui lòng nhập tên đăng nhập hoặc email'
+    if (!p) newErrors.password = 'Vui lòng nhập mật khẩu'
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
@@ -36,17 +69,20 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const normalized = email.trim().toLowerCase()
-      const match = Object.values(DEMO_ACCOUNTS).find(
-        (a) => a.email.toLowerCase() === normalized && a.password === password
-      )
-      if (!match) {
-        setErrors({ password: 'Email hoặc mật khẩu không đúng (dùng tài khoản demo)' })
-        return
-      }
-      setAuth(match.user, `mock_token_${match.user.roles[0]}`)
+      const authData = await authService.login({
+        usernameOrEmail: u,
+        password: p,
+      })
+      const loggedInUser = mapAuthResponseToUser(authData)
+      setAuth(loggedInUser, authData.token)
       toast.success('Đăng nhập thành công!')
-      navigate(getHomePathForRoles(match.user.roles))
+      navigate(getDestination(loggedInUser.roles), { replace: true })
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Tên đăng nhập hoặc mật khẩu không chính xác'
+      setErrors({ password: message })
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -64,16 +100,24 @@ export default function LoginPage() {
       </header>
 
       <Form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <FormField id="login-email" label="Tên đăng nhập hoặc Email:" error={errors.email} required>
+        <FormField
+          id="login-username-or-email"
+          label="Tên đăng nhập hoặc Email:"
+          error={errors.usernameOrEmail}
+          required
+        >
           <Input
-            id="login-email"
+            id="login-username-or-email"
+            name="usernameOrEmail"
             aria-label="Tên đăng nhập hoặc Email"
-            type="email"
+            type="text"
             placeholder="taikhoan@mooc.edu.vn"
-            value={email}
+            value={usernameOrEmail}
             onChange={(e) => {
-              setEmail(e.target.value)
-              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+              setUsernameOrEmail(e.target.value)
+              if (errors.usernameOrEmail) {
+                setErrors((prev) => ({ ...prev, usernameOrEmail: undefined }))
+              }
             }}
             leftIcon={<Mail size={16} />}
             autoComplete="username"
@@ -83,57 +127,37 @@ export default function LoginPage() {
         <FormField id="login-password" label="Mật khẩu:" error={errors.password} required>
           <Input
             id="login-password"
+            name="password"
             aria-label="Mật khẩu"
             type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value)
-              if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
+              if (errors.password) {
+                setErrors((prev) => ({ ...prev, password: undefined }))
+              }
             }}
             leftIcon={<Lock size={16} />}
             autoComplete="current-password"
           />
         </FormField>
 
-        <SubmitButton loading={loading} variant="primary" className="w-full justify-center uppercase tracking-wide">
+        <SubmitButton
+          loading={loading}
+          variant="primary"
+          className="w-full justify-center uppercase tracking-wide"
+        >
           Đăng nhập
         </SubmitButton>
       </Form>
 
-      <footer className="mt-4 flex flex-col gap-3">
-        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Demo quick-login grid] */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-line-subtle pt-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            leftIcon={<GraduationCap size={16} />}
-            onClick={() => loginAs('teacher')}
-            className="justify-center"
-          >
-            Đăng nhập Giáo viên Demo
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            leftIcon={<BookOpen size={16} />}
-            onClick={() => loginAs('student')}
-            className="justify-center"
-          >
-            Đăng nhập Học sinh Demo
-          </Button>
-        </div>
-
-        <Text size="sm" tone="muted" className="text-center mt-2">
+      <footer className="mt-6 border-t border-line-subtle pt-4 text-center">
+        <Text size="sm" tone="muted">
           Bạn chưa có tài khoản?{' '}
           <ButtonLink to="/register" variant="ghost" size="sm" className="inline px-1 text-action-accent">
             Đăng ký ngay
           </ButtonLink>
-        </Text>
-        <Text size="xs" tone="muted" className="text-center flex items-center justify-center gap-1">
-          <UserRound size={12} /> teacher@mooc.edu.vn / student@mooc.edu.vn · Password@123
         </Text>
       </footer>
     </Card>
