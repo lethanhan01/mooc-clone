@@ -26,25 +26,68 @@ class SocketService implements SocketConnection {
   private readonly eventListeners: Map<string, Set<SocketEventCallback>> = new Map()
   public connected: boolean = false
 
+  // Quản lý cơ chế tự động kết nối lại (Auto-Reconnect)
+  private reconnectAttempts = 0
+  private readonly maxReconnectAttempts = 5
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+  private isManuallyClosed = false
+
+  // Ghi nhớ tham số kết nối và phòng thi để phục hồi sau rớt mạng (Auto Re-join)
+  private lastWsUrl?: string
+  private lastToken?: string
+  private lastRoomId?: string
+  private lastUser?: { id: string; name: string }
+
   connect(wsUrl?: string, token?: string): SocketConnection {
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
       return this
     }
 
+    if (wsUrl !== undefined) this.lastWsUrl = wsUrl
+    if (token !== undefined) this.lastToken = token
+    this.isManuallyClosed = false
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+      this.reconnectTimeout = null
+    }
+
     const defaultUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'
-    const targetUrl = wsUrl || defaultUrl
+    const targetUrl = this.lastWsUrl || defaultUrl
 
     try {
-      this.ws = new WebSocket(token ? `${targetUrl}?token=${encodeURIComponent(token)}` : targetUrl)
-
-      this.ws.onopen = () => {
-        this.connected = true
-        this.emit('connect')
+      if (this.ws) {
+        this.ws.onopen = null
+        this.ws.onclose = null
+        this.ws.onerror = null
+        this.ws.onmessage = null
       }
 
-      this.ws.onclose = () => {
+      const fullUrl = this.lastToken ? `${targetUrl}?token=${encodeURIComponent(this.lastToken)}` : targetUrl
+      this.ws = new WebSocket(fullUrl)
+
+      this.ws.onopen = () => {
+        const wasReconnecting = this.reconnectAttempts > 0
+        this.connected = true
+        this.reconnectAttempts = 0
+        this.emit('connect')
+
+        // Khôi phục phiên phòng thi nếu vừa kết nối lại sau sự cố mất mạng
+        if (wasReconnecting) {
+          this.emit('reconnect')
+          if (this.lastRoomId && this.lastUser) {
+            this.send('join_room', { roomId: this.lastRoomId, user: this.lastUser })
+          }
+        }
+      }
+
+      this.ws.onclose = (event) => {
         this.connected = false
-        this.emit('disconnect')
+        this.emit('disconnect', event)
+
+        if (!this.isManuallyClosed) {
+          this.scheduleReconnect()
+        }
       }
 
       this.ws.onerror = (err) => {
@@ -63,9 +106,37 @@ class SocketService implements SocketConnection {
       }
     } catch (e) {
       console.warn('[WebSocket] Connection failed', e)
+      if (!this.isManuallyClosed) {
+        this.scheduleReconnect()
+      }
     }
 
     return this
+  }
+
+  private scheduleReconnect(): void {
+    if (this.isManuallyClosed || this.reconnectTimeout) {
+      return
+    }
+
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.warn(`[WebSocket] Max reconnect attempts (${this.maxReconnectAttempts}) reached`)
+      this.emit('reconnect_failed')
+      return
+    }
+
+    // Thuật toán Exponential Backoff kèm Jitter: 1s, 2s, 4s, 8s, 16s... tối đa 15s + 0-1000ms jitter
+    const backoff = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 15000)
+    const jitter = Math.random() * 1000
+    const delay = backoff + jitter
+
+    this.reconnectAttempts++
+    this.emit('reconnecting', { attempt: this.reconnectAttempts, delay })
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null
+      this.connect(this.lastWsUrl, this.lastToken)
+    }, delay)
   }
 
   getSocket(): SocketConnection | null {
@@ -101,10 +172,16 @@ class SocketService implements SocketConnection {
   }
 
   joinRoom(roomId: string, user: { id: string; name: string }): void {
+    this.lastRoomId = roomId
+    this.lastUser = user
     this.send('join_room', { roomId, user })
   }
 
   leaveRoom(roomId: string): void {
+    if (this.lastRoomId === roomId) {
+      this.lastRoomId = undefined
+      this.lastUser = undefined
+    }
     this.send('leave_room', { roomId })
   }
 
@@ -140,8 +217,16 @@ class SocketService implements SocketConnection {
     }
   }
 
-
   disconnect(): void {
+    this.isManuallyClosed = true
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+      this.reconnectTimeout = null
+    }
+    this.reconnectAttempts = 0
+    this.lastRoomId = undefined
+    this.lastUser = undefined
+
     if (this.ws) {
       this.ws.close()
       this.ws = null
