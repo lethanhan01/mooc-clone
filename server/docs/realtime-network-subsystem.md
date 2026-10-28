@@ -300,33 +300,69 @@ TCP là giao thức hướng dòng (Stream-oriented), truyền tải dữ liệu
 
 ## 5. Quy Chuẩn Đa Luồng & An Toàn Kênh Truyền (Concurrency Safety)
 
-### 5.1. Phân Tách Luồng: Doug Lea Classic Reactor vs Worker ThreadPool
-Trong [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java), kiến trúc đa luồng tuân thủ nghiêm ngặt mô hình Doug Lea Classic Reactor Pattern:
+### 5.1. Cơ Chế Doug Lea Classic Reactor Pattern & So Sánh Các Mô Hình Mạng TCP
 
-```text
-[Mạng Socket] ---> (OP_ACCEPT, OP_READ)
-                         │
-                         ▼
-        ┌───────────────────────────────────┐
-        │   1 Luồng Duy Nhất: Reactor       │
-        │   ("nio-reactor-thread")          │
-        │   - selector.select(500)          │
-        │   - sc.read(buffer)               │
-        │   - decoder.decode() (Framing thô)│
-        └─────────────────┬─────────────────┘
-                          │ workerPool.submit(...) (Non-blocking handoff)
-                          ▼
-        ┌───────────────────────────────────┐
-        │   Worker ThreadPool (N = 2 * CPU) │
-        │   ("nio-worker-xxxx")             │
-        │   - Parse JSON Payload            │
-        │   - Nghiệp vụ RoomService         │
-        │   - Truy vấn JPA / PostgreSQL DB  │
-        │   - Tính điểm & Chấm thi          │
-        └───────────────────────────────────┘
+#### A. Lý Thuyết Thiết Kế Doug Lea Classic Reactor Pattern
+Mô hình **Classic Reactor Pattern** được giáo sư Doug Lea chuẩn hóa trong bài thuyết trình học thuật kinh điển *"Scalable IO in Java"* nhằm giải quyết bài toán hiệu năng và khả năng mở rộng (Scalability) của các ứng dụng mạng I/O cao.
+
+##### 1. Nguyên Lý Dồn Kênh I/O Không Chặn (Non-blocking I/O Multiplexing)
+* Trong mô hình truyền thống, thao tác I/O (như `read()` hay `accept()`) sẽ chặn (Block) luồng thực thi cho tới khi có dữ liệu từ mạng hoặc có kết nối mới. Điều này buộc máy chủ phải dùng nhiều luồng để phục vụ nhiều kết nối.
+* Mô hình Reactor chuyển từ mô hình hướng luồng (Thread-driven) sang **mô hình hướng sự kiện (Event-driven)** dựa trên kỹ thuật **Dồn kênh I/O (I/O Multiplexing)**:
+  - Một kênh socket được cấu hình ở chế độ không chặn (`non-blocking`). Thao tác đọc/ghi sẽ trả về ngay lập tức nếu dữ liệu chưa sẵn sàng.
+  - Sử dụng một bộ phân kênh sự kiện (**Demultiplexer**, trong Java NIO là `Selector`) để giám sát đồng thời trạng thái I/O của hàng nghìn kết nối mạng trên **một luồng duy nhất** (Single-Threaded Reactor Event Loop).
+
+##### 2. Các Thành Phần Cốt Lõi Trong Cấu Trúc Doug Lea Reactor:
+1. **Reactor (Event Loop & Demultiplexer):**
+   - Vận hành như một vòng lặp liên tục (`while (isRunning)`).
+   - Gọi phương thức dồn kênh `selector.select()` để kiểm tra xem có kênh mạng nào sẵn sàng thao tác I/O (`SelectionKey.OP_ACCEPT`, `SelectionKey.OP_READ`).
+2. **Dispatcher (Bộ Điều Phối):**
+   - Bóc tách tập hợp các khóa sẵn sàng (`selectedKeys()`), xác định loại sự kiện và phân phối (Dispatch) sự kiện đó tới đúng đối tượng xử lý được gắn kèm (Attachment).
+3. **Acceptor:**
+   - Xử lý riêng sự kiện thiết lập kết nối mới (`OP_ACCEPT`) từ `ServerSocketChannel`.
+   - Tiếp nhận kết nối (`accept()`), đặt trạng thái non-blocking cho `SocketChannel` của client và đăng ký (Register) kênh này vào `Selector` với sự kiện quan tâm tiếp theo (`OP_READ`).
+4. **Handler & Phân Tách Worker ThreadPool (I/O Handoff):**
+   - Trong biến thể Doug Lea Classic Reactor kết hợp Worker Threads (mô hình hiện thực tại [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)):
+     - Luồng Reactor chỉ làm nhiệm vụ đọc dữ liệu I/O thô từ Socket vào `accumulationBuffer` và bóc tách cấu trúc khung tin (Framing).
+     - Ngay khi nhận được khung tin hoàn chỉnh, Reactor không tự xử lý mà bàn giao ngay lập tức (Non-blocking handoff qua `workerPool.submit(...)`) cho nhóm luồng công nhân Worker Pool xử lý giải mã JSON, nghiệp vụ và ghi cơ sở dữ liệu.
+
+##### 3. Sơ Đồ Kiến Trúc Chuẩn Hóa Doug Lea Classic Reactor:
+
+```mermaid
+flowchart TD
+    subgraph Clients["Tầng Khách (Client Connections)"]
+        C1["Client Connection 1"]
+        C2["Client Connection 2"]
+        Cn["Client Connection N"]
+    end
+
+    subgraph ReactorLayer["Tầng Reactor (Single Reactor Thread - Event Loop)"]
+        Demux["I/O Demultiplexer<br/>(Java NIO Selector)"]
+        EventLoop["Reactor Event Loop<br/>(selector.select -> Iterate keys)"]
+        Dispatcher{"Dispatcher<br/>(Phân loại sự kiện)"}
+        Acceptor["Acceptor<br/>- accept() SocketChannel<br/>- configureBlocking(false)<br/>- register OP_READ with ClientSession"]
+        IOReader["I/O Handler (Pha Đọc & Framing)<br/>- sc.read(accumulationBuffer)<br/>- decode(buffer) -> PacketFrames"]
+    end
+
+    subgraph WorkerLayer["Tầng Xử Lý Nghiệp Vụ (Worker ThreadPool)"]
+        TaskQueue[("Blocking Task Queue")]
+        W1["Worker Thread 1"]
+        W2["Worker Thread 2"]
+        Wn["Worker Thread N"]
+        BizLogic["Tầng Nghiệp Vụ & Dữ Liệu<br/>- RoomEventBus.handleTcpFrame()<br/>- RoomService (Chấm thi, DB PostgreSQL)"]
+    end
+
+    C1 & C2 & Cn -->|"TCP Stream (Port 9090)"| Demux
+    Demux --> EventLoop
+    EventLoop --> Dispatcher
+    Dispatcher -->|"Sự kiện OP_ACCEPT"| Acceptor
+    Dispatcher -->|"Sự kiện OP_READ"| IOReader
+    Acceptor -.->|"Đăng ký kênh mới"| Demux
+    IOReader -->|"Handoff không chặn<br/>workerPool.submit(task)"| TaskQueue
+    TaskQueue --> W1 & W2 & Wn
+    W1 & W2 & Wn --> BizLogic
 ```
 
-#### Ba Hiểm Họa Nghiêm Trọng Nếu Xử Lý DB/Nghiệp Vụ Trên Luồng Reactor:
+##### 4. Ba Hiểm Họa Nghiêm Trọng Nếu Xử Lý Nghiệp Vụ/DB Trực Tiếp Trên Luồng Reactor:
 1. **Đóng Băng Vòng Lặp Sự Kiện (Event Loop Starvation):**
    - Luồng Reactor là đơn luồng (`Single-Threaded Event Loop`). Nếu luồng này bị chặn (Block) dù chỉ 50ms để chờ truy vấn CSDL PostgreSQL hoặc chấm bài thi, toàn bộ vòng lặp sự kiện sẽ bị tê liệt.
    - Máy chủ không thể tiếp nhận kết nối mới (`handleAccept`), các gói tin `PING`, `SUBMIT_ANSWER` từ hàng trăm thí sinh khác đều bị kẹt cứng trong bộ đệm tầng Kernel.
@@ -335,6 +371,51 @@ Trong [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/
    - Worker ThreadPool chuyên biệt cho các tác vụ tính toán nặng và I/O chặn (Blocking DB), được định cấu hình số luồng bằng `Math.max(4, Runtime.getRuntime().availableProcessors() * 2)`.
 3. **Mất Khả Năng Cô Lập Lỗi (Fault Isolation):**
    - Nếu xảy ra lỗi nghiêm trọng (ví dụ `SQLException`, dữ liệu JSON lỗi) trong quá trình xử lý nộp bài của một thí sinh, ngoại lệ đó chỉ ảnh hưởng đến 1 luồng công nhân cụ thể. Luồng Reactor vẫn hoạt động bình thường, bảo vệ an toàn cho cả phòng thi.
+
+---
+
+#### B. So Sánh Đối Chuẩn 3 Mô Hình Máy Chủ Mạng TCP
+
+Để thấy rõ lý do tại sao hệ thống thi trắc nghiệm trực tuyến `mooc-clone` lựa chọn mô hình Doug Lea Classic Reactor cho phân hệ máy chủ TCP, dưới đây là phân tích đối chiếu với 2 mô hình truyền thống phổ biến:
+
+##### 1. Khái Quát 3 Mô Hình:
+* **Mô hình 1: Thread-per-Connection (Mô hình kinh điển 1 luồng / 1 kết nối):**
+  - Mỗi khi một client kết nối tới máy chủ, phương thức `serverSocket.accept()` trả về một `Socket` chặn (Blocking Socket), và máy chủ tạo mới một `Thread` độc lập (`new Thread(new ConnectionHandler(socket)).start()`) để phục vụ riêng client đó suốt vòng đời kết nối.
+* **Mô hình 2: Multi-thread Connection / Thread Pool Blocking I/O (Mô hình Thread Pool chia sẻ):**
+  - Thay vì tạo luồng vô hạn, máy chủ dùng một nhóm luồng cố định (`ExecutorService threadPool = Executors.newFixedThreadPool(M)`). Khi có kết nối mới từ `accept()`, kết nối được chuyển vào Thread Pool để xử lý. Tuy nhiên, luồng worker vẫn dùng thao tác đọc/ghi chặn (`InputStream.read()`, `OutputStream.write()`).
+* **Mô hình 3: Doug Lea Classic Reactor + Worker Pool (Mô hình của hệ thống mooc-clone):**
+  - Sử dụng 1 luồng Reactor duy nhất kết hợp `Selector` để quản lý dồn kênh I/O không chặn cho toàn bộ $N$ client kết nối, chỉ ủy quyền các tác vụ nặng cho nhóm luồng công nhân Worker Pool.
+
+##### 2. Bảng Ma Trận So Sánh Định Tính Giữa 3 Mô Hình:
+
+| Tiêu Chí Kỹ Thuật | Thread-per-Connection (1:1 Blocking) | Thread Pool Blocking I/O (M:N Pooling) | Doug Lea Classic Reactor + Worker Pool (mooc-clone) |
+| :--- | :--- | :--- | :--- |
+| **Cơ chế I/O (I/O Model)** | Blocking I/O (Đồng bộ chặn trên từng luồng) | Blocking I/O (Đồng bộ chặn trên luồng worker) | **Non-blocking I/O Multiplexing (`Selector`)** |
+| **Số luồng quản lý I/O** | Tuyến tính với số client: $N$ kết nối = $N$ luồng | Cố định theo kích thước pool: $M$ luồng ($M \ll N$) | **Cực tiểu: Đúng 1 luồng Reactor duy nhất** |
+| **Khả năng mở rộng đồng thời (Concurrency / C10K)** | Kém: Giới hạn vật lý bởi bộ nhớ OS (thường sụp đổ ở 1.000 – 3.000 luồng do cạn RAM/Stack) | Trung bình: Tối đa phục vụ đồng thời bằng đúng số luồng trong pool ($M$ kết nối tại một thời điểm) | **Xuất sắc: Dễ dàng duy trì hàng chục nghìn kết nối đồng thời với tài nguyên cực thấp** |
+| **Hành vi khi kết nối nhàn rỗi (Idle / Keep-Alive)** | **Lãng phí cực lớn:** Luồng bị block ngủ (`sleep/wait`) chờ socket nhưng vẫn chiếm dụng 1MB RAM bộ nhớ Stack | **Tê liệt pool:** Các kết nối nhàn rỗi (ví dụ thí sinh đang đọc đề thi không gửi byte nào) chiếm trọn luồng, làm cạn kiệt pool | **Tối ưu tuyệt đối:** Kết nối nhàn rỗi không tiêu tốn CPU/Thread nào; `Selector` chỉ đánh thức Reactor khi có byte thực sự đến |
+| **Chi phí chuyển ngữ cảnh (Context Switching Overhead)** | **Rất cao:** Hệ điều hành liên tục tráo đổi hàng nghìn luồng, CPU tiêu tốn chu kỳ cho quản lý luồng hơn là xử lý dữ liệu | Trung bình: Bị khống chế trong giới hạn kích thước pool $M$ luồng | **Cực thấp:** 1 luồng Reactor chạy tuần hoàn; các luồng Worker chỉ được cấp việc khi có khung tin hoàn chỉnh |
+| **Hành vi khi chịu tải đột biến (Spike Load / Overload)** | Nguy cơ tràn bộ nhớ `OutOfMemoryError: unable to create new native thread`, làm sập toàn bộ JVM | Kết nối mới bị xếp hàng đợi (`Queue`) hoặc bị từ chối; độ trễ phản hồi tăng vọt khi hàng đợi tắc nghẽn | **Chống chịu tốt:** Reactor vẫn tiếp tục `accept()` và dồn kênh trơn tru; hàng đợi công việc của Worker Pool điều tiết tải nghiệp vụ nhịp nhàng |
+| **Độ phức tạp lập trình & Debug** | **Rất thấp:** Luồng chạy tuần tự tuyến tính (`read` $\rightarrow$ `process` $\rightarrow$ `write`), stack trace rõ ràng, dễ bắt lỗi | **Thấp:** Lập trình hướng đối tượng thông thường kết hợp `Callable/Runnable` chuẩn Java | **Cao:** Phải quản lý trạng thái máy (State Machine), đệm tích lũy (`accumulationBuffer`), xử lý dính/phân mảnh gói tin |
+| **Phù hợp với kịch bản phòng thi trực tuyến** | ❌ Không phù hợp: Khi kỳ thi có hàng nghìn thí sinh đồng thời, máy chủ sẽ sập vì cạn kiệt tài nguyên luồng | ❌ Không tối ưu: Đa số thời gian thí sinh chỉ ngồi suy nghĩ (kết nối nhàn rỗi), chiếm giữ luồng vô ích | **✅ Lý tưởng:** Hỗ trợ duy trì hàng nghìn kết nối thi cử liên tục, độ trễ đếm giờ/bắt đầu thi gần như bằng 0 |
+
+##### 3. Đánh Giá Ưu - Nhược Điểm & Phạm Vi Ứng Dụng Thực Tế:
+
+1. **Thread-per-Connection:**
+   * *Ưu điểm:* Mã nguồn đơn giản nhất, luồng xử lý tuần tự trực giác, cấu trúc ngoại lệ dễ dò tìm.
+   * *Nhược điểm:* Khả năng mở rộng cực kém do rào cản chi phí luồng hệ điều hành (Thread Stack thường từ 512KB đến 1MB). Khi vượt ngưỡng 2.000 luồng, chi phí Context Switching làm suy kiệt CPU.
+   * *Phạm vi phù hợp:* Ứng dụng mạng nội bộ doanh nghiệp nhỏ, các tiện ích dòng lệnh CLI đơn giản, hệ thống thử nghiệm với số lượng người dùng đồng thời dưới 100 kết nối.
+
+2. **Thread Pool Blocking I/O (Multi-thread Connection):**
+   * *Ưu điểm:* Khống chế được trần tiêu thụ tài nguyên tối đa (Bounded Threads), bảo vệ hệ điều hành không bị cạn bộ nhớ.
+   * *Nhược điểm:* Vấn đề cốt tử là **Blocking I/O Head-of-Line Blocking**: Khi $M$ luồng trong pool đều đang bị block bởi các socket gửi chậm (Slow Client) hoặc socket nhàn rỗi, toàn bộ hệ thống bị nghẽn (Thread Starvation), các kết nối mới hoặc các gói tin quan trọng không còn luồng để phục vụ.
+   * *Phạm vi phù hợp:* Các dịch vụ có thời gian mỗi phiên giao dịch cực ngắn (ví dụ HTTP REST API ngắn hạn kiểu Servlet truyền thống), nơi các request hoàn tất nhanh và giải phóng luồng ngay. Không phù hợp với kết nối duy trì lâu dài (Long-lived Persistent Connections) như phòng thi hay trò chơi trực tuyến.
+
+3. **Doug Lea Classic Reactor + Worker Pool (Kiến trúc mooc-clone):**
+   * *Ưu điểm:* Phân tách triệt để giữa tầng I/O và tầng tính toán nghiệp vụ. Đạt thông lượng I/O tối đa nhờ cơ chế dồn kênh của hệ điều hành (`epoll` trên Linux, `kqueue` trên macOS, I/O Completion Port trên Windows). Duy trì được số lượng lớn kết nối mở mà không bị lãng phí bộ nhớ luồng.
+   * *Nhược điểm:* Đòi hỏi kiến trúc mã nguồn phức tạp hơn: lập trình viên phải tự xử lý việc ghép mảnh byte dữ liệu (Packet Framing), quản lý bộ đệm trạng thái cho từng phiên (`ClientSession`), và đảm bảo an toàn đa luồng khi ghi ngược dữ liệu ra socket (`synchronized(channel)`).
+   * *Phạm vi phù hợp:* Các hệ thống thời gian thực tải cao, hệ thống thi cử, streaming, chat, cổng API Gateway (nền tảng của các giải pháp công nghiệp như Netty, Vert.x, Node.js, Nginx).
+
 
 ### 5.2. Đồng Bộ Hóa Khi Ghi Socket & Bài Toán Khách Chậm (Slow Consumer)
 1. **Ngăn Ngừa Xen Kẽ Khung Dữ Liệu (Interleaved Frames):**
