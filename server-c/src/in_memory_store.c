@@ -6,6 +6,36 @@
 
 static size_t g_exam_seq = 1;
 static size_t g_quest_seq = 1;
+static size_t g_room_seq = 1;
+
+int64_t get_server_now_ms(void) {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
+        return (int64_t)ts.tv_sec * 1000LL + (int64_t)(ts.tv_nsec / 1000000L);
+    }
+    return (int64_t)time(NULL) * 1000LL;
+}
+
+const char *room_status_str(room_status_t status) {
+    switch (status) {
+        case ROOM_STATUS_WAITING: return "WAITING";
+        case ROOM_STATUS_RUNNING: return "RUNNING";
+        case ROOM_STATUS_ENDED:   return "ENDED";
+        default:                  return "WAITING";
+    }
+}
+
+static void lazy_evaluate_room_locked(exam_room_t *room, int64_t now_ms) {
+    if (!room) return;
+    if (room->status == ROOM_STATUS_RUNNING && room->ends_at_ms > 0 && now_ms >= room->ends_at_ms) {
+        room->status = ROOM_STATUS_ENDED;
+        room->ended_at_ms = room->ends_at_ms;
+        // Tự động khóa sổ (auto-finalize) tất cả thí sinh chưa nộp bài
+        for (size_t i = 0; i < room->participant_count; i++) {
+            room->submitted[i] = true;
+        }
+    }
+}
 
 void store_init(in_memory_store_t *store) {
     if (!store) return;
@@ -40,6 +70,20 @@ void store_init(in_memory_store_t *store) {
     store->questions[0] = sample_q;
     store->question_count = 1;
     g_quest_seq = 2;
+
+    // Phòng thi mẫu mặc định ở trạng thái WAITING
+    exam_room_t sample_room;
+    memset(&sample_room, 0, sizeof(sample_room));
+    strncpy(sample_room.id, "room-1", sizeof(sample_room.id) - 1);
+    strncpy(sample_room.room_code, "ROOM01", sizeof(sample_room.room_code) - 1);
+    strncpy(sample_room.name, "Phòng Thi Hệ Thống C & Mạng Máy Tính", sizeof(sample_room.name) - 1);
+    strncpy(sample_room.exam_id, "exam-1", sizeof(sample_room.exam_id) - 1);
+    sample_room.status = ROOM_STATUS_WAITING;
+    sample_room.duration_seconds = 900;
+
+    store->rooms[0] = sample_room;
+    store->room_count = 1;
+    g_room_seq = 2;
 }
 
 void store_destroy(in_memory_store_t *store) {
@@ -193,4 +237,213 @@ int store_create_question(in_memory_store_t *store, const question_entity_t *que
 
     pthread_rwlock_unlock(&store->rwlock);
     return 0;
+}
+
+int store_get_all_rooms(in_memory_store_t *store, exam_room_t *out_rooms, size_t max_out) {
+    if (!store || !out_rooms || max_out == 0) return 0;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    size_t count = store->room_count < max_out ? store->room_count : max_out;
+    for (size_t i = 0; i < count; i++) {
+        lazy_evaluate_room_locked(&store->rooms[i], now_ms);
+        out_rooms[i] = store->rooms[i];
+    }
+    pthread_rwlock_unlock(&store->rwlock);
+    return (int)count;
+}
+
+int store_get_room_by_code(in_memory_store_t *store, const char *room_code, exam_room_t *out_room) {
+    if (!store || !room_code || !out_room) return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    int res = -1;
+    for (size_t i = 0; i < store->room_count; i++) {
+        if (strcmp(store->rooms[i].room_code, room_code) == 0) {
+            lazy_evaluate_room_locked(&store->rooms[i], now_ms);
+            *out_room = store->rooms[i];
+            res = 0;
+            break;
+        }
+    }
+    pthread_rwlock_unlock(&store->rwlock);
+    return res;
+}
+
+int store_create_room(in_memory_store_t *store, const exam_room_t *room, exam_room_t *out_room) {
+    if (!store || !room || room->room_code[0] == '\0') return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    if (store->room_count >= MAX_ROOMS) {
+        pthread_rwlock_unlock(&store->rwlock);
+        return -1;
+    }
+
+    for (size_t i = 0; i < store->room_count; i++) {
+        if (strcmp(store->rooms[i].room_code, room->room_code) == 0) {
+            pthread_rwlock_unlock(&store->rwlock);
+            return -2; // Duplicate room_code
+        }
+    }
+
+    exam_room_t *new_room = &store->rooms[store->room_count++];
+    memset(new_room, 0, sizeof(exam_room_t));
+    snprintf(new_room->id, sizeof(new_room->id), "room-%zu", g_room_seq++);
+    strncpy(new_room->room_code, room->room_code, sizeof(new_room->room_code) - 1);
+    strncpy(new_room->name, room->name[0] ? room->name : "Phòng thi trực tuyến", sizeof(new_room->name) - 1);
+    strncpy(new_room->exam_id, room->exam_id[0] ? room->exam_id : "exam-1", sizeof(new_room->exam_id) - 1);
+    new_room->status = ROOM_STATUS_WAITING;
+    new_room->duration_seconds = room->duration_seconds > 0 ? room->duration_seconds : 900;
+
+    if (out_room) {
+        *out_room = *new_room;
+    }
+
+    pthread_rwlock_unlock(&store->rwlock);
+    return 0;
+}
+
+int store_join_room(in_memory_store_t *store, const char *room_code, const char *username, exam_room_t *out_room) {
+    if (!store || !room_code || !username || username[0] == '\0') return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    int res = -1;
+
+    for (size_t i = 0; i < store->room_count; i++) {
+        exam_room_t *r = &store->rooms[i];
+        if (strcmp(r->room_code, room_code) == 0) {
+            lazy_evaluate_room_locked(r, now_ms);
+            if (r->status == ROOM_STATUS_ENDED) {
+                res = -2;
+                break;
+            }
+            bool exists = false;
+            for (size_t p = 0; p < r->participant_count; p++) {
+                if (strcmp(r->participants[p], username) == 0) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists && r->participant_count < MAX_ROOM_PARTICIPANTS) {
+                size_t idx = r->participant_count++;
+                strncpy(r->participants[idx], username, sizeof(r->participants[0]) - 1);
+                r->scores[idx] = 0;
+                r->submitted[idx] = false;
+            }
+            if (out_room) {
+                *out_room = *r;
+            }
+            res = 0;
+            break;
+        }
+    }
+
+    pthread_rwlock_unlock(&store->rwlock);
+    return res;
+}
+
+int store_start_room(in_memory_store_t *store, const char *room_code, exam_room_t *out_room) {
+    if (!store || !room_code) return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    int res = -1;
+
+    for (size_t i = 0; i < store->room_count; i++) {
+        exam_room_t *r = &store->rooms[i];
+        if (strcmp(r->room_code, room_code) == 0) {
+            lazy_evaluate_room_locked(r, now_ms);
+            if (r->status == ROOM_STATUS_WAITING) {
+                r->status = ROOM_STATUS_RUNNING;
+                r->started_at_ms = now_ms;
+                r->ends_at_ms = now_ms + (int64_t)r->duration_seconds * 1000LL;
+            }
+            if (out_room) {
+                *out_room = *r;
+            }
+            res = 0;
+            break;
+        }
+    }
+
+    pthread_rwlock_unlock(&store->rwlock);
+    return res;
+}
+
+int store_submit_room_attempt(in_memory_store_t *store, const char *room_code, const char *username, int score, exam_room_t *out_room) {
+    if (!store || !room_code || !username || username[0] == '\0') return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    int res = -1;
+
+    for (size_t i = 0; i < store->room_count; i++) {
+        exam_room_t *r = &store->rooms[i];
+        if (strcmp(r->room_code, room_code) == 0) {
+            // Kiểm tra Grace Period 2000ms trước khi khóa sổ
+            if (r->status == ROOM_STATUS_ENDED ||
+                (r->ends_at_ms > 0 && now_ms > r->ends_at_ms + ROOM_SUBMIT_GRACE_MS)) {
+                lazy_evaluate_room_locked(r, now_ms);
+                if (out_room) *out_room = *r;
+                res = -2; // Hết giờ làm bài (quá hạn cả Grace Period)
+                break;
+            }
+
+            if (r->status != ROOM_STATUS_RUNNING) {
+                if (out_room) *out_room = *r;
+                res = -3; // Phòng chưa bắt đầu
+                break;
+            }
+
+            // Tìm hoặc thêm thí sinh vào danh sách và ghi nhận điểm
+            int found_p = -1;
+            for (size_t p = 0; p < r->participant_count; p++) {
+                if (strcmp(r->participants[p], username) == 0) {
+                    found_p = (int)p;
+                    break;
+                }
+            }
+            if (found_p == -1 && r->participant_count < MAX_ROOM_PARTICIPANTS) {
+                found_p = (int)r->participant_count++;
+                strncpy(r->participants[found_p], username, sizeof(r->participants[0]) - 1);
+            }
+            if (found_p >= 0) {
+                r->scores[found_p] = score;
+                r->submitted[found_p] = true;
+            }
+
+            // Sau khi ghi nhận bài nộp trong cửa sổ Grace Period, nếu đã chạm mốc ends_at_ms thì chuyển trạng thái phòng
+            lazy_evaluate_room_locked(r, now_ms);
+            if (out_room) {
+                *out_room = *r;
+            }
+            res = 0;
+            break;
+        }
+    }
+
+    pthread_rwlock_unlock(&store->rwlock);
+    return res;
+}
+
+int store_finish_room(in_memory_store_t *store, const char *room_code, exam_room_t *out_room) {
+    if (!store || !room_code) return -1;
+    pthread_rwlock_wrlock(&store->rwlock);
+    int64_t now_ms = get_server_now_ms();
+    int res = -1;
+
+    for (size_t i = 0; i < store->room_count; i++) {
+        exam_room_t *r = &store->rooms[i];
+        if (strcmp(r->room_code, room_code) == 0) {
+            r->status = ROOM_STATUS_ENDED;
+            r->ended_at_ms = now_ms;
+            for (size_t p = 0; p < r->participant_count; p++) {
+                r->submitted[p] = true;
+            }
+            if (out_room) {
+                *out_room = *r;
+            }
+            res = 0;
+            break;
+        }
+    }
+
+    pthread_rwlock_unlock(&store->rwlock);
+    return res;
 }

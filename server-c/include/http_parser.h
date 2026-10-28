@@ -23,6 +23,12 @@ typedef struct {
     http_fsm_state_t state;
     size_t bytes_parsed;
     size_t body_bytes_read;
+    char temp_method[16];
+    size_t method_idx;
+    char temp_uri[HTTP_MAX_PATH_LEN + HTTP_MAX_QUERY_LEN];
+    size_t uri_idx;
+    char temp_ver[16];
+    size_t ver_idx;
     char temp_key[HTTP_MAX_HEADER_KEY_LEN];
     char temp_val[HTTP_MAX_HEADER_VAL_LEN];
     size_t key_len;

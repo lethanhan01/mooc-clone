@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <poll.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -128,8 +129,18 @@ ssize_t tcp_send_all(int fd, const void *buf, size_t len) {
     while (total_sent < len) {
         ssize_t sent = send(fd, ptr + total_sent, len - total_sent, MSG_NOSIGNAL);
         if (sent <= 0) {
-            if (sent < 0 && (errno == EINTR)) {
+            if (sent < 0 && errno == EINTR) {
                 continue;
+            }
+            if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+                struct pollfd pfd;
+                pfd.fd = fd;
+                pfd.events = POLLOUT;
+                pfd.revents = 0;
+                int pr = poll(&pfd, 1, 2000);
+                if (pr > 0 && (pfd.revents & POLLOUT) && !(pfd.revents & (POLLERR | POLLHUP))) {
+                    continue;
+                }
             }
             return -1;
         }

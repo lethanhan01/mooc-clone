@@ -1,6 +1,11 @@
 CC ?= gcc
-CFLAGS ?= -Wall -Wextra -pedantic -std=c11 -D_GNU_SOURCE -Iinclude -Ithird_party -fsanitize=address,undefined -fno-omit-frame-pointer -g
-LDFLAGS ?= -fsanitize=address,undefined -pthread
+BASE_CFLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -D_GNU_SOURCE -Iinclude -Ithird_party -fno-omit-frame-pointer -g
+SAN_FLAGS ?= -fsanitize=address,undefined
+CFLAGS ?= $(BASE_CFLAGS) $(SAN_FLAGS)
+LDFLAGS ?= $(SAN_FLAGS) -pthread
+
+VALGRIND_CFLAGS = $(BASE_CFLAGS)
+VALGRIND_LDFLAGS = -pthread
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
@@ -29,6 +34,8 @@ TEST_OBJS = $(patsubst tests/%.c,$(OBJ_DIR)/tests/%.o,$(TEST_SRCS))
 TARGET_SERVER = $(BUILD_DIR)/http_server
 TARGET_ECHO = $(BUILD_DIR)/tcp_echo_server
 TARGET_TESTS = $(BUILD_DIR)/unit_tests
+TARGET_TESTS_VALGRIND = $(BUILD_DIR)/unit_tests_valgrind
+TARGET_SERVER_VALGRIND = $(BUILD_DIR)/http_server_valgrind
 
 .PHONY: all build run run-seq run-pool test memcheck clean dirs
 
@@ -69,9 +76,15 @@ run-seq: $(TARGET_SERVER)
 test: $(TARGET_TESTS)
 	@./$(TARGET_TESTS)
 
-memcheck: $(TARGET_TESTS)
+$(TARGET_TESTS_VALGRIND): $(TEST_SRCS) $(COMMON_SRCS) | dirs
+	$(CC) $(VALGRIND_CFLAGS) $(TEST_SRCS) $(COMMON_SRCS) -o $@ $(VALGRIND_LDFLAGS)
+
+$(TARGET_SERVER_VALGRIND): src/main.c $(COMMON_SRCS) | dirs
+	$(CC) $(VALGRIND_CFLAGS) src/main.c $(COMMON_SRCS) -o $@ $(VALGRIND_LDFLAGS)
+
+memcheck: $(TARGET_TESTS_VALGRIND) $(TARGET_SERVER_VALGRIND)
 	@if command -v valgrind > /dev/null 2>&1; then \
-		valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./$(TARGET_TESTS); \
+		valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./$(TARGET_TESTS_VALGRIND); \
 	else \
 		echo "[NOTICE] Valgrind not installed, relying on AddressSanitizer (already active in binary)"; \
 		./$(TARGET_TESTS); \

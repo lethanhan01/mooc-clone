@@ -14,8 +14,7 @@
 - **Cấu trúc Package (`com.example.server.<domain>`):**
   - `socket.core`: Quản lý Selector, Reactor Loop, kết nối TCP Channel và vòng đời `ClientSession`.
   - `socket.protocol`: Cấu trúc khung gói tin (`PacketFrame`), hằng số mã lệnh (`ProtocolConstants`), bộ mã hóa (`PacketFramingEncoder`) và giải mã (`PacketFramingDecoder`).
-  - `socket.gateway`: Cấu hình Spring WebSocket (`WebSocketConfig`) và bộ xử lý sự kiện Web (`ExamWebSocketHandler`).
-  - `exam`: Nghiệp vụ phòng thi (`ExamRoomService`), quản lý trạng thái (`ExamRoomState`) và đếm ngược thời gian (`ExamTimerService`).
+  - `controller` & `service`: Cung cấp RESTful API Stateless kèm đồng hồ chuẩn máy chủ (`serverNow`, `endsAt`) phục vụ HTTP Short Polling cho trình duyệt Web.
 - **Tên Lớp (Classes & Interfaces):** Sử dụng `PascalCase` rõ ràng theo đúng vai trò:
   - Máy chủ: `NioClassicReactorServer`
   - Quản lý phiên: `ClientSession`

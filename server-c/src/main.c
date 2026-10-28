@@ -21,7 +21,9 @@ static http_router_t g_router;
 
 static void handle_sigint(int sig) {
     (void)sig;
-    printf("\n[SERVER] Caught termination signal! Initiating graceful shutdown...\n");
+    const char msg[] = "\n[SERVER] Caught termination signal! Initiating graceful shutdown...\n";
+    ssize_t unused = write(STDOUT_FILENO, msg, sizeof(msg) - 1);
+    (void)unused;
     g_running = 0;
     if (g_reactor) {
         reactor_stop(g_reactor);
@@ -42,13 +44,19 @@ static void handle_client_sequential(int client_fd) {
         ssize_t n = recv(client_fd, temp, sizeof(temp), 0);
         if (n <= 0) break;
 
-        if (buf_len + (size_t)n > sizeof(buf)) break;
+        if (buf_len + (size_t)n > sizeof(buf)) {
+            const char *bad_req =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Content-Type: application/json; charset=utf-8\r\n"
+                "Content-Length: 36\r\n"
+                "Connection: close\r\n\r\n"
+                "{\"error\":\"Bad Request\",\"status\":400}";
+            tcp_send_all(client_fd, bad_req, strlen(bad_req));
+            break;
+        }
         memcpy(buf + buf_len, temp, (size_t)n);
         buf_len += (size_t)n;
 
-        http_parser_init(&parser);
-        http_request_free(&req);
-        http_request_init(&req);
         int parsed = http_parser_execute(&parser, &req, buf, buf_len);
         if (parsed > 0) {
             http_response_t res;
@@ -63,6 +71,13 @@ static void handle_client_sequential(int client_fd) {
             http_response_free(&res);
             break;
         } else if (parsed < 0) {
+            const char *bad_req =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Content-Type: application/json; charset=utf-8\r\n"
+                "Content-Length: 36\r\n"
+                "Connection: close\r\n\r\n"
+                "{\"error\":\"Bad Request\",\"status\":400}";
+            tcp_send_all(client_fd, bad_req, strlen(bad_req));
             break;
         }
     }
@@ -144,7 +159,10 @@ int main(int argc, char *argv[]) {
                 threadpool_conn_arg_t *arg = (threadpool_conn_arg_t *)malloc(sizeof(threadpool_conn_arg_t));
                 if (arg) {
                     arg->client_fd = conn.client_fd;
-                    thread_pool_submit(g_thread_pool, handle_client_threadpool_task, arg);
+                    if (thread_pool_submit(g_thread_pool, handle_client_threadpool_task, arg) != 0) {
+                        close(conn.client_fd);
+                        free(arg);
+                    }
                 } else {
                     close(conn.client_fd);
                 }

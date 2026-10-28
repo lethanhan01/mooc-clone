@@ -15,6 +15,15 @@ void handle_delete_exam(const http_request_t *req, http_response_t *res);
 void handle_get_exam_questions(const http_request_t *req, http_response_t *res);
 void handle_create_question(const http_request_t *req, http_response_t *res);
 
+// Stateless REST Polling Room Controllers (Server Authoritative Timestamp)
+void handle_get_all_rooms(const http_request_t *req, http_response_t *res);
+void handle_create_room(const http_request_t *req, http_response_t *res);
+void handle_get_room_state(const http_request_t *req, http_response_t *res);
+void handle_join_room(const http_request_t *req, http_response_t *res);
+void handle_start_room(const http_request_t *req, http_response_t *res);
+void handle_submit_room_attempt(const http_request_t *req, http_response_t *res);
+void handle_finish_room(const http_request_t *req, http_response_t *res);
+
 void register_all_routes(http_router_t *router, in_memory_store_t *store);
 
 #endif // REST_CONTROLLERS_H

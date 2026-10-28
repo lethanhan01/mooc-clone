@@ -39,6 +39,7 @@ const char *http_status_phrase(http_status_t status) {
         case HTTP_STATUS_FORBIDDEN:           return "Forbidden";
         case HTTP_STATUS_NOT_FOUND:           return "Not Found";
         case HTTP_STATUS_METHOD_NOT_ALLOWED:  return "Method Not Allowed";
+        case HTTP_STATUS_CONFLICT:            return "Conflict";
         case HTTP_STATUS_INTERNAL_ERROR:      return "Internal Server Error";
         default:                             return "Unknown Status";
     }
@@ -96,15 +97,10 @@ void http_request_set_param(http_request_t *req, const char *key, const char *va
 
 int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *data, size_t len) {
     if (!parser || !req || !data || len == 0) return 0;
+    if (parser->state == FSM_STATE_ERROR) return -1;
+    if (parser->state == FSM_STATE_COMPLETE) return (int)parser->bytes_parsed;
 
-    char temp_method[16] = {0};
-    size_t method_idx = 0;
-    char temp_uri[HTTP_MAX_PATH_LEN + HTTP_MAX_QUERY_LEN] = {0};
-    size_t uri_idx = 0;
-    char temp_ver[16] = {0};
-    size_t ver_idx = 0;
-
-    size_t i = 0;
+    size_t i = parser->bytes_parsed;
     while (i < len && parser->state != FSM_STATE_COMPLETE && parser->state != FSM_STATE_ERROR) {
         char c = data[i];
 
@@ -112,15 +108,15 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
             case FSM_STATE_START:
             case FSM_STATE_METHOD: {
                 if (c == ' ') {
-                    temp_method[method_idx] = '\0';
-                    req->method = http_method_from_str(temp_method);
+                    parser->temp_method[parser->method_idx] = '\0';
+                    req->method = http_method_from_str(parser->temp_method);
                     if (req->method == HTTP_METHOD_UNKNOWN) {
                         parser->state = FSM_STATE_ERROR;
                         return -1;
                     }
                     parser->state = FSM_STATE_URI;
-                } else if (method_idx < sizeof(temp_method) - 1 && isalpha((unsigned char)c)) {
-                    temp_method[method_idx++] = c;
+                } else if (parser->method_idx < sizeof(parser->temp_method) - 1 && isalpha((unsigned char)c)) {
+                    parser->temp_method[parser->method_idx++] = c;
                     parser->state = FSM_STATE_METHOD;
                 } else {
                     parser->state = FSM_STATE_ERROR;
@@ -131,19 +127,19 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
 
             case FSM_STATE_URI: {
                 if (c == ' ') {
-                    temp_uri[uri_idx] = '\0';
-                    char *q = strchr(temp_uri, '?');
+                    parser->temp_uri[parser->uri_idx] = '\0';
+                    char *q = strchr(parser->temp_uri, '?');
                     if (q) {
                         *q = '\0';
-                        strncpy(req->path, temp_uri, sizeof(req->path) - 1);
+                        strncpy(req->path, parser->temp_uri, sizeof(req->path) - 1);
                         strncpy(req->query, q + 1, sizeof(req->query) - 1);
                     } else {
-                        strncpy(req->path, temp_uri, sizeof(req->path) - 1);
+                        strncpy(req->path, parser->temp_uri, sizeof(req->path) - 1);
                         req->query[0] = '\0';
                     }
                     parser->state = FSM_STATE_VERSION;
-                } else if (uri_idx < sizeof(temp_uri) - 1 && c != '\r' && c != '\n') {
-                    temp_uri[uri_idx++] = c;
+                } else if (parser->uri_idx < sizeof(parser->temp_uri) - 1 && c != '\r' && c != '\n') {
+                    parser->temp_uri[parser->uri_idx++] = c;
                 } else {
                     parser->state = FSM_STATE_ERROR;
                     return -1;
@@ -153,11 +149,11 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
 
             case FSM_STATE_VERSION: {
                 if (c == '\r') {
-                    temp_ver[ver_idx] = '\0';
-                    strncpy(req->http_version, temp_ver, sizeof(req->http_version) - 1);
+                    parser->temp_ver[parser->ver_idx] = '\0';
+                    strncpy(req->http_version, parser->temp_ver, sizeof(req->http_version) - 1);
                     parser->state = FSM_STATE_LINE_CR;
-                } else if (ver_idx < sizeof(temp_ver) - 1 && c != '\n') {
-                    temp_ver[ver_idx++] = c;
+                } else if (parser->ver_idx < sizeof(parser->temp_ver) - 1 && c != '\n') {
+                    parser->temp_ver[parser->ver_idx++] = c;
                 } else {
                     parser->state = FSM_STATE_ERROR;
                     return -1;
@@ -270,7 +266,8 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
                     } else {
                         parser->state = FSM_STATE_COMPLETE;
                         i++;
-                        return (int)i; // Complete request with no body
+                        parser->bytes_parsed = i;
+                        return (int)parser->bytes_parsed; // Complete request with no body
                     }
                 } else {
                     parser->state = FSM_STATE_ERROR;
@@ -287,12 +284,13 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
                 memcpy(req->body + parser->body_bytes_read, data + i, to_copy);
                 parser->body_bytes_read += to_copy;
                 i += to_copy;
+                parser->bytes_parsed = i;
 
                 if (parser->body_bytes_read == req->content_length) {
                     req->body[req->content_length] = '\0';
                     req->body_len = req->content_length;
                     parser->state = FSM_STATE_COMPLETE;
-                    return (int)i;
+                    return (int)parser->bytes_parsed;
                 }
                 return 0; // Need more body data
             }
@@ -303,10 +301,11 @@ int http_parser_execute(http_parser_t *parser, http_request_t *req, const char *
         }
 
         i++;
+        parser->bytes_parsed = i;
     }
 
     if (parser->state == FSM_STATE_COMPLETE) {
-        return (int)i;
+        return (int)parser->bytes_parsed;
     }
 
     return 0; // Incomplete request

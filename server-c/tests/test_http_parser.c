@@ -48,9 +48,10 @@ void test_parse_post_with_body(void) {
 }
 
 void test_parse_fragmented_input(void) {
-    const char *chunk1 = "GET /frag";
+    const char *chunk1 = "POST /frag";
     const char *chunk2 = "mented HTTP/1.1\r\nHost: local";
-    const char *chunk3 = "host\r\n\r\n";
+    const char *chunk3 = "host\r\nContent-Length: 13\r\n\r\n{\"part\":";
+    const char *chunk4 = "\"ok\"}";
 
     http_parser_t parser;
     http_request_t req;
@@ -58,22 +59,37 @@ void test_parse_fragmented_input(void) {
     http_parser_init(&parser);
     http_request_init(&req);
 
-    int res1 = http_parser_execute(&parser, &req, chunk1, strlen(chunk1));
+    char buffer[256] = {0};
+    size_t buf_len = 0;
+
+    // Chunk 1: Partial Request-Line
+    memcpy(buffer + buf_len, chunk1, strlen(chunk1));
+    buf_len += strlen(chunk1);
+    int res1 = http_parser_execute(&parser, &req, buffer, buf_len);
     ASSERT_EQ_INT(0, res1, "Incomplete chunk1 should return 0");
 
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%s%s", chunk1, chunk2);
-    http_parser_init(&parser);
-    http_request_init(&req);
-    int res2 = http_parser_execute(&parser, &req, buffer, strlen(buffer));
+    // Chunk 2: Rest of Request-Line + Partial Header (NO parser re-init!)
+    memcpy(buffer + buf_len, chunk2, strlen(chunk2));
+    buf_len += strlen(chunk2);
+    int res2 = http_parser_execute(&parser, &req, buffer, buf_len);
     ASSERT_EQ_INT(0, res2, "Incomplete chunk2 should return 0");
 
-    snprintf(buffer, sizeof(buffer), "%s%s%s", chunk1, chunk2, chunk3);
-    http_parser_init(&parser);
-    http_request_init(&req);
-    int res3 = http_parser_execute(&parser, &req, buffer, strlen(buffer));
-    ASSERT_TRUE(res3 > 0, "Complete buffer should parse successfully");
-    ASSERT_EQ_STR("/fragmented", req.path, "Path should match concatenated input");
+    // Chunk 3: Rest of Headers + Partial Body (8 of 13 bytes)
+    memcpy(buffer + buf_len, chunk3, strlen(chunk3));
+    buf_len += strlen(chunk3);
+    int res3 = http_parser_execute(&parser, &req, buffer, buf_len);
+    ASSERT_EQ_INT(0, res3, "Incomplete body chunk3 should return 0");
+
+    // Chunk 4: Remaining 5 bytes of Body
+    memcpy(buffer + buf_len, chunk4, strlen(chunk4));
+    buf_len += strlen(chunk4);
+    int res4 = http_parser_execute(&parser, &req, buffer, buf_len);
+    ASSERT_EQ_INT((int)buf_len, res4, "Complete buffer should return exact total bytes parsed");
+    ASSERT_EQ_INT(HTTP_METHOD_POST, req.method, "Method should be POST");
+    ASSERT_EQ_STR("/fragmented", req.path, "Path should match concatenated input without state corruption");
+    ASSERT_EQ_STR("localhost", http_request_get_header(&req, "Host"), "Host header should be preserved across chunks");
+    ASSERT_NOT_NULL(req.body, "Body must not be NULL");
+    ASSERT_EQ_STR("{\"part\":\"ok\"}", req.body, "Fragmented body should be reassembled accurately");
 
     http_request_free(&req);
 }
@@ -92,4 +108,57 @@ void test_response_serialize(void) {
 
     free(serialized);
     http_response_free(&res);
+}
+
+void test_parse_sticky_pipelined_requests(void) {
+    const char *req1_raw = "GET /api/v1/health HTTP/1.1\r\nHost: localhost\r\n\r\n";
+    const char *req2_raw = "DELETE /api/v1/exams/exam-1 HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+
+    char accum[512] = {0};
+    size_t accum_len = 0;
+    memcpy(accum, req1_raw, strlen(req1_raw));
+    accum_len += strlen(req1_raw);
+    memcpy(accum + accum_len, req2_raw, strlen(req2_raw));
+    accum_len += strlen(req2_raw);
+
+    http_parser_t parser;
+    http_request_t req;
+    http_parser_init(&parser);
+    http_request_init(&req);
+
+    // 1. Parse first sticky request
+    int parsed1 = http_parser_execute(&parser, &req, accum, accum_len);
+    ASSERT_EQ_INT((int)strlen(req1_raw), parsed1, "First pipelined request length should match");
+    ASSERT_EQ_INT(HTTP_METHOD_GET, req.method, "First method should be GET");
+    ASSERT_EQ_STR("/api/v1/health", req.path, "First path should be /api/v1/health");
+    ASSERT_TRUE(req.keep_alive, "First request should default to keep-alive");
+    http_request_free(&req);
+
+    // Shift buffer via memmove just like Reactor
+    size_t consumed = (size_t)parsed1;
+    memmove(accum, accum + consumed, accum_len - consumed);
+    accum_len -= consumed;
+    http_parser_init(&parser);
+    http_request_init(&req);
+
+    // 2. Parse second sticky request from remaining buffer
+    int parsed2 = http_parser_execute(&parser, &req, accum, accum_len);
+    ASSERT_EQ_INT((int)strlen(req2_raw), parsed2, "Second pipelined request length should match");
+    ASSERT_EQ_INT(HTTP_METHOD_DELETE, req.method, "Second method should be DELETE");
+    ASSERT_EQ_STR("/api/v1/exams/exam-1", req.path, "Second path should be /api/v1/exams/exam-1");
+    ASSERT_TRUE(!req.keep_alive, "Second request Connection: close should set keep_alive = false");
+    http_request_free(&req);
+}
+
+void test_parse_malformed_request(void) {
+    const char *bad_raw = "INVALID_METHOD /api/v1/health HTTP/1.1\r\n\r\n";
+    http_parser_t parser;
+    http_request_t req;
+    http_parser_init(&parser);
+    http_request_init(&req);
+
+    int res = http_parser_execute(&parser, &req, bad_raw, strlen(bad_raw));
+    ASSERT_EQ_INT(-1, res, "Malformed HTTP method should return -1");
+    ASSERT_EQ_INT(FSM_STATE_ERROR, parser.state, "Parser state should be FSM_STATE_ERROR");
+    http_request_free(&req);
 }

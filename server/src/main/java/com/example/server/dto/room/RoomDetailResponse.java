@@ -18,6 +18,7 @@ public record RoomDetailResponse(
         Integer maxParticipants,
         OffsetDateTime startedAt,
         OffsetDateTime endsAt,
+        OffsetDateTime serverNow,
         Long ownerId,
         String ownerDisplayName,
         List<String> participantUsernames

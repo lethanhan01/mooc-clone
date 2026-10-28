@@ -52,9 +52,9 @@ graph TD
 1. **Kênh Non-blocking TCP Socket Reactor (Cổng 9090):**
    - Xây dựng hoàn toàn bằng **Java NIO thuần túy** (`Channels`, `Selector`, `ByteBuffers`) cài đặt theo mô hình kinh điển **Doug Lea Classic Reactor Pattern** tại [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java).
    - Phục vụ các client máy trạm chuyên dụng hoặc bộ giả lập thi cử tải cao với giao thức nhị phân siêu nhẹ (Binary Framing 8-byte).
-2. **Kênh Spring WebSocket Gateway (Cổng 8080):**
-   - Đăng ký tại [WebSocketConfig.java](../src/main/java/com/example/server/socket/gateway/WebSocketConfig.java) và xử lý tại [ExamWebSocketHandler.java](../src/main/java/com/example/server/socket/gateway/ExamWebSocketHandler.java).
-   - Lắng nghe tại endpoint `/ws`, phục vụ trực tiếp người dùng cuối trên trình duyệt Web (ứng dụng React 19 SPA) qua giao thức WebSocket văn bản (JSON text frames).
+2. **Kênh HTTP/REST Short Polling & Server Authoritative Timestamp (Cổng 8080):**
+   - Triển khai tại [ExamRoomController.java](../src/main/java/com/example/server/controller/ExamRoomController.java) và [RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java) (cùng bản đối chiếu C11 tại [rest_controllers.c](../../server-c/src/rest_controllers.c)).
+   - Phục vụ trực tiếp người dùng cuối trên trình duyệt Web (ứng dụng React 19 SPA) theo mô hình **100% Stateless REST** kết hợp đồng hồ chuẩn máy chủ (`serverNow`, `endsAt`) và cơ chế **Lazy State Transition**.
 3. **Trạm Điều Phối Tập Trung `RoomEventBus` (Design Pattern: Mediator):**
    - Quản lý đồng thời danh sách kết nối TCP `SocketChannel` (`roomChannels`) và WebSocket `WebSocketSession` (`roomWebSessions`) của từng phòng thi.
    - Khi có sự kiện (thí sinh vào phòng, bắt đầu thi, tick đếm ngược thời gian, kết thúc bài thi), `RoomEventBus` phát thanh song song (Parallel Broadcast) tới cả 2 kênh mà không gây nghẽn luồng mạng.
@@ -229,6 +229,71 @@ sequenceDiagram
 * **Phân tách hoàn toàn (Complete Decoupling):** Kênh TCP và kênh WebSocket không hề biết về sự tồn tại của nhau. Nếu một kênh gặp sự cố mạng hoặc bị restart, kênh còn lại vẫn vận hành độc lập 100%.
 * **Thống nhất nghiệp vụ (Single Source of Truth):** Toàn bộ nghiệp vụ phòng thi (tham gia phòng, thoát phòng, tính điểm, kiểm tra thời gian) đều nằm tập trung tại `RoomService` và CSDL PostgreSQL, loại bỏ hoàn toàn nguy cơ sai lệch logic giữa 2 phân hệ mạng.
 * **Tối ưu hóa đặc thù cho từng loại Client:** Thí sinh thi trên Web sử dụng JSON Text trực quan, dễ tích hợp với hệ sinh thái React/TypeScript; các hệ thống máy trạm chấm thi hoặc bộ kiểm thử tải nặng (Load Testing) sử dụng Binary Framing 8-byte để đạt thông lượng I/O cao nhất và độ trễ thấp nhất.
+
+---
+
+### 1.5. Giải Pháp Thay Thế WebSocket Bằng Thuần HTTP/1.1 Khi Muốn Giảm Độ Phức Tạp Hệ Thống
+
+Một câu hỏi thiết kế kiến trúc quan trọng thường đặt ra là: *"Khi hệ thống đã có sẵn máy chủ HTTP/1.1 (như Spring REST hoặc máy chủ C Reactor tại `server-c/`), tại sao lại cần thêm WebSocket? Và nếu muốn loại bỏ hoàn toàn WebSocket để giảm độ phức tạp (không phải cài đặt SHA-1/Base64 Handshake, Frame Masking/Unmasking theo RFC 6455) thì giải quyết như thế nào?"*
+
+#### A. Tại Sao Máy Chủ HTTP/1.1 Thông Thường Không Tự Đẩy (Push) Sự Kiện Được?
+- Dù kết nối HTTP/1.1 bật cờ `Connection: keep-alive` để tái sử dụng đường ống TCP, về mặt ngữ nghĩa giao thức, HTTP/1.1 vẫn là **Client-Driven (Bán song công logic)**: Máy chủ chỉ được gửi đúng 1 gói `HTTP Response` tương ứng với 1 gói `HTTP Request` do Client khởi xướng trước đó.
+- Khi kết nối Keep-Alive đang ở trạng thái nhàn rỗi (chờ request tiếp theo), máy chủ không thể tự ý đẩy một thông điệp `TIME_TICK` hay `EXAM_STARTED` xuống trình duyệt nếu trình duyệt không gửi request hỏi.
+
+#### B. Ba Giải Pháp Thay Thế WebSocket Hoàn Toàn Bằng Thuần HTTP/1.1
+
+Nếu mục tiêu ưu tiên là **tối giản hóa kiến trúc giao thức** (chỉ duy trì một ngăn xếp HTTP/1.1 duy nhất, đặc biệt hữu ích khi tự viết máy chủ từ tầng Socket bằng C như trong [server-c/README.md](../../server-c/README.md)), có thể thay thế WebSocket bằng 1 trong 3 kiến trúc thuần HTTP sau:
+
+##### 1. Giải pháp 1: Server-Sent Events (SSE — `text/event-stream`) + HTTP REST POST (Khuyến nghị số 1 khi bỏ WebSocket)
+- **Nguyên lý hoạt động:**
+  - **Chiều `Server -> Client` (Nhận sự kiện trực tiếp):** Trình duyệt mở kết nối qua API chuẩn W3C `new EventSource('/api/v1/rooms/101/stream')`. Máy chủ trả về HTTP Header chuẩn:
+    ```http
+    HTTP/1.1 200 OK
+    Content-Type: text/event-stream; charset=utf-8
+    Cache-Control: no-cache
+    Connection: keep-alive
+    ```
+    Sau đó máy chủ **không đóng kết nối** mà giữ `client_fd` mở. Mỗi khi có sự kiện đếm giờ hoặc bắt đầu thi, máy chủ chỉ cần gọi `send()` ghi dòng văn bản thuần:
+    ```text
+    event: time_tick
+    data: {"secondsRemaining": 1799}
+
+    ```
+  - **Chiều `Client -> Server` (Gửi thao tác):** Thí sinh vào phòng, chọn đáp án hoặc nộp bài qua các lệnh gọi `fetch()` HTTP POST thông thường (`POST /api/v1/rooms/101/submit`).
+- **Ưu điểm vượt trội so với tự cài đặt WebSocket:**
+  - Không cần bắt tay `Sec-WebSocket-Key` (SHA-1 + Base64), không cần giải mã bitmask khung nhị phân RFC 6455.
+  - Trình duyệt hỗ trợ sẵn cơ chế **Auto-Reconnect** tự động trong `EventSource`.
+
+##### 2. Giải pháp 2: HTTP Short Polling + Server Authoritative Timestamp (Đơn giản tuyệt đối — 100% Stateless)
+- **Nguyên lý hoạt động:**
+  - Loại bỏ hoàn toàn việc máy chủ phải bắn sự kiện `TIME_TICK` mỗi giây. Thay vào đó, khi thí sinh lấy thông tin phòng thi (`GET /api/v1/rooms/101`), máy chủ trả về mốc thời gian chuẩn của server:
+    ```json
+    {
+      "status": "in_progress",
+      "serverNowMs": 1730100000000,
+      "examEndsAtMs": 1730103600000
+    }
+    ```
+  - Trình duyệt tính độ lệch đồng hồ `clockOffset = serverNowMs - Date.now()` (chống gian lận chỉnh giờ hệ điều hành phía client) và tự chạy bộ đếm ngược mượt mà mỗi giây trên giao diện.
+  - Định kỳ mỗi **3 – 5 giây**, trình duyệt gọi nhẹ `GET /api/v1/rooms/101/state` (tận dụng kết nối `Connection: keep-alive` sẵn có) để đồng bộ danh sách thí sinh hoặc trạng thái kết thúc phòng thi.
+- **Ưu điểm:** Máy chủ hoàn toàn **Phi trạng thái (Stateless)**, không cần lưu giữ danh sách `WebSocketSession` hay kênh kết nối mở trong RAM, cực kỳ dễ mở rộng ngang (Horizontal Scaling).
+
+##### 3. Giải pháp 3: HTTP Long Polling (Hanging GET)
+- **Nguyên lý hoạt động:**
+  - Trình duyệt gửi `GET /api/v1/rooms/101/poll?version=4`.
+  - Nếu trạng thái phòng thi chưa thay đổi (vẫn ở `version == 4`), máy chủ **treo (giữ) request đó trong Reactor** mà chưa phản hồi ngay.
+  - Ngay khi chủ phòng bấm "Bắt đầu thi" (`version` tăng lên `5`), máy chủ lập tức trả về HTTP 200 kèm trạng thái mới; trình duyệt nhận xong lại gửi tiếp một request `poll?version=5` mới.
+- **Ưu điểm:** Độ trễ nhận thông báo gần như tức thì tương đương WebSocket nhưng chỉ dùng thuần HTTP GET.
+
+#### C. Bảng Quyết Định Kiến Trúc (Trade-off Matrix) Khi Lựa Chọn Giữa WebSocket Và Thuần HTTP
+
+| Tiêu Chí Đánh Giá | WebSocket Full-Duplex (`server/` hiện tại) | SSE + HTTP POST (Hybrid HTTP/1.1) | Short Polling + Server Timestamp (Stateless REST) |
+| :--- | :--- | :--- | :--- |
+| **Độ phức tạp cài đặt ở tầng C / Socket** | **Cao** (Bắt tay SHA-1/Base64 + Framing RFC 6455) | **Thấp** (Chỉ là HTTP Response giữ mở) | **Rất thấp** (100% HTTP Request-Response chuẩn) |
+| **Độ trễ sự kiện Server-Push** | `< 5ms` (Tức thì 2 chiều) | `< 5ms` (Tức thì chiều Server $\rightarrow$ Client) | `1000ms – 3000ms` (Phụ thuộc chu kỳ Poll) |
+| **Tài nguyên RAM giữ kết nối trên Server** | Giữ 1 Socket / thí sinh | Giữ 1 Socket SSE / thí sinh + kết nối POST ngắn | **Không cần giữ trạng thái phiên đẩy (Stateless)** |
+| **Khả năng đi xuyên Firewall / Proxy cũ** | Đôi khi bị chặn header `Upgrade` | **Tương thích 100% HTTP chuẩn** | **Tương thích 100% HTTP chuẩn** |
+| **Khuyến nghị áp dụng** | Khi cần giao tiếp 2 chiều tần suất cao, độ trễ cực thấp | Khi muốn bỏ WebSocket nhưng vẫn cần Server-Push tức thì | Khi muốn hệ thống REST thuần túy, tối giản nhất |
 
 ---
 
@@ -459,15 +524,52 @@ Khi thí sinh cố tình mở đồng thời cả giao diện Web (cổng 8080) 
 3. **Chính Sách Chống Thi Hộ & Can Thiệp Kép (Single Active Session Policy):**
    - Nếu phát hiện cùng một `userId` đã kết nối từ một kênh trước đó, hệ thống ghi log cảnh báo và có thể chủ động ngắt phiên kết nối cũ (`disconnect`) trước khi chấp nhận phiên kết nối mới, ngăn chặn hành vi một người làm bài trên Web trong khi một script tự động gửi đáp án qua cổng TCP.
 
+### 5.5. Đối Chiếu Hiện Thực Doug Lea Classic Reactor Giữa Java NIO (`server/`) Và POSIX C11 `epoll` (`server-c/`)
+
+Bên cạnh phân hệ máy chủ Java NIO (`server/`), kho lưu trữ còn cung cấp phân hệ đối chiếu chuẩn mực bằng ngôn ngữ C thuần túy tại [server-c/README.md](../../server-c/README.md) nhằm minh họa trực tiếp cách các thành phần của **Doug Lea Classic Reactor Pattern** ánh xạ xuống tầng nhân hệ điều hành Linux (POSIX System Calls):
+
+| Thành Phần Kiến Trúc | Phân Hệ Java NIO (`server/`) | Phân Hệ POSIX C11 (`server-c/`) |
+| :--- | :--- | :--- |
+| **I/O Demultiplexer** | `java.nio.channels.Selector` (`selector.select()`) | Linux `epoll` (`epoll_create1`, `epoll_ctl`, `epoll_wait`) |
+| **Chế độ Kích hoạt Sự kiện** | Level-Triggered (`SelectionKey.OP_READ`) | Edge-Triggered + One-Shot (`EPOLLIN \| EPOLLET \| EPOLLONESHOT`) |
+| **Acceptor Không Chặn** | `ServerSocketChannel.accept()` + `configureBlocking(false)` | `accept4(..., SOCK_NONBLOCK)` hoặc `fcntl(fd, F_SETFL, O_NONBLOCK)` |
+| **Bộ Đệm Tích Lũy Phiên** | `ClientSession` chứa `ByteBuffer accumulationBuffer` (64KB) | `client_session_t` chứa `accumulation_buffer[32768]` + Doubly-Linked List |
+| **Bộ Giải Mã Khung Tin** | [PacketFramingDecoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingDecoder.java) (8-byte Binary Framing) | [http_parser.c](../../server-c/src/http_parser.c) (Incremental Stateful HTTP/1.1 FSM Parser) |
+| **Chống Dính Gói (Sticky)** | Vòng lặp `while (buffer.remaining() >= HEADER_SIZE)` + `compact()` | **Sequential Per-Session Drain** + `memmove()` trên Worker Thread |
+| **Worker ThreadPool** | `ExecutorService` (`Executors.newFixedThreadPool`) | [thread_pool.c](../../server-c/src/thread_pool.c) (`pthread_mutex_t` + `pthread_cond_t` queue) |
+| **Kho Lưu Trữ Đồng Thời** | `ConcurrentHashMap` + PostgreSQL 14+ | [in_memory_store.c](../../server-c/src/in_memory_store.c) (`pthread_rwlock_t` Read-Write Lock) |
+
+---
+
+### 5.6. Giải Pháp Thay Thế WebSocket Trên Web: HTTP Short Polling + Server Authoritative Timestamp (100% Stateless REST)
+
+Để triệt tiêu hoàn toàn độ phức tạp của việc quản lý phiên WebSocket stateful trên trình duyệt mà vẫn đảm bảo tính công bằng thời gian thực cho phòng thi trực tuyến, hệ thống áp dụng kiến trúc **HTTP Short Polling kết hợp Server Authoritative Timestamp (Đồng hồ chuẩn máy chủ)**:
+
+1. **Adaptive Short Polling Trên Trình Duyệt ([useRoomsQuery.ts](../../client/src/hooks/queries/useRoomsQuery.ts)):**
+   - Khi phòng ở trạng thái `WAITING`: TanStack Query tự động lấy mẫu (`refetchInterval`) mỗi **`2000ms` (2 giây)** để bắt sự kiện Giáo viên phát lệnh bắt đầu thi.
+   - Khi phòng ở trạng thái `RUNNING`: Chu kỳ lấy mẫu giãn ra **`3000ms` (3 giây)** để phát hiện sự kiện đóng phòng sớm, kết hợp đồng hồ nội suy 1 giây ở Client.
+   - Khi phòng chuyển sang `ENDED` hoặc `CANCELLED`: Tự động trả về `refetchInterval: false`, ngắt hoàn toàn Polling để giải phóng băng thông.
+
+2. **Toán Học Đồng Bộ Thời Gian Chống Gian Lận ([examStore.ts](../../client/src/stores/examStore.ts)):**
+   - Mỗi bản tin phản hồi chi tiết phòng thi từ Server ([RoomDetailResponse.java](../src/main/java/com/example/server/dto/room/RoomDetailResponse.java) hoặc `/api/v1/rooms/:code/state` trên `server-c/`) luôn đính kèm mốc giờ chuẩn của máy chủ `serverNow` ($T_{\text{serverNow}}$) và hạn nộp bài `endsAt` ($T_{\text{endsAt}}$).
+   - Client tính độ lệch đồng hồ $\Delta t = T_{\text{serverNow}} - T_{\text{clientNow}}$ và suy diễn thời gian còn lại mỗi giây:
+     $$\text{remainingSeconds} = \max\left(0, \left\lfloor \frac{T_{\text{endsAt}} - (\text{Date.now()} + \Delta t)}{1000} \right\rfloor\right)$$
+   - Công thức này giúp đồng hồ đếm ngược miễn nhiễm hoàn toàn với hành vi thí sinh chỉnh lùi giờ hệ điều hành cũng như hiện tượng trình duyệt đóng băng `setInterval` khi chuyển tab ngầm.
+
+3. **Lazy State Transition & Grace Period (2s) Trên Máy Chủ ([RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java) & [in_memory_store.c](../../server-c/src/in_memory_store.c)):**
+   - Máy chủ không cần duy trì bất kỳ luồng Timer (`ScheduledExecutorService` hay `timerfd`) chạy ngầm nào cho từng phòng thi.
+   - Ngay khi có bất kỳ request `GET` trạng thái phòng hoặc `POST` nộp bài chạm mốc $T_{\text{serverNow}} \ge T_{\text{endsAt}}$, máy chủ tự động chuyển trạng thái phòng từ `RUNNING` sang `ENDED` (**Lazy Evaluation**) và từ chối mọi thao tác nộp đáp án vượt quá cửa sổ ân hạn mạng **2 giây (Grace Period)**.
+
 ---
 
 ## 6. Liên Kết Đối Chiếu
 
-- Mã nguồn Bộ điều phối trung tâm: [RoomEventBus.java](../src/main/java/com/example/server/socket/RoomEventBus.java)
-- Máy chủ Classic Reactor NIO: [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)
-- Cổng tiếp nhận WebSocket: [ExamWebSocketHandler.java](../src/main/java/com/example/server/socket/gateway/ExamWebSocketHandler.java) & [WebSocketConfig.java](../src/main/java/com/example/server/socket/gateway/WebSocketConfig.java)
+- Mã nguồn Bộ điều phối trung tâm TCP NIO: [RoomEventBus.java](../src/main/java/com/example/server/socket/RoomEventBus.java)
+- Máy chủ Classic Reactor NIO (Java): [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)
+- Máy chủ Classic Reactor `epoll` (POSIX C11): [reactor.c](../../server-c/src/reactor.c) & [server-c/README.md](../../server-c/README.md)
+- Cổng REST Phòng thi & Đồng hồ chuẩn (Spring Boot): [ExamRoomController.java](../src/main/java/com/example/server/controller/ExamRoomController.java) & [RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java)
 - Bộ giải mã và mã hóa nhị phân: [PacketFramingDecoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingDecoder.java) & [PacketFramingEncoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingEncoder.java)
 - Danh mục Opcode giao thức: [ProtocolConstants.java](../src/main/java/com/example/server/socket/protocol/ProtocolConstants.java)
-- Dịch vụ WebSocket phía Client (React 19): [socket.service.ts](../../client/src/services/socket.service.ts)
+- Engine Adaptive Short Polling & Clock-Offset phía Client (React 19): [useRoomsQuery.ts](../../client/src/hooks/queries/useRoomsQuery.ts) & [examStore.ts](../../client/src/stores/examStore.ts)
 - Quy chuẩn lập trình chi tiết: [CONVENTIONS.md](../CONVENTIONS.md)
 - Cẩm nang xây dựng Custom API kết nối thời gian thực: [CUSTOM_API_GUIDE.md](ai-guides/CUSTOM_API_GUIDE.md)

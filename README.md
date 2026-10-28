@@ -14,10 +14,15 @@ mooc-clone/
 │   ├── src/         # Mã nguồn React 19, TypeScript, Tailwind CSS v4
 │   ├── docs/        # 17 chuyên đề kỹ thuật chi tiết của Frontend
 │   └── FRONTEND_CONVENTIONS.md  # Bộ quy chuẩn phát triển Frontend
-├── server/          # Máy chủ Backend & Dịch vụ Socket thời gian thực
-│   ├── src/         # Mã nguồn Java Spring Boot
+├── server/          # Máy chủ Backend Java & Dịch vụ Socket thời gian thực
+│   ├── src/         # Mã nguồn Java 21 Spring Boot + NIO Reactor
 │   ├── docs/        # Tài liệu kiến trúc chuyên sâu & AI Guides
-│   ├── online_exam_schema.sql          # Kịch bản khởi tạo CSDL PostgreSQL
+│   └── online_exam_schema.sql   # Kịch bản khởi tạo CSDL PostgreSQL
+├── server-c/        # Máy chủ HTTP/REST & Doug Lea Reactor viết bằng C11/POSIX
+│   ├── include/     # Header đặc tả Socket, HTTP FSM Parser, Router, epoll Reactor
+│   ├── src/         # Mã nguồn C thuần túy (Zero external framework)
+│   ├── tests/       # Unit Tests & Integration / Benchmark Suites
+│   └── README.md    # Runbook biên dịch, vận hành và kiểm thử bộ nhớ (ASan/Valgrind)
 └── README.md        # Tài liệu tổng quan dự án và thang điểm
 ```
 
@@ -121,9 +126,24 @@ npm install
 npm run dev
 ```
 
+### 4.4 Khởi chạy Máy chủ C HTTP/REST Reactor (`server-c/` trên Linux / WSL2)
+
+Di chuyển vào thư mục `server-c/` trên môi trường Linux hoặc WSL2 Ubuntu 22.04 để biên dịch, kiểm thử và khởi chạy máy chủ C theo mô hình Doug Lea Classic Reactor (`epoll` + Worker ThreadPool):
+
+```bash
+cd server-c
+make build
+make test
+make memcheck
+make run
+```
+
+Chi tiết hướng dẫn 3 chế độ đồng thời (`sequential`, `threadpool`, `reactor`) và bảng tra cứu cURL xem tại [server-c/README.md](server-c/README.md).
+
 ---
 
 ## 5. Tài liệu Kỹ thuật Liên quan
 
-- **Tài liệu & Kiến trúc Backend:** Cẩm nang AI Guides, Kiến trúc Mạng kép, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
+- **Tài liệu & Kiến trúc Backend Java:** Cẩm nang AI Guides, Kiến trúc Mạng kép, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
+- **Tài liệu & Runbook Máy chủ C (`server-c/`):** Đặc tả kiến trúc Socket POSIX, HTTP/1.1 FSM Parser và `epoll` Reactor tại [server-c/README.md](server-c/README.md).
 - **Quy chuẩn Phát triển Frontend:** Tiêu chuẩn 19 Master Rules, Design Tokens và Semantic Architecture tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md).

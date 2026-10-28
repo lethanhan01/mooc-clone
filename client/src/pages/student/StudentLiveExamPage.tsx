@@ -26,16 +26,11 @@ export default function StudentLiveExamPage() {
   const submitAnswerMutation = useSubmitAnswerMutation()
   const submitExamMutation = useSubmitExamMutation()
 
-  const activeAttemptId = useExamStore((s) => s.activeAttemptId)
-  const currentIndex = useExamStore((s) => s.currentIndex)
-  const answers = useExamStore((s) => s.answers)
-  const flagged = useExamStore((s) => s.flaggedQuestionIds)
-  const remainingSeconds = useExamStore((s) => s.remainingSeconds)
-  const startSession = useExamStore((s) => s.startSession)
-  const selectAnswerInStore = useExamStore((s) => s.selectAnswer)
-  const toggleFlag = useExamStore((s) => s.toggleFlag)
-  const setCurrentIndex = useExamStore((s) => s.setCurrentIndex)
-  const decrementTimer = useExamStore((s) => s.decrementTimer)
+  const {
+    activeAttemptId, currentIndex, answers, flaggedQuestionIds: flagged,
+    remainingSeconds, startSession, syncServerClock, selectAnswer: selectAnswerInStore,
+    toggleFlag, setCurrentIndex, decrementTimer,
+  } = useExamStore()
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const autoSubmitted = useRef(false)
@@ -46,28 +41,38 @@ export default function StudentLiveExamPage() {
     : allQuestions
   ).slice(0, (room?.easyCount ?? 5) + (room?.mediumCount ?? 5) + (room?.hardCount ?? 0) || 10)
 
-
-  // Auto-init attempt if not already running
   useEffect(() => {
     if (!room || activeAttemptId) return
     startAttemptMutation
       .mutateAsync({ roomCode: room.roomCode, mode: 'EXAM' })
-      .then((res) => {
-        startSession({ attemptId: res.attemptId, roomCode: room.roomCode, durationSeconds: room.durationSeconds })
-      })
+      .then((res) =>
+        startSession({
+          attemptId: res.attemptId,
+          roomCode: room.roomCode,
+          durationSeconds: room.durationSeconds,
+          endsAt: room.endsAt,
+          serverNow: room.serverNow,
+        })
+      )
       .catch(() => toast.error('Không thể khởi tạo lượt thi từ máy chủ'))
   }, [room, activeAttemptId, startAttemptMutation, startSession])
 
-  // Timer countdown
+  useEffect(() => {
+    if (activeAttemptId && room?.endsAt) {
+      syncServerClock({ endsAt: room.endsAt, serverNow: room.serverNow })
+    }
+  }, [activeAttemptId, room?.endsAt, room?.serverNow, syncServerClock])
+
   useEffect(() => {
     if (!activeAttemptId) return
     const id = window.setInterval(() => decrementTimer(), 1000)
     return () => window.clearInterval(id)
   }, [activeAttemptId, decrementTimer])
 
-  // Auto submit when time runs out
+  const isRoomEnded = room?.status?.toUpperCase() === 'ENDED' || room?.status === 'finished'
+
   useEffect(() => {
-    if (activeAttemptId && remainingSeconds === 0 && !autoSubmitted.current) {
+    if (activeAttemptId && (remainingSeconds === 0 || isRoomEnded) && !autoSubmitted.current) {
       autoSubmitted.current = true
       submitExamMutation
         .mutateAsync(activeAttemptId)
@@ -77,8 +82,7 @@ export default function StudentLiveExamPage() {
         })
         .catch(() => toast.error('Không thể nộp bài tự động'))
     }
-  }, [remainingSeconds, activeAttemptId, submitExamMutation, navigate, room, roomId])
-
+  }, [remainingSeconds, isRoomEnded, activeAttemptId, submitExamMutation, navigate, room, roomId])
 
   if (isRoomLoading || isQuestionsLoading || questions.length === 0) {
     return (
@@ -96,10 +100,7 @@ export default function StudentLiveExamPage() {
     if (activeAttemptId) {
       submitAnswerMutation.mutate({
         attemptId: activeAttemptId,
-        payload: {
-          questionId: currentQuestion.id,
-          selectedOptionId: optionId,
-        },
+        payload: { questionId: currentQuestion.id, selectedOptionId: optionId },
       })
     }
   }

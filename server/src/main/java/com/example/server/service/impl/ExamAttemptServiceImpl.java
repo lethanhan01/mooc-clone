@@ -12,6 +12,7 @@ import com.example.server.entity.UserEntity;
 import com.example.server.entity.enums.AttemptMode;
 import com.example.server.entity.enums.AttemptStatus;
 import com.example.server.entity.enums.QuestionStatus;
+import com.example.server.entity.enums.RoomStatus;
 import com.example.server.entity.enums.SystemRole;
 import com.example.server.exception.AppException;
 import com.example.server.exception.ErrorCode;
@@ -38,6 +39,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
 
     private static final String ATTEMPT_NOT_FOUND_PREFIX = "Không tìm thấy lượt thi với ID: ";
     private static final String PLEASE_LOGIN_MESSAGE = "Vui lòng đăng nhập";
+    private static final long SUBMIT_GRACE_PERIOD_SECONDS = 2L;
 
     private final ExamAttemptRepository attemptRepository;
     private final AttemptAnswerRepository answerRepository;
@@ -73,8 +75,24 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         if (request.roomCode() != null && !request.roomCode().isBlank()) {
             ExamRoomEntity room = roomRepository.findByRoomCode(request.roomCode())
                     .orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_FOUND, "Không tìm thấy phòng: " + request.roomCode()));
+
+            if (room.getStatus() == RoomStatus.RUNNING && room.getEndsAt() != null && !now.isBefore(room.getEndsAt())) {
+                room.setStatus(RoomStatus.ENDED);
+                room.setEndedAt(room.getEndsAt());
+                roomRepository.save(room);
+            }
+
+            if (room.getStatus() == RoomStatus.ENDED || room.getStatus() == RoomStatus.CANCELLED) {
+                throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Phòng thi đã kết thúc");
+            }
+
             attempt.setRoom(room);
-            attempt.setDeadlineAt(now.plusSeconds(room.getDurationSeconds()));
+            // Nếu phòng đang RUNNING có mốc endsAt chuẩn từ Server, đồng bộ deadline của thí sinh theo endsAt của phòng
+            if (room.getEndsAt() != null) {
+                attempt.setDeadlineAt(room.getEndsAt());
+            } else {
+                attempt.setDeadlineAt(now.plusSeconds(room.getDurationSeconds()));
+            }
         } else {
             attempt.setDeadlineAt(now.plusSeconds(1800)); // 30 phút mặc định cho luyện tập
         }
@@ -114,7 +132,27 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Bài thi đã nộp hoặc đã kết thúc, không thể nộp thêm đáp án");
         }
 
-        if (attempt.getDeadlineAt() != null && OffsetDateTime.now(ZoneOffset.UTC).isAfter(attempt.getDeadlineAt())) {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+        // Kiểm tra nếu phòng thi đã bị đóng sớm hoặc hết giờ (kèm Grace Period 2 giây)
+        ExamRoomEntity room = attempt.getRoom();
+        if (room != null) {
+            if (room.getStatus() == RoomStatus.RUNNING
+                    && room.getEndsAt() != null
+                    && now.isAfter(room.getEndsAt().plusSeconds(SUBMIT_GRACE_PERIOD_SECONDS))) {
+                room.setStatus(RoomStatus.ENDED);
+                room.setEndedAt(room.getEndsAt());
+                roomRepository.save(room);
+            }
+            if (room.getStatus() == RoomStatus.ENDED || room.getStatus() == RoomStatus.CANCELLED) {
+                attempt.setStatus(AttemptStatus.TIMED_OUT);
+                attemptRepository.save(attempt);
+                throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Phòng thi đã kết thúc, không thể nộp thêm đáp án");
+            }
+        }
+
+        if (attempt.getDeadlineAt() != null
+                && now.isAfter(attempt.getDeadlineAt().plusSeconds(SUBMIT_GRACE_PERIOD_SECONDS))) {
             attempt.setStatus(AttemptStatus.TIMED_OUT);
             attemptRepository.save(attempt);
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Đã hết thời gian làm bài thi");
@@ -130,7 +168,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         } else {
             answer.setSelectedOption(null);
         }
-        answer.setAnsweredAt(OffsetDateTime.now(ZoneOffset.UTC));
+        answer.setAnsweredAt(now);
         answerRepository.save(answer);
     }
 
@@ -178,30 +216,30 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         int total = answers.size();
         int answered = 0;
         int correct = 0;
-        int wrong = 0;
 
-        List<AttemptAnswerResponse> answerResponses = new ArrayList<>();
-        for (AttemptAnswerEntity a : answers) {
-            Long optId = a.getSelectedOption() != null ? a.getSelectedOption().getId() : null;
-            if (optId != null) {
+        List<AttemptAnswerResponse> answerDtos = new ArrayList<>();
+        for (AttemptAnswerEntity ans : answers) {
+            QuestionOptionEntity opt = ans.getSelectedOption();
+            Long selectedId = null;
+            if (opt != null) {
+                selectedId = opt.getId();
                 answered++;
-                if (a.getSelectedOption().isCorrect()) {
+                if (opt.isCorrect()) {
                     correct++;
-                } else {
-                    wrong++;
                 }
             }
-            answerResponses.add(new AttemptAnswerResponse(
-                    a.getQuestion().getId(),
-                    a.getPosition(),
-                    optId,
-                    a.getAnsweredAt()
+            answerDtos.add(new AttemptAnswerResponse(
+                    ans.getQuestion().getId(),
+                    ans.getPosition(),
+                    selectedId,
+                    ans.getAnsweredAt()
             ));
         }
 
+        int wrong = answered - correct;
         int unanswered = total - answered;
-        double correctPercent = total > 0 ? (100.0 * correct / total) : 0.0;
-        double score10 = total > 0 ? (10.0 * correct / total) : 0.0;
+        double score10 = total > 0 ? Math.round((correct * 10.0 / total) * 100.0) / 100.0 : 0.0;
+        double correctPercent = total > 0 ? Math.round((correct * 100.0 / total) * 100.0) / 100.0 : 0.0;
 
         return new AttemptResultResponse(
                 entity.getId(),
@@ -217,11 +255,11 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
                 correct,
                 wrong,
                 unanswered,
-                Math.round(score10 * 10.0) / 10.0,
-                Math.round(correctPercent * 10.0) / 10.0,
+                score10,
+                correctPercent,
                 entity.getStartedAt(),
                 entity.getSubmittedAt(),
-                answerResponses
+                answerDtos
         );
     }
 }

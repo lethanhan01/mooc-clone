@@ -49,3 +49,39 @@ void test_store_crud_basic(void) {
 
     store_destroy(&store);
 }
+
+void test_store_room_polling_and_lazy_expiration(void) {
+    in_memory_store_t store;
+    store_init(&store);
+
+    exam_room_t input_room;
+    memset(&input_room, 0, sizeof(input_room));
+    strncpy(input_room.room_code, "POLL99", sizeof(input_room.room_code) - 1);
+    strncpy(input_room.name, "Polling Test Room", sizeof(input_room.name) - 1);
+    strncpy(input_room.exam_id, "exam-1", sizeof(input_room.exam_id) - 1);
+    input_room.duration_seconds = 1; // 1 second duration
+
+    exam_room_t room_out;
+    int rc = store_create_room(&store, &input_room, &room_out);
+    ASSERT_EQ_INT(0, rc, "store_create_room should succeed");
+    ASSERT_EQ_INT(ROOM_STATUS_WAITING, room_out.status, "Initial room status should be WAITING");
+
+    rc = store_join_room(&store, "POLL99", "student_01", &room_out);
+    ASSERT_EQ_INT(0, rc, "store_join_room should succeed");
+    ASSERT_EQ_INT(1, (int)room_out.participant_count, "Participant count should be 1");
+
+    rc = store_start_room(&store, "POLL99", &room_out);
+    ASSERT_EQ_INT(0, rc, "store_start_room should succeed");
+    ASSERT_EQ_INT(ROOM_STATUS_RUNNING, room_out.status, "Room status after start should be RUNNING");
+    ASSERT_TRUE(room_out.ends_at_ms > room_out.started_at_ms, "ends_at_ms should be greater than started_at_ms");
+
+    // Simulate time passing beyond ends_at_ms + ROOM_SUBMIT_GRACE_MS (2000ms)
+    store.rooms[store.room_count - 1].ends_at_ms = get_server_now_ms() - 2500;
+
+    // Submitting after grace period must return -2 (expired) and lazily transition to ENDED
+    rc = store_submit_room_attempt(&store, "POLL99", "student_01", 9, &room_out);
+    ASSERT_EQ_INT(-2, rc, "store_submit_room_attempt after grace period must fail with -2");
+    ASSERT_EQ_INT(ROOM_STATUS_ENDED, room_out.status, "Room status must lazily transition to ENDED");
+
+    store_destroy(&store);
+}

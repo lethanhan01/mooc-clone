@@ -3,6 +3,7 @@ package com.example.server.service.impl;
 import com.example.server.dto.room.CreateRoomRequest;
 import com.example.server.dto.room.RoomDetailResponse;
 import com.example.server.dto.room.RoomSummaryDto;
+import com.example.server.dto.room.UpdateRoomRequest;
 import com.example.server.entity.ExamRoomEntity;
 import com.example.server.entity.RoomMemberEntity;
 import com.example.server.entity.RoomMemberId;
@@ -19,7 +20,6 @@ import com.example.server.service.RoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.server.dto.room.UpdateRoomRequest;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -43,6 +43,20 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
         this.userRepository = userRepository;
     }
 
+    /**
+     * Lazy State Transition: Tự động chuyển RUNNING -> ENDED ngay khi phát hiện serverNow >= endsAt
+     * mà không cần luồng Timer chạy ngầm.
+     */
+    private void lazyEvaluateRoomExpiration(ExamRoomEntity room, OffsetDateTime now) {
+        if (room.getStatus() == RoomStatus.RUNNING
+                && room.getEndsAt() != null
+                && !now.isBefore(room.getEndsAt())) {
+            room.setStatus(RoomStatus.ENDED);
+            room.setEndedAt(room.getEndsAt());
+            repository.save(room);
+        }
+    }
+
     @Override
     public RoomSummaryDto joinRoom(String roomCode, String usernameOrId, String displayName) {
         String safeRoomCode = roomCode.length() > 12 ? roomCode.substring(0, 12) : roomCode;
@@ -54,6 +68,8 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
         // 2. Kiểm tra ExamRoom bắt buộc phải tồn tại trong CSDL
         ExamRoomEntity room = repository.findByRoomCode(safeRoomCode)
                 .orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_FOUND, "Không tìm thấy phòng thi với mã: " + safeRoomCode));
+
+        lazyEvaluateRoomExpiration(room, OffsetDateTime.now(ZoneOffset.UTC));
 
         if (room.getStatus() == RoomStatus.ENDED || room.getStatus() == RoomStatus.CANCELLED) {
             throw new AppException(ErrorCode.ROOM_ALREADY_ENDED, "Phòng thi đã kết thúc hoặc bị hủy");
@@ -85,18 +101,23 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<RoomSummaryDto> getRoomSummary(String roomCode) {
         String safeRoomCode = roomCode.length() > 12 ? roomCode.substring(0, 12) : roomCode;
-        return repository.findByRoomCode(safeRoomCode).map(this::toResponseDto);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        return repository.findByRoomCode(safeRoomCode).map(room -> {
+            lazyEvaluateRoomExpiration(room, now);
+            return toResponseDto(room);
+        });
     }
 
     @Override
-    @Transactional(readOnly = true)
     public RoomDetailResponse getRoomDetail(String roomCode) {
         String safeRoomCode = roomCode.length() > 12 ? roomCode.substring(0, 12) : roomCode;
         ExamRoomEntity room = repository.findByRoomCode(safeRoomCode)
                 .orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_FOUND, "Không tìm thấy phòng thi: " + safeRoomCode));
+
+        OffsetDateTime serverNow = OffsetDateTime.now(ZoneOffset.UTC);
+        lazyEvaluateRoomExpiration(room, serverNow);
 
         List<String> participantUsernames = memberRepository.findByIdRoomId(room.getId()).stream()
                 .map(m -> m.getUser().getUsername())
@@ -117,6 +138,7 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
                 room.getMaxParticipants(),
                 room.getStartedAt(),
                 room.getEndsAt(),
+                serverNow,
                 room.getOwner().getId(),
                 room.getOwner().getDisplayName(),
                 participantUsernames
@@ -194,6 +216,7 @@ public class RoomServiceImpl extends BaseServiceImpl<ExamRoomEntity, Long, Creat
 
     @Override
     protected RoomSummaryDto toResponseDto(ExamRoomEntity room) {
+        lazyEvaluateRoomExpiration(room, OffsetDateTime.now(ZoneOffset.UTC));
         int count = memberRepository.findByIdRoomId(room.getId()).size();
         return new RoomSummaryDto(
                 room.getId(),

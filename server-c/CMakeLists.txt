@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 include_directories(include third_party)
 
 add_definitions(-D_GNU_SOURCE)
-add_compile_options(-Wall -Wextra -pedantic -g)
+add_compile_options(-Wall -Wextra -Werror -pedantic -g)
 
 option(ENABLE_ASAN "Enable AddressSanitizer" ON)
 if(ENABLE_ASAN)
