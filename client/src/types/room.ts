@@ -41,6 +41,7 @@ export interface RoomDetailResponse {
   maxParticipants?: number | null
   startedAt?: string | null
   endsAt?: string | null
+  serverNow?: string | null
   ownerId?: number
   ownerDisplayName?: string
   participantUsernames?: string[]

@@ -1,5 +1,6 @@
 package com.example.server.service;
 
+import com.example.server.dto.room.RoomDetailResponse;
 import com.example.server.dto.room.RoomSummaryDto;
 import com.example.server.entity.ExamRoomEntity;
 import com.example.server.entity.UserEntity;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -88,8 +91,8 @@ class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("Kiểm tra vòng đời phòng thi: Start và Finish phòng thi trên CSDL Supabase")
-    void testRoomLifecycle() {
+    @DisplayName("Kiểm tra vòng đời phòng thi: Start, Short Poll (serverNow) và Lazy Expiration trên CSDL")
+    void testRoomLifecycleAndLazyExpiration() {
         String testRoomCode = "LC_" + (System.currentTimeMillis() % 1000000);
         ExamRoomEntity lifecycleRoom = new ExamRoomEntity();
         lifecycleRoom.setRoomCode(testRoomCode);
@@ -108,14 +111,21 @@ class RoomServiceTest {
         roomService.joinRoom(testRoomCode, testUser.getUsername(), "Thí sinh LC");
 
         roomService.startRoom(testRoomCode);
-        Optional<RoomSummaryDto> runningRoom = roomService.getRoomSummary(testRoomCode);
-        assertTrue(runningRoom.isPresent());
-        assertEquals("RUNNING", runningRoom.get().status());
+        RoomDetailResponse runningDetail = roomService.getRoomDetail(testRoomCode);
+        assertEquals("RUNNING", runningDetail.status());
+        assertNotNull(runningDetail.serverNow());
+        assertNotNull(runningDetail.startedAt());
+        assertNotNull(runningDetail.endsAt());
 
-        roomService.finishRoom(testRoomCode);
-        Optional<RoomSummaryDto> finishedRoom = roomService.getRoomSummary(testRoomCode);
-        assertTrue(finishedRoom.isPresent());
-        assertEquals("ENDED", finishedRoom.get().status());
+        // Mô phỏng hết giờ (startedAt và endsAt đã lùi về quá khứ) để kiểm tra Lazy State Transition
+        OffsetDateTime pastNow = OffsetDateTime.now(ZoneOffset.UTC);
+        ExamRoomEntity persisted = examRoomRepository.findByRoomCode(testRoomCode).orElseThrow();
+        persisted.setStartedAt(pastNow.minusSeconds(305));
+        persisted.setEndsAt(pastNow.minusSeconds(5));
+        examRoomRepository.save(persisted);
+
+        RoomDetailResponse expiredDetail = roomService.getRoomDetail(testRoomCode);
+        assertEquals("ENDED", expiredDetail.status());
     }
 
     @Test

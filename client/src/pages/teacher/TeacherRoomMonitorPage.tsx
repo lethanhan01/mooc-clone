@@ -35,12 +35,13 @@ export default function TeacherRoomMonitorPage() {
   }
 
   const participants = room.participantUsernames ?? []
-  const remain =
-    room.endsAt != null
-      ? Math.max(0, Math.floor((new Date(room.endsAt).getTime() - Date.now()) / 1000))
-      : room.durationSeconds
-
   const isEnded = room.status?.toUpperCase() === 'ENDED' || room.status === 'finished'
+  const serverNowMs = room.serverNow ? Date.parse(room.serverNow) : Date.now()
+  const remain = isEnded
+    ? 0
+    : room.endsAt != null
+      ? Math.max(0, Math.floor((new Date(room.endsAt).getTime() - serverNowMs) / 1000))
+      : room.durationSeconds
 
   async function handleCloseRoom() {
     if (!room) return
@@ -127,7 +128,7 @@ export default function TeacherRoomMonitorPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-xs text-text-muted">
-                  Đang đồng bộ qua Socket
+                  Đồng bộ HTTP Polling
                 </TableCell>
               </TableRow>
             ))}

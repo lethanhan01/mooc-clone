@@ -52,9 +52,9 @@ graph TD
 1. **Kênh Non-blocking TCP Socket Reactor (Cổng 9090):**
    - Xây dựng hoàn toàn bằng **Java NIO thuần túy** (`Channels`, `Selector`, `ByteBuffers`) cài đặt theo mô hình kinh điển **Doug Lea Classic Reactor Pattern** tại [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java).
    - Phục vụ các client máy trạm chuyên dụng hoặc bộ giả lập thi cử tải cao với giao thức nhị phân siêu nhẹ (Binary Framing 8-byte).
-2. **Kênh Spring WebSocket Gateway (Cổng 8080):**
-   - Đăng ký tại [WebSocketConfig.java](../src/main/java/com/example/server/socket/gateway/WebSocketConfig.java) và xử lý tại [ExamWebSocketHandler.java](../src/main/java/com/example/server/socket/gateway/ExamWebSocketHandler.java).
-   - Lắng nghe tại endpoint `/ws`, phục vụ trực tiếp người dùng cuối trên trình duyệt Web (ứng dụng React 19 SPA) qua giao thức WebSocket văn bản (JSON text frames).
+2. **Kênh HTTP/REST Short Polling & Server Authoritative Timestamp (Cổng 8080):**
+   - Triển khai tại [ExamRoomController.java](../src/main/java/com/example/server/controller/ExamRoomController.java) và [RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java) (cùng bản đối chiếu C11 tại [rest_controllers.c](../../server-c/src/rest_controllers.c)).
+   - Phục vụ trực tiếp người dùng cuối trên trình duyệt Web (ứng dụng React 19 SPA) theo mô hình **100% Stateless REST** kết hợp đồng hồ chuẩn máy chủ (`serverNow`, `endsAt`) và cơ chế **Lazy State Transition**.
 3. **Trạm Điều Phối Tập Trung `RoomEventBus` (Design Pattern: Mediator):**
    - Quản lý đồng thời danh sách kết nối TCP `SocketChannel` (`roomChannels`) và WebSocket `WebSocketSession` (`roomWebSessions`) của từng phòng thi.
    - Khi có sự kiện (thí sinh vào phòng, bắt đầu thi, tick đếm ngược thời gian, kết thúc bài thi), `RoomEventBus` phát thanh song song (Parallel Broadcast) tới cả 2 kênh mà không gây nghẽn luồng mạng.
@@ -232,6 +232,71 @@ sequenceDiagram
 
 ---
 
+### 1.5. Giải Pháp Thay Thế WebSocket Bằng Thuần HTTP/1.1 Khi Muốn Giảm Độ Phức Tạp Hệ Thống
+
+Một câu hỏi thiết kế kiến trúc quan trọng thường đặt ra là: *"Khi hệ thống đã có sẵn máy chủ HTTP/1.1 (như Spring REST hoặc máy chủ C Reactor tại `server-c/`), tại sao lại cần thêm WebSocket? Và nếu muốn loại bỏ hoàn toàn WebSocket để giảm độ phức tạp (không phải cài đặt SHA-1/Base64 Handshake, Frame Masking/Unmasking theo RFC 6455) thì giải quyết như thế nào?"*
+
+#### A. Tại Sao Máy Chủ HTTP/1.1 Thông Thường Không Tự Đẩy (Push) Sự Kiện Được?
+- Dù kết nối HTTP/1.1 bật cờ `Connection: keep-alive` để tái sử dụng đường ống TCP, về mặt ngữ nghĩa giao thức, HTTP/1.1 vẫn là **Client-Driven (Bán song công logic)**: Máy chủ chỉ được gửi đúng 1 gói `HTTP Response` tương ứng với 1 gói `HTTP Request` do Client khởi xướng trước đó.
+- Khi kết nối Keep-Alive đang ở trạng thái nhàn rỗi (chờ request tiếp theo), máy chủ không thể tự ý đẩy một thông điệp `TIME_TICK` hay `EXAM_STARTED` xuống trình duyệt nếu trình duyệt không gửi request hỏi.
+
+#### B. Ba Giải Pháp Thay Thế WebSocket Hoàn Toàn Bằng Thuần HTTP/1.1
+
+Nếu mục tiêu ưu tiên là **tối giản hóa kiến trúc giao thức** (chỉ duy trì một ngăn xếp HTTP/1.1 duy nhất, đặc biệt hữu ích khi tự viết máy chủ từ tầng Socket bằng C như trong [server-c/README.md](../../server-c/README.md)), có thể thay thế WebSocket bằng 1 trong 3 kiến trúc thuần HTTP sau:
+
+##### 1. Giải pháp 1: Server-Sent Events (SSE — `text/event-stream`) + HTTP REST POST (Khuyến nghị số 1 khi bỏ WebSocket)
+- **Nguyên lý hoạt động:**
+  - **Chiều `Server -> Client` (Nhận sự kiện trực tiếp):** Trình duyệt mở kết nối qua API chuẩn W3C `new EventSource('/api/v1/rooms/101/stream')`. Máy chủ trả về HTTP Header chuẩn:
+    ```http
+    HTTP/1.1 200 OK
+    Content-Type: text/event-stream; charset=utf-8
+    Cache-Control: no-cache
+    Connection: keep-alive
+    ```
+    Sau đó máy chủ **không đóng kết nối** mà giữ `client_fd` mở. Mỗi khi có sự kiện đếm giờ hoặc bắt đầu thi, máy chủ chỉ cần gọi `send()` ghi dòng văn bản thuần:
+    ```text
+    event: time_tick
+    data: {"secondsRemaining": 1799}
+
+    ```
+  - **Chiều `Client -> Server` (Gửi thao tác):** Thí sinh vào phòng, chọn đáp án hoặc nộp bài qua các lệnh gọi `fetch()` HTTP POST thông thường (`POST /api/v1/rooms/101/submit`).
+- **Ưu điểm vượt trội so với tự cài đặt WebSocket:**
+  - Không cần bắt tay `Sec-WebSocket-Key` (SHA-1 + Base64), không cần giải mã bitmask khung nhị phân RFC 6455.
+  - Trình duyệt hỗ trợ sẵn cơ chế **Auto-Reconnect** tự động trong `EventSource`.
+
+##### 2. Giải pháp 2: HTTP Short Polling + Server Authoritative Timestamp (Đơn giản tuyệt đối — 100% Stateless)
+- **Nguyên lý hoạt động:**
+  - Loại bỏ hoàn toàn việc máy chủ phải bắn sự kiện `TIME_TICK` mỗi giây. Thay vào đó, khi thí sinh lấy thông tin phòng thi (`GET /api/v1/rooms/101`), máy chủ trả về mốc thời gian chuẩn của server:
+    ```json
+    {
+      "status": "in_progress",
+      "serverNowMs": 1730100000000,
+      "examEndsAtMs": 1730103600000
+    }
+    ```
+  - Trình duyệt tính độ lệch đồng hồ `clockOffset = serverNowMs - Date.now()` (chống gian lận chỉnh giờ hệ điều hành phía client) và tự chạy bộ đếm ngược mượt mà mỗi giây trên giao diện.
+  - Định kỳ mỗi **3 – 5 giây**, trình duyệt gọi nhẹ `GET /api/v1/rooms/101/state` (tận dụng kết nối `Connection: keep-alive` sẵn có) để đồng bộ danh sách thí sinh hoặc trạng thái kết thúc phòng thi.
+- **Ưu điểm:** Máy chủ hoàn toàn **Phi trạng thái (Stateless)**, không cần lưu giữ danh sách `WebSocketSession` hay kênh kết nối mở trong RAM, cực kỳ dễ mở rộng ngang (Horizontal Scaling).
+
+##### 3. Giải pháp 3: HTTP Long Polling (Hanging GET)
+- **Nguyên lý hoạt động:**
+  - Trình duyệt gửi `GET /api/v1/rooms/101/poll?version=4`.
+  - Nếu trạng thái phòng thi chưa thay đổi (vẫn ở `version == 4`), máy chủ **treo (giữ) request đó trong Reactor** mà chưa phản hồi ngay.
+  - Ngay khi chủ phòng bấm "Bắt đầu thi" (`version` tăng lên `5`), máy chủ lập tức trả về HTTP 200 kèm trạng thái mới; trình duyệt nhận xong lại gửi tiếp một request `poll?version=5` mới.
+- **Ưu điểm:** Độ trễ nhận thông báo gần như tức thì tương đương WebSocket nhưng chỉ dùng thuần HTTP GET.
+
+#### C. Bảng Quyết Định Kiến Trúc (Trade-off Matrix) Khi Lựa Chọn Giữa WebSocket Và Thuần HTTP
+
+| Tiêu Chí Đánh Giá | WebSocket Full-Duplex (`server/` hiện tại) | SSE + HTTP POST (Hybrid HTTP/1.1) | Short Polling + Server Timestamp (Stateless REST) |
+| :--- | :--- | :--- | :--- |
+| **Độ phức tạp cài đặt ở tầng C / Socket** | **Cao** (Bắt tay SHA-1/Base64 + Framing RFC 6455) | **Thấp** (Chỉ là HTTP Response giữ mở) | **Rất thấp** (100% HTTP Request-Response chuẩn) |
+| **Độ trễ sự kiện Server-Push** | `< 5ms` (Tức thì 2 chiều) | `< 5ms` (Tức thì chiều Server $\rightarrow$ Client) | `1000ms – 3000ms` (Phụ thuộc chu kỳ Poll) |
+| **Tài nguyên RAM giữ kết nối trên Server** | Giữ 1 Socket / thí sinh | Giữ 1 Socket SSE / thí sinh + kết nối POST ngắn | **Không cần giữ trạng thái phiên đẩy (Stateless)** |
+| **Khả năng đi xuyên Firewall / Proxy cũ** | Đôi khi bị chặn header `Upgrade` | **Tương thích 100% HTTP chuẩn** | **Tương thích 100% HTTP chuẩn** |
+| **Khuyến nghị áp dụng** | Khi cần giao tiếp 2 chiều tần suất cao, độ trễ cực thấp | Khi muốn bỏ WebSocket nhưng vẫn cần Server-Push tức thì | Khi muốn hệ thống REST thuần túy, tối giản nhất |
+
+---
+
 ## 2. Đặc Tả Khung Gói Tin Nhị Phân 8-byte (Binary Packet Framing Protocol)
 
 Mọi gói tin truyền qua cổng TCP 9090 tuân theo định dạng khung nhị phân chuẩn định lượng (Framing Specification):
@@ -300,33 +365,69 @@ TCP là giao thức hướng dòng (Stream-oriented), truyền tải dữ liệu
 
 ## 5. Quy Chuẩn Đa Luồng & An Toàn Kênh Truyền (Concurrency Safety)
 
-### 5.1. Phân Tách Luồng: Doug Lea Classic Reactor vs Worker ThreadPool
-Trong [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java), kiến trúc đa luồng tuân thủ nghiêm ngặt mô hình Doug Lea Classic Reactor Pattern:
+### 5.1. Cơ Chế Doug Lea Classic Reactor Pattern & So Sánh Các Mô Hình Mạng TCP
 
-```text
-[Mạng Socket] ---> (OP_ACCEPT, OP_READ)
-                         │
-                         ▼
-        ┌───────────────────────────────────┐
-        │   1 Luồng Duy Nhất: Reactor       │
-        │   ("nio-reactor-thread")          │
-        │   - selector.select(500)          │
-        │   - sc.read(buffer)               │
-        │   - decoder.decode() (Framing thô)│
-        └─────────────────┬─────────────────┘
-                          │ workerPool.submit(...) (Non-blocking handoff)
-                          ▼
-        ┌───────────────────────────────────┐
-        │   Worker ThreadPool (N = 2 * CPU) │
-        │   ("nio-worker-xxxx")             │
-        │   - Parse JSON Payload            │
-        │   - Nghiệp vụ RoomService         │
-        │   - Truy vấn JPA / PostgreSQL DB  │
-        │   - Tính điểm & Chấm thi          │
-        └───────────────────────────────────┘
+#### A. Lý Thuyết Thiết Kế Doug Lea Classic Reactor Pattern
+Mô hình **Classic Reactor Pattern** được giáo sư Doug Lea chuẩn hóa trong bài thuyết trình học thuật kinh điển *"Scalable IO in Java"* nhằm giải quyết bài toán hiệu năng và khả năng mở rộng (Scalability) của các ứng dụng mạng I/O cao.
+
+##### 1. Nguyên Lý Dồn Kênh I/O Không Chặn (Non-blocking I/O Multiplexing)
+* Trong mô hình truyền thống, thao tác I/O (như `read()` hay `accept()`) sẽ chặn (Block) luồng thực thi cho tới khi có dữ liệu từ mạng hoặc có kết nối mới. Điều này buộc máy chủ phải dùng nhiều luồng để phục vụ nhiều kết nối.
+* Mô hình Reactor chuyển từ mô hình hướng luồng (Thread-driven) sang **mô hình hướng sự kiện (Event-driven)** dựa trên kỹ thuật **Dồn kênh I/O (I/O Multiplexing)**:
+  - Một kênh socket được cấu hình ở chế độ không chặn (`non-blocking`). Thao tác đọc/ghi sẽ trả về ngay lập tức nếu dữ liệu chưa sẵn sàng.
+  - Sử dụng một bộ phân kênh sự kiện (**Demultiplexer**, trong Java NIO là `Selector`) để giám sát đồng thời trạng thái I/O của hàng nghìn kết nối mạng trên **một luồng duy nhất** (Single-Threaded Reactor Event Loop).
+
+##### 2. Các Thành Phần Cốt Lõi Trong Cấu Trúc Doug Lea Reactor:
+1. **Reactor (Event Loop & Demultiplexer):**
+   - Vận hành như một vòng lặp liên tục (`while (isRunning)`).
+   - Gọi phương thức dồn kênh `selector.select()` để kiểm tra xem có kênh mạng nào sẵn sàng thao tác I/O (`SelectionKey.OP_ACCEPT`, `SelectionKey.OP_READ`).
+2. **Dispatcher (Bộ Điều Phối):**
+   - Bóc tách tập hợp các khóa sẵn sàng (`selectedKeys()`), xác định loại sự kiện và phân phối (Dispatch) sự kiện đó tới đúng đối tượng xử lý được gắn kèm (Attachment).
+3. **Acceptor:**
+   - Xử lý riêng sự kiện thiết lập kết nối mới (`OP_ACCEPT`) từ `ServerSocketChannel`.
+   - Tiếp nhận kết nối (`accept()`), đặt trạng thái non-blocking cho `SocketChannel` của client và đăng ký (Register) kênh này vào `Selector` với sự kiện quan tâm tiếp theo (`OP_READ`).
+4. **Handler & Phân Tách Worker ThreadPool (I/O Handoff):**
+   - Trong biến thể Doug Lea Classic Reactor kết hợp Worker Threads (mô hình hiện thực tại [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)):
+     - Luồng Reactor chỉ làm nhiệm vụ đọc dữ liệu I/O thô từ Socket vào `accumulationBuffer` và bóc tách cấu trúc khung tin (Framing).
+     - Ngay khi nhận được khung tin hoàn chỉnh, Reactor không tự xử lý mà bàn giao ngay lập tức (Non-blocking handoff qua `workerPool.submit(...)`) cho nhóm luồng công nhân Worker Pool xử lý giải mã JSON, nghiệp vụ và ghi cơ sở dữ liệu.
+
+##### 3. Sơ Đồ Kiến Trúc Chuẩn Hóa Doug Lea Classic Reactor:
+
+```mermaid
+flowchart TD
+    subgraph Clients["Tầng Khách (Client Connections)"]
+        C1["Client Connection 1"]
+        C2["Client Connection 2"]
+        Cn["Client Connection N"]
+    end
+
+    subgraph ReactorLayer["Tầng Reactor (Single Reactor Thread - Event Loop)"]
+        Demux["I/O Demultiplexer<br/>(Java NIO Selector)"]
+        EventLoop["Reactor Event Loop<br/>(selector.select -> Iterate keys)"]
+        Dispatcher{"Dispatcher<br/>(Phân loại sự kiện)"}
+        Acceptor["Acceptor<br/>- accept() SocketChannel<br/>- configureBlocking(false)<br/>- register OP_READ with ClientSession"]
+        IOReader["I/O Handler (Pha Đọc & Framing)<br/>- sc.read(accumulationBuffer)<br/>- decode(buffer) -> PacketFrames"]
+    end
+
+    subgraph WorkerLayer["Tầng Xử Lý Nghiệp Vụ (Worker ThreadPool)"]
+        TaskQueue[("Blocking Task Queue")]
+        W1["Worker Thread 1"]
+        W2["Worker Thread 2"]
+        Wn["Worker Thread N"]
+        BizLogic["Tầng Nghiệp Vụ & Dữ Liệu<br/>- RoomEventBus.handleTcpFrame()<br/>- RoomService (Chấm thi, DB PostgreSQL)"]
+    end
+
+    C1 & C2 & Cn -->|"TCP Stream (Port 9090)"| Demux
+    Demux --> EventLoop
+    EventLoop --> Dispatcher
+    Dispatcher -->|"Sự kiện OP_ACCEPT"| Acceptor
+    Dispatcher -->|"Sự kiện OP_READ"| IOReader
+    Acceptor -.->|"Đăng ký kênh mới"| Demux
+    IOReader -->|"Handoff không chặn<br/>workerPool.submit(task)"| TaskQueue
+    TaskQueue --> W1 & W2 & Wn
+    W1 & W2 & Wn --> BizLogic
 ```
 
-#### Ba Hiểm Họa Nghiêm Trọng Nếu Xử Lý DB/Nghiệp Vụ Trên Luồng Reactor:
+##### 4. Ba Hiểm Họa Nghiêm Trọng Nếu Xử Lý Nghiệp Vụ/DB Trực Tiếp Trên Luồng Reactor:
 1. **Đóng Băng Vòng Lặp Sự Kiện (Event Loop Starvation):**
    - Luồng Reactor là đơn luồng (`Single-Threaded Event Loop`). Nếu luồng này bị chặn (Block) dù chỉ 50ms để chờ truy vấn CSDL PostgreSQL hoặc chấm bài thi, toàn bộ vòng lặp sự kiện sẽ bị tê liệt.
    - Máy chủ không thể tiếp nhận kết nối mới (`handleAccept`), các gói tin `PING`, `SUBMIT_ANSWER` từ hàng trăm thí sinh khác đều bị kẹt cứng trong bộ đệm tầng Kernel.
@@ -335,6 +436,51 @@ Trong [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/
    - Worker ThreadPool chuyên biệt cho các tác vụ tính toán nặng và I/O chặn (Blocking DB), được định cấu hình số luồng bằng `Math.max(4, Runtime.getRuntime().availableProcessors() * 2)`.
 3. **Mất Khả Năng Cô Lập Lỗi (Fault Isolation):**
    - Nếu xảy ra lỗi nghiêm trọng (ví dụ `SQLException`, dữ liệu JSON lỗi) trong quá trình xử lý nộp bài của một thí sinh, ngoại lệ đó chỉ ảnh hưởng đến 1 luồng công nhân cụ thể. Luồng Reactor vẫn hoạt động bình thường, bảo vệ an toàn cho cả phòng thi.
+
+---
+
+#### B. So Sánh Đối Chuẩn 3 Mô Hình Máy Chủ Mạng TCP
+
+Để thấy rõ lý do tại sao hệ thống thi trắc nghiệm trực tuyến `mooc-clone` lựa chọn mô hình Doug Lea Classic Reactor cho phân hệ máy chủ TCP, dưới đây là phân tích đối chiếu với 2 mô hình truyền thống phổ biến:
+
+##### 1. Khái Quát 3 Mô Hình:
+* **Mô hình 1: Thread-per-Connection (Mô hình kinh điển 1 luồng / 1 kết nối):**
+  - Mỗi khi một client kết nối tới máy chủ, phương thức `serverSocket.accept()` trả về một `Socket` chặn (Blocking Socket), và máy chủ tạo mới một `Thread` độc lập (`new Thread(new ConnectionHandler(socket)).start()`) để phục vụ riêng client đó suốt vòng đời kết nối.
+* **Mô hình 2: Multi-thread Connection / Thread Pool Blocking I/O (Mô hình Thread Pool chia sẻ):**
+  - Thay vì tạo luồng vô hạn, máy chủ dùng một nhóm luồng cố định (`ExecutorService threadPool = Executors.newFixedThreadPool(M)`). Khi có kết nối mới từ `accept()`, kết nối được chuyển vào Thread Pool để xử lý. Tuy nhiên, luồng worker vẫn dùng thao tác đọc/ghi chặn (`InputStream.read()`, `OutputStream.write()`).
+* **Mô hình 3: Doug Lea Classic Reactor + Worker Pool (Mô hình của hệ thống mooc-clone):**
+  - Sử dụng 1 luồng Reactor duy nhất kết hợp `Selector` để quản lý dồn kênh I/O không chặn cho toàn bộ $N$ client kết nối, chỉ ủy quyền các tác vụ nặng cho nhóm luồng công nhân Worker Pool.
+
+##### 2. Bảng Ma Trận So Sánh Định Tính Giữa 3 Mô Hình:
+
+| Tiêu Chí Kỹ Thuật | Thread-per-Connection (1:1 Blocking) | Thread Pool Blocking I/O (M:N Pooling) | Doug Lea Classic Reactor + Worker Pool (mooc-clone) |
+| :--- | :--- | :--- | :--- |
+| **Cơ chế I/O (I/O Model)** | Blocking I/O (Đồng bộ chặn trên từng luồng) | Blocking I/O (Đồng bộ chặn trên luồng worker) | **Non-blocking I/O Multiplexing (`Selector`)** |
+| **Số luồng quản lý I/O** | Tuyến tính với số client: $N$ kết nối = $N$ luồng | Cố định theo kích thước pool: $M$ luồng ($M \ll N$) | **Cực tiểu: Đúng 1 luồng Reactor duy nhất** |
+| **Khả năng mở rộng đồng thời (Concurrency / C10K)** | Kém: Giới hạn vật lý bởi bộ nhớ OS (thường sụp đổ ở 1.000 – 3.000 luồng do cạn RAM/Stack) | Trung bình: Tối đa phục vụ đồng thời bằng đúng số luồng trong pool ($M$ kết nối tại một thời điểm) | **Xuất sắc: Dễ dàng duy trì hàng chục nghìn kết nối đồng thời với tài nguyên cực thấp** |
+| **Hành vi khi kết nối nhàn rỗi (Idle / Keep-Alive)** | **Lãng phí cực lớn:** Luồng bị block ngủ (`sleep/wait`) chờ socket nhưng vẫn chiếm dụng 1MB RAM bộ nhớ Stack | **Tê liệt pool:** Các kết nối nhàn rỗi (ví dụ thí sinh đang đọc đề thi không gửi byte nào) chiếm trọn luồng, làm cạn kiệt pool | **Tối ưu tuyệt đối:** Kết nối nhàn rỗi không tiêu tốn CPU/Thread nào; `Selector` chỉ đánh thức Reactor khi có byte thực sự đến |
+| **Chi phí chuyển ngữ cảnh (Context Switching Overhead)** | **Rất cao:** Hệ điều hành liên tục tráo đổi hàng nghìn luồng, CPU tiêu tốn chu kỳ cho quản lý luồng hơn là xử lý dữ liệu | Trung bình: Bị khống chế trong giới hạn kích thước pool $M$ luồng | **Cực thấp:** 1 luồng Reactor chạy tuần hoàn; các luồng Worker chỉ được cấp việc khi có khung tin hoàn chỉnh |
+| **Hành vi khi chịu tải đột biến (Spike Load / Overload)** | Nguy cơ tràn bộ nhớ `OutOfMemoryError: unable to create new native thread`, làm sập toàn bộ JVM | Kết nối mới bị xếp hàng đợi (`Queue`) hoặc bị từ chối; độ trễ phản hồi tăng vọt khi hàng đợi tắc nghẽn | **Chống chịu tốt:** Reactor vẫn tiếp tục `accept()` và dồn kênh trơn tru; hàng đợi công việc của Worker Pool điều tiết tải nghiệp vụ nhịp nhàng |
+| **Độ phức tạp lập trình & Debug** | **Rất thấp:** Luồng chạy tuần tự tuyến tính (`read` $\rightarrow$ `process` $\rightarrow$ `write`), stack trace rõ ràng, dễ bắt lỗi | **Thấp:** Lập trình hướng đối tượng thông thường kết hợp `Callable/Runnable` chuẩn Java | **Cao:** Phải quản lý trạng thái máy (State Machine), đệm tích lũy (`accumulationBuffer`), xử lý dính/phân mảnh gói tin |
+| **Phù hợp với kịch bản phòng thi trực tuyến** | ❌ Không phù hợp: Khi kỳ thi có hàng nghìn thí sinh đồng thời, máy chủ sẽ sập vì cạn kiệt tài nguyên luồng | ❌ Không tối ưu: Đa số thời gian thí sinh chỉ ngồi suy nghĩ (kết nối nhàn rỗi), chiếm giữ luồng vô ích | **✅ Lý tưởng:** Hỗ trợ duy trì hàng nghìn kết nối thi cử liên tục, độ trễ đếm giờ/bắt đầu thi gần như bằng 0 |
+
+##### 3. Đánh Giá Ưu - Nhược Điểm & Phạm Vi Ứng Dụng Thực Tế:
+
+1. **Thread-per-Connection:**
+   * *Ưu điểm:* Mã nguồn đơn giản nhất, luồng xử lý tuần tự trực giác, cấu trúc ngoại lệ dễ dò tìm.
+   * *Nhược điểm:* Khả năng mở rộng cực kém do rào cản chi phí luồng hệ điều hành (Thread Stack thường từ 512KB đến 1MB). Khi vượt ngưỡng 2.000 luồng, chi phí Context Switching làm suy kiệt CPU.
+   * *Phạm vi phù hợp:* Ứng dụng mạng nội bộ doanh nghiệp nhỏ, các tiện ích dòng lệnh CLI đơn giản, hệ thống thử nghiệm với số lượng người dùng đồng thời dưới 100 kết nối.
+
+2. **Thread Pool Blocking I/O (Multi-thread Connection):**
+   * *Ưu điểm:* Khống chế được trần tiêu thụ tài nguyên tối đa (Bounded Threads), bảo vệ hệ điều hành không bị cạn bộ nhớ.
+   * *Nhược điểm:* Vấn đề cốt tử là **Blocking I/O Head-of-Line Blocking**: Khi $M$ luồng trong pool đều đang bị block bởi các socket gửi chậm (Slow Client) hoặc socket nhàn rỗi, toàn bộ hệ thống bị nghẽn (Thread Starvation), các kết nối mới hoặc các gói tin quan trọng không còn luồng để phục vụ.
+   * *Phạm vi phù hợp:* Các dịch vụ có thời gian mỗi phiên giao dịch cực ngắn (ví dụ HTTP REST API ngắn hạn kiểu Servlet truyền thống), nơi các request hoàn tất nhanh và giải phóng luồng ngay. Không phù hợp với kết nối duy trì lâu dài (Long-lived Persistent Connections) như phòng thi hay trò chơi trực tuyến.
+
+3. **Doug Lea Classic Reactor + Worker Pool (Kiến trúc mooc-clone):**
+   * *Ưu điểm:* Phân tách triệt để giữa tầng I/O và tầng tính toán nghiệp vụ. Đạt thông lượng I/O tối đa nhờ cơ chế dồn kênh của hệ điều hành (`epoll` trên Linux, `kqueue` trên macOS, I/O Completion Port trên Windows). Duy trì được số lượng lớn kết nối mở mà không bị lãng phí bộ nhớ luồng.
+   * *Nhược điểm:* Đòi hỏi kiến trúc mã nguồn phức tạp hơn: lập trình viên phải tự xử lý việc ghép mảnh byte dữ liệu (Packet Framing), quản lý bộ đệm trạng thái cho từng phiên (`ClientSession`), và đảm bảo an toàn đa luồng khi ghi ngược dữ liệu ra socket (`synchronized(channel)`).
+   * *Phạm vi phù hợp:* Các hệ thống thời gian thực tải cao, hệ thống thi cử, streaming, chat, cổng API Gateway (nền tảng của các giải pháp công nghiệp như Netty, Vert.x, Node.js, Nginx).
+
 
 ### 5.2. Đồng Bộ Hóa Khi Ghi Socket & Bài Toán Khách Chậm (Slow Consumer)
 1. **Ngăn Ngừa Xen Kẽ Khung Dữ Liệu (Interleaved Frames):**
@@ -378,15 +524,52 @@ Khi thí sinh cố tình mở đồng thời cả giao diện Web (cổng 8080) 
 3. **Chính Sách Chống Thi Hộ & Can Thiệp Kép (Single Active Session Policy):**
    - Nếu phát hiện cùng một `userId` đã kết nối từ một kênh trước đó, hệ thống ghi log cảnh báo và có thể chủ động ngắt phiên kết nối cũ (`disconnect`) trước khi chấp nhận phiên kết nối mới, ngăn chặn hành vi một người làm bài trên Web trong khi một script tự động gửi đáp án qua cổng TCP.
 
+### 5.5. Đối Chiếu Hiện Thực Doug Lea Classic Reactor Giữa Java NIO (`server/`) Và POSIX C11 `epoll` (`server-c/`)
+
+Bên cạnh phân hệ máy chủ Java NIO (`server/`), kho lưu trữ còn cung cấp phân hệ đối chiếu chuẩn mực bằng ngôn ngữ C thuần túy tại [server-c/README.md](../../server-c/README.md) nhằm minh họa trực tiếp cách các thành phần của **Doug Lea Classic Reactor Pattern** ánh xạ xuống tầng nhân hệ điều hành Linux (POSIX System Calls):
+
+| Thành Phần Kiến Trúc | Phân Hệ Java NIO (`server/`) | Phân Hệ POSIX C11 (`server-c/`) |
+| :--- | :--- | :--- |
+| **I/O Demultiplexer** | `java.nio.channels.Selector` (`selector.select()`) | Linux `epoll` (`epoll_create1`, `epoll_ctl`, `epoll_wait`) |
+| **Chế độ Kích hoạt Sự kiện** | Level-Triggered (`SelectionKey.OP_READ`) | Edge-Triggered + One-Shot (`EPOLLIN \| EPOLLET \| EPOLLONESHOT`) |
+| **Acceptor Không Chặn** | `ServerSocketChannel.accept()` + `configureBlocking(false)` | `accept4(..., SOCK_NONBLOCK)` hoặc `fcntl(fd, F_SETFL, O_NONBLOCK)` |
+| **Bộ Đệm Tích Lũy Phiên** | `ClientSession` chứa `ByteBuffer accumulationBuffer` (64KB) | `client_session_t` chứa `accumulation_buffer[32768]` + Doubly-Linked List |
+| **Bộ Giải Mã Khung Tin** | [PacketFramingDecoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingDecoder.java) (8-byte Binary Framing) | [http_parser.c](../../server-c/src/http_parser.c) (Incremental Stateful HTTP/1.1 FSM Parser) |
+| **Chống Dính Gói (Sticky)** | Vòng lặp `while (buffer.remaining() >= HEADER_SIZE)` + `compact()` | **Sequential Per-Session Drain** + `memmove()` trên Worker Thread |
+| **Worker ThreadPool** | `ExecutorService` (`Executors.newFixedThreadPool`) | [thread_pool.c](../../server-c/src/thread_pool.c) (`pthread_mutex_t` + `pthread_cond_t` queue) |
+| **Kho Lưu Trữ Đồng Thời** | `ConcurrentHashMap` + PostgreSQL 14+ | [in_memory_store.c](../../server-c/src/in_memory_store.c) (`pthread_rwlock_t` Read-Write Lock) |
+
+---
+
+### 5.6. Giải Pháp Thay Thế WebSocket Trên Web: HTTP Short Polling + Server Authoritative Timestamp (100% Stateless REST)
+
+Để triệt tiêu hoàn toàn độ phức tạp của việc quản lý phiên WebSocket stateful trên trình duyệt mà vẫn đảm bảo tính công bằng thời gian thực cho phòng thi trực tuyến, hệ thống áp dụng kiến trúc **HTTP Short Polling kết hợp Server Authoritative Timestamp (Đồng hồ chuẩn máy chủ)**:
+
+1. **Adaptive Short Polling Trên Trình Duyệt ([useRoomsQuery.ts](../../client/src/hooks/queries/useRoomsQuery.ts)):**
+   - Khi phòng ở trạng thái `WAITING`: TanStack Query tự động lấy mẫu (`refetchInterval`) mỗi **`2000ms` (2 giây)** để bắt sự kiện Giáo viên phát lệnh bắt đầu thi.
+   - Khi phòng ở trạng thái `RUNNING`: Chu kỳ lấy mẫu giãn ra **`3000ms` (3 giây)** để phát hiện sự kiện đóng phòng sớm, kết hợp đồng hồ nội suy 1 giây ở Client.
+   - Khi phòng chuyển sang `ENDED` hoặc `CANCELLED`: Tự động trả về `refetchInterval: false`, ngắt hoàn toàn Polling để giải phóng băng thông.
+
+2. **Toán Học Đồng Bộ Thời Gian Chống Gian Lận ([examStore.ts](../../client/src/stores/examStore.ts)):**
+   - Mỗi bản tin phản hồi chi tiết phòng thi từ Server ([RoomDetailResponse.java](../src/main/java/com/example/server/dto/room/RoomDetailResponse.java) hoặc `/api/v1/rooms/:code/state` trên `server-c/`) luôn đính kèm mốc giờ chuẩn của máy chủ `serverNow` ($T_{\text{serverNow}}$) và hạn nộp bài `endsAt` ($T_{\text{endsAt}}$).
+   - Client tính độ lệch đồng hồ $\Delta t = T_{\text{serverNow}} - T_{\text{clientNow}}$ và suy diễn thời gian còn lại mỗi giây:
+     $$\text{remainingSeconds} = \max\left(0, \left\lfloor \frac{T_{\text{endsAt}} - (\text{Date.now()} + \Delta t)}{1000} \right\rfloor\right)$$
+   - Công thức này giúp đồng hồ đếm ngược miễn nhiễm hoàn toàn với hành vi thí sinh chỉnh lùi giờ hệ điều hành cũng như hiện tượng trình duyệt đóng băng `setInterval` khi chuyển tab ngầm.
+
+3. **Lazy State Transition & Grace Period (2s) Trên Máy Chủ ([RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java) & [in_memory_store.c](../../server-c/src/in_memory_store.c)):**
+   - Máy chủ không cần duy trì bất kỳ luồng Timer (`ScheduledExecutorService` hay `timerfd`) chạy ngầm nào cho từng phòng thi.
+   - Ngay khi có bất kỳ request `GET` trạng thái phòng hoặc `POST` nộp bài chạm mốc $T_{\text{serverNow}} \ge T_{\text{endsAt}}$, máy chủ tự động chuyển trạng thái phòng từ `RUNNING` sang `ENDED` (**Lazy Evaluation**) và từ chối mọi thao tác nộp đáp án vượt quá cửa sổ ân hạn mạng **2 giây (Grace Period)**.
+
 ---
 
 ## 6. Liên Kết Đối Chiếu
 
-- Mã nguồn Bộ điều phối trung tâm: [RoomEventBus.java](../src/main/java/com/example/server/socket/RoomEventBus.java)
-- Máy chủ Classic Reactor NIO: [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)
-- Cổng tiếp nhận WebSocket: [ExamWebSocketHandler.java](../src/main/java/com/example/server/socket/gateway/ExamWebSocketHandler.java) & [WebSocketConfig.java](../src/main/java/com/example/server/socket/gateway/WebSocketConfig.java)
+- Mã nguồn Bộ điều phối trung tâm TCP NIO: [RoomEventBus.java](../src/main/java/com/example/server/socket/RoomEventBus.java)
+- Máy chủ Classic Reactor NIO (Java): [NioClassicReactorServer.java](../src/main/java/com/example/server/socket/core/NioClassicReactorServer.java)
+- Máy chủ Classic Reactor `epoll` (POSIX C11): [reactor.c](../../server-c/src/reactor.c) & [server-c/README.md](../../server-c/README.md)
+- Cổng REST Phòng thi & Đồng hồ chuẩn (Spring Boot): [ExamRoomController.java](../src/main/java/com/example/server/controller/ExamRoomController.java) & [RoomServiceImpl.java](../src/main/java/com/example/server/service/impl/RoomServiceImpl.java)
 - Bộ giải mã và mã hóa nhị phân: [PacketFramingDecoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingDecoder.java) & [PacketFramingEncoder.java](../src/main/java/com/example/server/socket/protocol/PacketFramingEncoder.java)
 - Danh mục Opcode giao thức: [ProtocolConstants.java](../src/main/java/com/example/server/socket/protocol/ProtocolConstants.java)
-- Dịch vụ WebSocket phía Client (React 19): [socket.service.ts](../../client/src/services/socket.service.ts)
+- Engine Adaptive Short Polling & Clock-Offset phía Client (React 19): [useRoomsQuery.ts](../../client/src/hooks/queries/useRoomsQuery.ts) & [examStore.ts](../../client/src/stores/examStore.ts)
 - Quy chuẩn lập trình chi tiết: [CONVENTIONS.md](../CONVENTIONS.md)
 - Cẩm nang xây dựng Custom API kết nối thời gian thực: [CUSTOM_API_GUIDE.md](ai-guides/CUSTOM_API_GUIDE.md)

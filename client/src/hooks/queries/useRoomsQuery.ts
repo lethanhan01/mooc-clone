@@ -1,7 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { roomService } from '@/services/room.service'
-import type { CreateRoomRequest, UpdateRoomRequest } from '@/types'
+import type { CreateRoomRequest, RoomStatus, UpdateRoomRequest } from '@/types'
+
+/**
+ * Tính chu kỳ Adaptive Short Polling theo trạng thái phòng thi:
+ * - WAITING: 2000ms (2 giây) để bắt lệnh Bắt đầu phòng thi nhanh.
+ * - RUNNING: 3000ms (3 giây) kết hợp đồng hồ nội suy Clock-Offset 1 giây ở Client.
+ * - ENDED / CANCELLED: false (tự động ngắt Polling để giải phóng tài nguyên).
+ */
+export function computeAdaptiveRoomPollingInterval(status?: RoomStatus | string | null): number | false {
+  if (!status) return false
+  const normalized = status.toUpperCase()
+  if (normalized === 'WAITING') return 2000
+  if (normalized === 'RUNNING' || status === 'in_progress') return 3000
+  return false
+}
 
 export function useRoomsListQuery() {
   return useQuery({
@@ -10,11 +24,16 @@ export function useRoomsListQuery() {
   })
 }
 
-export function useRoomDetailQuery(roomCode: string) {
+export function useRoomDetailQuery(roomCode: string, options?: { polling?: boolean }) {
+  const enablePolling = options?.polling ?? true
   return useQuery({
     queryKey: queryKeys.rooms.detail(roomCode),
     queryFn: () => roomService.getRoomDetail(roomCode),
     enabled: Boolean(roomCode),
+    refetchInterval: enablePolling
+      ? (query) => computeAdaptiveRoomPollingInterval(query.state.data?.status)
+      : false,
+    refetchIntervalInBackground: false,
   })
 }
 

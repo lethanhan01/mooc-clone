@@ -48,6 +48,8 @@ export default function StudentWaitingRoomPage() {
         attemptId: attempt.attemptId,
         roomCode: room!.roomCode,
         durationSeconds: room!.durationSeconds,
+        endsAt: room!.endsAt,
+        serverNow: room!.serverNow,
       })
       toast.success('Bắt đầu làm bài thi chính thức')
       navigate(`/student/rooms/${room!.roomCode}/exam`)

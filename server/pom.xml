@@ -12,7 +12,7 @@
 	<artifactId>server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>server</name>
-	<description>Online Exam NIO and WebSocket Server</description>
+	<description>Online Exam NIO and Stateless REST Polling Server</description>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
@@ -24,10 +24,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

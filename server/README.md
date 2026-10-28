@@ -1,7 +1,7 @@
 # Phân Hệ Máy Chủ Thi Trắc Nghiệm Trực Tuyến Backend (`server/`)
 
 > **Học phần:** Lập trình Mạng (IT4062) — Hệ sinh thái `mooc-clone`  
-> **Kiến trúc:** Pure Layered Architecture (Phân tầng thuần khiết) kết hợp Phân hệ Mạng Song song Kép (NIO Reactor TCP 9090 & WebSocket Gateway 8080)  
+> **Kiến trúc:** Pure Layered Architecture (Phân tầng thuần khiết) kết hợp Phân hệ Mạng Kép (NIO Reactor TCP 9090 & Stateless REST Short Polling 8080)  
 > **Công nghệ Nền tảng:** Java 21 LTS, Spring Boot 3.4.3, Spring Data JPA, Spring Security 6, SpringDoc OpenAPI 3, PostgreSQL 14+ (Supabase)
 
 ---
@@ -29,7 +29,7 @@ Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân
 | **AI Guides**   | [API_GENERATION_GUIDE.md](docs/ai-guides/API_GENERATION_GUIDE.md)   | Cẩm nang tạo CRUD API kế thừa Bộ ba Generic (`BaseController`, `BaseServiceImpl`, DTO Records)        |
 | **AI Guides**   | [CUSTOM_API_GUIDE.md](docs/ai-guides/CUSTOM_API_GUIDE.md)           | Cẩm nang tạo Custom API độc lập: Máy trạng thái, Chấm điểm, Đa Repo, Bắn sự kiện thời gian thực       |
 | **Chuyên Đề**   | [database-architecture.md](docs/database-architecture.md)           | Kiến trúc CSDL Chuẩn 3NF, Sơ đồ Mermaid ERD 9 bảng cốt lõi và 5 Dynamic Views tính điểm tức thì       |
-| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng kép: Non-blocking TCP Reactor 9090 (Khung nhị phân 8-byte, 12+ Opcodes) & WebSocket 8080 |
+| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng kép: Non-blocking TCP Reactor 9090 (Khung nhị phân 8-byte, 12+ Opcodes) & REST Polling 8080 |
 | **Chuyên Đề**   | [security-architecture.md](docs/security-architecture.md)           | Cơ chế bảo mật Opaque Session Token SHA-256, Bộ lọc Filter và 4 nguyên tắc chống gian lận bài thi     |
 | **Chuyên Đề**   | [api-specification.md](docs/api-specification.md)                   | Đặc tả RESTful API, Chuẩn hóa `ApiResponse<T>`, Bảng mã lỗi `ErrorCode` và Hướng dẫn Swagger UI       |
 | **Quy Chuẩn**   | [CONVENTIONS.md](CONVENTIONS.md)                                    | Quy chuẩn Lập trình Socket NIO Java (Thao tác ByteBuffer, Thread-safe writes, SLF4J, Test Socket)     |
@@ -47,7 +47,7 @@ Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân
 | **Cơ sở Dữ liệu**    | PostgreSQL Cloud (Supabase)                   | **14+ / 17**         | Lưu trữ quan hệ chuẩn 3NF, JSONB metadata, Network INET, Session Token Hash |
 | **Bảo mật**          | Spring Security                               | **6.4.3**            | Pipeline xác thực Session Token SHA-256, Stateless SecurityContext          |
 | **Mạng TCP**         | Java NIO (Channels, Selector, Buffers)        | **Java 21 Built-in** | Máy chủ TCP Non-blocking Classic Reactor Pattern (Cổng 9090)                |
-| **Mạng WebSocket**   | Spring WebSocket (TextHandler)                | **3.4.3**            | Cổng giao tiếp thời gian thực cho React SPA (Cổng 8080, `/ws/exam`)         |
+| **Đồng bộ Phòng thi**| Stateless REST + Server Authoritative Clock   | **3.4.3**            | Đồng bộ trạng thái phòng thi & thời gian chuẩn (`serverNow`, `endsAt`)      |
 | **Validation**       | Jakarta Bean Validation (Hibernate Validator) | **3.1.3**            | Kiểm tra tính hợp lệ dữ liệu đầu vào DTO (`@NotNull`, `@Size`, v.v.)        |
 | **Tài liệu API**     | SpringDoc OpenAPI Starter WebMVC              | **2.8.5**            | Tự động sinh Swagger UI và đặc tả OpenAPI 3 tương tác trực tiếp             |
 | **Build Tool**       | Apache Maven Wrapper (`mvnw`)                 | **3.9.x**            | Quản lý vòng đời dự án, biên dịch, kiểm thử tự động                         |
@@ -71,7 +71,7 @@ Thông số vận hành được nạp từ [src/main/resources/application.prop
 
 | Tên Biến Môi trường | Giá trị Mặc định | Bắt buộc | Ý nghĩa Kỹ thuật |
 | :--- | :--- | :--- | :--- |
-| `SERVER_PORT` | `8080` | Không | Cổng dịch vụ HTTP REST API và WebSocket Gateway |
+| `SERVER_PORT` | `8080` | Không | Cổng dịch vụ HTTP REST API & Short Polling |
 | `TCP_PORT` | `9090` | Không | Cổng lắng nghe Non-blocking TCP Socket Reactor |
 | `DB_URL` | `jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require` | Không (đã có mặc định) | JDBC URL kết nối tới Transaction Pooler PostgreSQL của Supabase |
 | `DB_USERNAME` | `postgres.sijjqpfyxccrswiqthxn` | Không (đã có mặc định) | Tên người dùng CSDL Supabase |
@@ -126,7 +126,7 @@ Tomcat started on port 8080 (http) with context path '/'
 Started ServerApplication in X.XXX seconds
 ```
 
-- **Cổng 8080 (HTTP & WebSocket):** Tiếp nhận RESTful API và Spring WebSocket (`/ws/exam`).
+- **Cổng 8080 (HTTP / Stateless REST):** Tiếp nhận RESTful API và Adaptive Short Polling với đồng hồ chuẩn `serverNow`.
 - **Cổng 9090 (TCP Socket):** Tiếp nhận kết nối mạng nhị phân Reactor.
 - **Swagger UI Trực Quan:** Truy cập tại [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) để kiểm tra danh mục API.
 - **OpenAPI 3 JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
@@ -192,13 +192,11 @@ Mã nguồn `server/` tuân thủ nguyên tắc một chiều nghiêm ngặt:
 ```mermaid
 graph TD
     Client["Client (React SPA Web / TCP Tester)"]
-    Client -->|"HTTP / REST (8080)"| Controller["Controller Layer (@RestController)"]
-    Client -->|"WebSocket /ws/exam (8080)"| WsGateway["ExamWebSocketHandler"]
+    Client -->|"HTTP / REST + Short Polling (8080)"| Controller["Controller Layer (@RestController)"]
     Client -->|"Raw TCP Binary (9090)"| Reactor["NioClassicReactorServer"]
 
-    Controller -->|"DTO Records"| Service["Service Layer (@Service)"]
-    WsGateway -->|"Events"| EventBus["RoomEventBus"]
-    Reactor -->|"Opcode Frames"| EventBus
+    Controller -->|"DTO Records (serverNow, endsAt)"| Service["Service Layer (@Service)"]
+    Reactor -->|"Opcode Frames"| EventBus["RoomEventBus"]
     EventBus -->|"Room State"| Service
 
     Service -->|"Entities"| Repository["Repository Layer (Spring Data JPA)"]
@@ -220,9 +218,9 @@ graph TD
 Hệ thống loại bỏ hoàn toàn dữ liệu phái sinh dư thừa, quản lý quan hệ thi cử qua 9 bảng cốt lõi và tính điểm tức thì qua 5 Khung nhìn nghiệp vụ (`v_attempt_results`, `v_room_list`, `v_room_results`, `v_user_statistics`, `v_user_topic_performance`).  
 👉 _Xem chi tiết:_ [docs/database-architecture.md](docs/database-architecture.md) | [online_exam_schema.sql](online_exam_schema.sql) | [online_exam_seed_data.sql](online_exam_seed_data.sql)
 
-### 5.2. Phân Hệ Mạng Song Song Kép (TCP 9090 & WebSocket 8080)
+### 5.2. Phân Hệ Mạng Kép (TCP 9090 & Stateless REST Short Polling 8080)
 
-Hệ thống vận hành đồng thời kênh Non-blocking TCP Socket 9090 với giao thức đóng khung nhị phân 8-byte (Magic, Opcode, Length, Payload, Checksum) và WebSocket 8080 (`/ws/exam`), đồng bộ hóa qua trạm sự kiện luồng an toàn `RoomEventBus`.  
+Hệ thống vận hành đồng thời kênh Non-blocking TCP Socket 9090 với giao thức đóng khung nhị phân 8-byte (Magic, Opcode, Length, Payload, Checksum) và kênh HTTP Short Polling + Server Authoritative Timestamp (`serverNow`, `endsAt`, Lazy State Transition) trên cổng 8080.  
 👉 _Xem chi tiết:_ [docs/realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | [CONVENTIONS.md](CONVENTIONS.md)
 
 ### 5.3. Bảo Mật Session Token SHA-256 & Chống Gian Lận Đề Thi
@@ -251,7 +249,7 @@ Bảo mật máy chủ bằng Opaque Session Token (64 hex characters) lưu băm
 ### Bộ Ba Kiểm Tra Toàn Vẹn Bắt Buộc Trước Khi Commit:
 
 ```bash
-# 1. Kiểm tra mã nguồn Java và thực thi 12/12 test suites Backend
+# 1. Kiểm tra mã nguồn Java và thực thi test suites Backend
 .\mvnw.cmd test
 
 # 2. Kiểm tra tính toàn vẹn tài liệu Markdown & Link Paths (0 link gãy)
