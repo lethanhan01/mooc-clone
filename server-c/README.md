@@ -36,9 +36,9 @@ flowchart TD
 
     C1 & C2 & Cn --> EpollDemux
     EpollDemux --> ReactorLoop
-    ReactorLoop -->|Event fd == listen_fd| Acceptor
-    ReactorLoop -->|Event fd == client_fd & EPOLLIN| IOReader
-    Acceptor -->|Register new client_fd| EpollDemux
+    ReactorLoop -->|Event fd == listen_socket| Acceptor
+    ReactorLoop -->|Event fd == client_socket & EPOLLIN| IOReader
+    Acceptor -->|Register new client_socket| EpollDemux
     IOReader -->|Đóng gói khung tin hoàn chỉnh| TaskQueue
     TaskQueue --> W1 & W2 & Wn
     W1 & W2 & Wn --> RespWrite
@@ -85,16 +85,19 @@ Dự án cung cấp `Makefile` thuận tiện hỗ trợ biên dịch tự độ
 # Di chuyển vào thư mục server-c
 cd server-c
 
-# 1. Biên dịch toàn bộ các binaries (http_server, tcp_echo_server, unit_tests)
+# 1. Kiểm tra tuân thủ quy chuẩn CONVENTIONS.md (<= 100 ký tự/dòng, 0 tabs, Doxygen)
+make lint
+
+# 2. Biên dịch toàn bộ các binaries (http_server, tcp_echo_server, unit_tests)
 make build
 
-# 2. Chạy toàn bộ Unit Tests (Socket, FSM Parser, Router, In-Memory Store)
+# 3. Chạy toàn bộ Unit Tests (Socket, FSM Parser, Router, In-Memory Store)
 make test
 
-# 3. Kiểm tra rò rỉ bộ nhớ chuyên sâu với Valgrind (hoặc ASan)
+# 4. Kiểm tra rò rỉ bộ nhớ chuyên sâu với Valgrind (hoặc ASan)
 make memcheck
 
-# 4. Dọn dẹp các tệp build
+# 5. Dọn dẹp các tệp build
 make clean
 ```
 

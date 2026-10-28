@@ -4,12 +4,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+/**
+ * @brief Vòng lặp chính của mỗi luồng công nhân (Worker Thread) trong Thread Pool.
+ *
+ * Luồng ngủ chờ trên biến điều kiện (notify) cho tới khi có tác vụ mới trong hàng đợi
+ * hoặc nhận tín hiệu shutdown từ tiến trình chính.
+ *
+ * @param[in] arg Con trỏ tới cấu trúc thread_pool_t.
+ * @return void* Luôn trả về NULL khi luồng kết thúc.
+ */
 static void *worker_thread_func(void *arg) {
     thread_pool_t *pool = (thread_pool_t *)arg;
 
     while (1) {
         pthread_mutex_lock(&pool->lock);
 
+        // Sử dụng vòng lặp while thay vì if để bảo vệ trước hiện tượng đánh thức giả
+        // (Spurious Wakeup) của pthread_cond_wait trên nhân POSIX.
         while (pool->queue_size == 0 && !pool->shutdown) {
             pthread_cond_wait(&pool->notify, &pool->lock);
         }
@@ -42,10 +53,14 @@ static void *worker_thread_func(void *arg) {
 }
 
 thread_pool_t *thread_pool_create(size_t num_threads) {
-    if (num_threads == 0) num_threads = 4;
+    if (num_threads == 0) {
+        num_threads = DEFAULT_THREAD_POOL_SIZE;
+    }
 
     thread_pool_t *pool = (thread_pool_t *)calloc(1, sizeof(thread_pool_t));
-    if (!pool) return NULL;
+    if (!pool) {
+        return NULL;
+    }
 
     pool->thread_count = num_threads;
     pool->shutdown = false;
@@ -75,10 +90,14 @@ thread_pool_t *thread_pool_create(size_t num_threads) {
 }
 
 int thread_pool_submit(thread_pool_t *pool, task_func_t func, void *arg) {
-    if (!pool || !func) return -1;
+    if (!pool || !func) {
+        return -1;
+    }
 
     task_t *task = (task_t *)malloc(sizeof(task_t));
-    if (!task) return -1;
+    if (!task) {
+        return -1;
+    }
     task->function = func;
     task->argument = arg;
     task->next = NULL;
@@ -106,7 +125,9 @@ int thread_pool_submit(thread_pool_t *pool, task_func_t func, void *arg) {
 }
 
 void thread_pool_shutdown(thread_pool_t *pool) {
-    if (!pool) return;
+    if (!pool) {
+        return;
+    }
 
     pthread_mutex_lock(&pool->lock);
     if (pool->shutdown) {
@@ -123,7 +144,9 @@ void thread_pool_shutdown(thread_pool_t *pool) {
 }
 
 void thread_pool_destroy(thread_pool_t *pool) {
-    if (!pool) return;
+    if (!pool) {
+        return;
+    }
 
     thread_pool_shutdown(pool);
 

@@ -87,21 +87,25 @@ void handle_create_exam(const http_request_t *req, http_response_t *res) {
 
     exam_entity_t new_exam;
     memset(&new_exam, 0, sizeof(new_exam));
-    strncpy(new_exam.title, title_item->valuestring, sizeof(new_exam.title) - 1);
+    strncpy(new_exam.title,
+            title_item->valuestring,
+            sizeof(new_exam.title) - 1);
 
     cJSON *desc_item = cJSON_GetObjectItemCaseSensitive(json, "description");
     if (cJSON_IsString(desc_item) && desc_item->valuestring != NULL) {
-        strncpy(new_exam.description, desc_item->valuestring, sizeof(new_exam.description) - 1);
+        strncpy(new_exam.description,
+                desc_item->valuestring,
+                sizeof(new_exam.description) - 1);
     }
 
     cJSON *dur_item = cJSON_GetObjectItemCaseSensitive(json, "duration_minutes");
     if (cJSON_IsNumber(dur_item)) {
         new_exam.duration_minutes = dur_item->valueint;
     } else {
-        new_exam.duration_minutes = 45;
+        new_exam.duration_minutes = DEFAULT_EXAM_DURATION_MIN;
     }
 
-    char created_id[36] = {0};
+    char created_id[MAX_ID_LEN] = {0};
     if (store_create_exam(g_store, &new_exam, created_id, sizeof(created_id)) != 0) {
         cJSON_Delete(json);
         http_response_init(res, HTTP_STATUS_INTERNAL_ERROR);
@@ -190,7 +194,9 @@ void handle_update_exam(const http_request_t *req, http_response_t *res) {
 
     cJSON *desc = cJSON_GetObjectItemCaseSensitive(json, "description");
     if (cJSON_IsString(desc) && desc->valuestring) {
-        strncpy(update_data.description, desc->valuestring, sizeof(update_data.description) - 1);
+        strncpy(update_data.description,
+                desc->valuestring,
+                sizeof(update_data.description) - 1);
     }
 
     cJSON *dur = cJSON_GetObjectItemCaseSensitive(json, "duration_minutes");
@@ -253,17 +259,19 @@ void handle_get_exam_questions(const http_request_t *req, http_response_t *res) 
     cJSON *arr = cJSON_CreateArray();
 
     for (int i = 0; i < count; i++) {
-        cJSON *q = cJSON_CreateObject();
-        cJSON_AddStringToObject(q, "id", questions[i].id);
-        cJSON_AddStringToObject(q, "exam_id", questions[i].exam_id);
-        cJSON_AddStringToObject(q, "content", questions[i].content);
+        cJSON *question_obj = cJSON_CreateObject();
+        cJSON_AddStringToObject(question_obj, "id", questions[i].id);
+        cJSON_AddStringToObject(question_obj, "exam_id", questions[i].exam_id);
+        cJSON_AddStringToObject(question_obj, "content", questions[i].content);
         cJSON *opts = cJSON_CreateArray();
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < QUESTION_OPTION_COUNT; j++) {
             cJSON_AddItemToArray(opts, cJSON_CreateString(questions[i].options[j]));
         }
-        cJSON_AddItemToObject(q, "options", opts);
-        cJSON_AddNumberToObject(q, "correct_option", questions[i].correct_option);
-        cJSON_AddItemToArray(arr, q);
+        cJSON_AddItemToObject(question_obj, "options", opts);
+        cJSON_AddNumberToObject(question_obj,
+                                "correct_option",
+                                questions[i].correct_option);
+        cJSON_AddItemToArray(arr, question_obj);
     }
 
     char *json_str = cJSON_PrintUnformatted(arr);
@@ -301,18 +309,24 @@ void handle_create_question(const http_request_t *req, http_response_t *res) {
         return;
     }
 
-    question_entity_t new_q;
-    memset(&new_q, 0, sizeof(new_q));
-    strncpy(new_q.exam_id, id, sizeof(new_q.exam_id) - 1);
-    strncpy(new_q.content, content->valuestring, sizeof(new_q.content) - 1);
+    question_entity_t new_question;
+    memset(&new_question, 0, sizeof(new_question));
+    strncpy(new_question.exam_id, id, sizeof(new_question.exam_id) - 1);
+    strncpy(new_question.content,
+            content->valuestring,
+            sizeof(new_question.content) - 1);
 
     cJSON *opts = cJSON_GetObjectItemCaseSensitive(json, "options");
     if (cJSON_IsArray(opts)) {
         int opt_idx = 0;
         cJSON *elem = NULL;
         cJSON_ArrayForEach(elem, opts) {
-            if (opt_idx < 4 && cJSON_IsString(elem) && elem->valuestring) {
-                strncpy(new_q.options[opt_idx], elem->valuestring, sizeof(new_q.options[0]) - 1);
+            if (opt_idx < QUESTION_OPTION_COUNT &&
+                cJSON_IsString(elem) &&
+                elem->valuestring) {
+                strncpy(new_question.options[opt_idx],
+                        elem->valuestring,
+                        sizeof(new_question.options[0]) - 1);
                 opt_idx++;
             }
         }
@@ -320,14 +334,19 @@ void handle_create_question(const http_request_t *req, http_response_t *res) {
 
     cJSON *correct = cJSON_GetObjectItemCaseSensitive(json, "correct_option");
     if (cJSON_IsNumber(correct)) {
-        new_q.correct_option = correct->valueint;
+        new_question.correct_option = correct->valueint;
     }
 
-    char created_id[36] = {0};
-    if (store_create_question(g_store, &new_q, created_id, sizeof(created_id)) != 0) {
+    char created_id[MAX_ID_LEN] = {0};
+    if (store_create_question(g_store,
+                              &new_question,
+                              created_id,
+                              sizeof(created_id)) != 0) {
         cJSON_Delete(json);
         http_response_init(res, HTTP_STATUS_NOT_FOUND);
-        http_response_set_body_json(res, "{\"error\":\"Exam not found to attach question\"}");
+        http_response_set_body_json(
+            res,
+            "{\"error\":\"Exam not found to attach question\"}");
         return;
     }
 
@@ -336,8 +355,8 @@ void handle_create_question(const http_request_t *req, http_response_t *res) {
     http_response_init(res, HTTP_STATUS_CREATED);
     cJSON *resp_obj = cJSON_CreateObject();
     cJSON_AddStringToObject(resp_obj, "id", created_id);
-    cJSON_AddStringToObject(resp_obj, "exam_id", new_q.exam_id);
-    cJSON_AddStringToObject(resp_obj, "content", new_q.content);
+    cJSON_AddStringToObject(resp_obj, "exam_id", new_question.exam_id);
+    cJSON_AddStringToObject(resp_obj, "content", new_question.content);
 
     char *json_str = cJSON_PrintUnformatted(resp_obj);
     http_response_set_body_json(res, json_str);
@@ -346,6 +365,16 @@ void handle_create_question(const http_request_t *req, http_response_t *res) {
     cJSON_Delete(resp_obj);
 }
 
+/**
+ * @brief Chuyển đổi cấu trúc exam_room_t sang đối tượng JSON kèm đồng hồ chuẩn server_now_ms.
+ *
+ * Việc đính kèm server_now_ms và ends_at_ms giúp Client tính độ lệch đồng hồ (clock_offset)
+ * và hiển thị bộ đếm ngược chính xác qua HTTP Short Polling mà không cần WebSocket.
+ *
+ * @param[in] room          Con trỏ tới thực thể phòng thi.
+ * @param[in] server_now_ms Mốc thời gian chuẩn hiện tại của máy chủ (ms).
+ * @return cJSON* Đối tượng JSON biểu diễn trạng thái phòng thi (người gọi cJSON_Delete()).
+ */
 static cJSON *room_to_cjson(const exam_room_t *room, int64_t server_now_ms) {
     cJSON *obj = cJSON_CreateObject();
     cJSON_AddStringToObject(obj, "id", room->id);
@@ -362,7 +391,7 @@ static cJSON *room_to_cjson(const exam_room_t *room, int64_t server_now_ms) {
     int remaining_sec = room->duration_seconds;
     if (room->status == ROOM_STATUS_RUNNING && room->ends_at_ms > 0) {
         int64_t diff_ms = room->ends_at_ms - server_now_ms;
-        remaining_sec = diff_ms > 0 ? (int)(diff_ms / 1000LL) : 0;
+        remaining_sec = diff_ms > 0 ? (int)(diff_ms / MS_PER_SECOND) : 0;
     } else if (room->status == ROOM_STATUS_ENDED) {
         remaining_sec = 0;
     }
@@ -424,7 +453,9 @@ void handle_create_room(const http_request_t *req, http_response_t *res) {
     }
 
     cJSON *code_item = cJSON_GetObjectItemCaseSensitive(json, "room_code");
-    if (!cJSON_IsString(code_item) || !code_item->valuestring || code_item->valuestring[0] == '\0') {
+    if (!cJSON_IsString(code_item) ||
+        !code_item->valuestring ||
+        code_item->valuestring[0] == '\0') {
         cJSON_Delete(json);
         http_response_init(res, HTTP_STATUS_BAD_REQUEST);
         http_response_set_body_json(res, "{\"error\":\"Field 'room_code' is required\"}");
@@ -433,7 +464,9 @@ void handle_create_room(const http_request_t *req, http_response_t *res) {
 
     exam_room_t input_room;
     memset(&input_room, 0, sizeof(input_room));
-    strncpy(input_room.room_code, code_item->valuestring, sizeof(input_room.room_code) - 1);
+    strncpy(input_room.room_code,
+            code_item->valuestring,
+            sizeof(input_room.room_code) - 1);
 
     cJSON *name_item = cJSON_GetObjectItemCaseSensitive(json, "name");
     if (cJSON_IsString(name_item) && name_item->valuestring) {
@@ -442,14 +475,16 @@ void handle_create_room(const http_request_t *req, http_response_t *res) {
 
     cJSON *exam_item = cJSON_GetObjectItemCaseSensitive(json, "exam_id");
     if (cJSON_IsString(exam_item) && exam_item->valuestring) {
-        strncpy(input_room.exam_id, exam_item->valuestring, sizeof(input_room.exam_id) - 1);
+        strncpy(input_room.exam_id,
+                exam_item->valuestring,
+                sizeof(input_room.exam_id) - 1);
     }
 
     cJSON *dur_item = cJSON_GetObjectItemCaseSensitive(json, "duration_seconds");
     if (cJSON_IsNumber(dur_item) && dur_item->valueint > 0) {
         input_room.duration_seconds = dur_item->valueint;
     } else {
-        input_room.duration_seconds = 900;
+        input_room.duration_seconds = DEFAULT_ROOM_DURATION_SEC;
     }
 
     exam_room_t created_room;
@@ -458,7 +493,9 @@ void handle_create_room(const http_request_t *req, http_response_t *res) {
 
     if (rc == -2) {
         http_response_init(res, HTTP_STATUS_CONFLICT);
-        http_response_set_body_json(res, "{\"error\":\"Room code already exists\",\"code\":\"ROOM_CODE_EXISTS\"}");
+        http_response_set_body_json(
+            res,
+            "{\"error\":\"Room code already exists\",\"code\":\"ROOM_CODE_EXISTS\"}");
         return;
     }
     if (rc != 0) {
@@ -519,19 +556,25 @@ void handle_join_room(const http_request_t *req, http_response_t *res) {
     cJSON *json = req->body ? cJSON_Parse(req->body) : NULL;
     const char *username = "guest";
     if (json) {
-        cJSON *u_item = cJSON_GetObjectItemCaseSensitive(json, "username");
-        if (cJSON_IsString(u_item) && u_item->valuestring && u_item->valuestring[0] != '\0') {
-            username = u_item->valuestring;
+        cJSON *username_item = cJSON_GetObjectItemCaseSensitive(json, "username");
+        if (cJSON_IsString(username_item) &&
+            username_item->valuestring &&
+            username_item->valuestring[0] != '\0') {
+            username = username_item->valuestring;
         }
     }
 
     exam_room_t room;
     int rc = store_join_room(g_store, code, username, &room);
-    if (json) cJSON_Delete(json);
+    if (json) {
+        cJSON_Delete(json);
+    }
 
     if (rc == -2) {
         http_response_init(res, HTTP_STATUS_CONFLICT);
-        http_response_set_body_json(res, "{\"error\":\"Room already ended\",\"code\":\"ROOM_ALREADY_ENDED\"}");
+        http_response_set_body_json(
+            res,
+            "{\"error\":\"Room already ended\",\"code\":\"ROOM_ALREADY_ENDED\"}");
         return;
     }
     if (rc != 0) {
@@ -596,11 +639,14 @@ void handle_submit_room_attempt(const http_request_t *req, http_response_t *res)
         return;
     }
 
-    cJSON *u_item = cJSON_GetObjectItemCaseSensitive(json, "username");
-    const char *username = (cJSON_IsString(u_item) && u_item->valuestring) ? u_item->valuestring : "guest";
+    cJSON *username_item = cJSON_GetObjectItemCaseSensitive(json, "username");
+    const char *username =
+        (cJSON_IsString(username_item) && username_item->valuestring)
+            ? username_item->valuestring
+            : "guest";
 
-    cJSON *s_item = cJSON_GetObjectItemCaseSensitive(json, "score");
-    int score = cJSON_IsNumber(s_item) ? s_item->valueint : 0;
+    cJSON *score_item = cJSON_GetObjectItemCaseSensitive(json, "score");
+    int score = cJSON_IsNumber(score_item) ? score_item->valueint : 0;
 
     exam_room_t room;
     int rc = store_submit_room_attempt(g_store, code, username, score, &room);
@@ -608,12 +654,16 @@ void handle_submit_room_attempt(const http_request_t *req, http_response_t *res)
 
     if (rc == -2) {
         http_response_init(res, HTTP_STATUS_CONFLICT);
-        http_response_set_body_json(res, "{\"error\":\"Exam deadline exceeded\",\"code\":\"ROOM_ALREADY_ENDED\"}");
+        http_response_set_body_json(
+            res,
+            "{\"error\":\"Exam deadline exceeded\",\"code\":\"ROOM_ALREADY_ENDED\"}");
         return;
     }
     if (rc == -3) {
         http_response_init(res, HTTP_STATUS_BAD_REQUEST);
-        http_response_set_body_json(res, "{\"error\":\"Room is not running\",\"code\":\"ROOM_NOT_RUNNING\"}");
+        http_response_set_body_json(
+            res,
+            "{\"error\":\"Room is not running\",\"code\":\"ROOM_NOT_RUNNING\"}");
         return;
     }
     if (rc != 0) {
@@ -664,18 +714,48 @@ void register_all_routes(http_router_t *router, in_memory_store_t *store) {
     http_router_register(router, HTTP_METHOD_GET, "/api/v1/health", handle_health);
     http_router_register(router, HTTP_METHOD_GET, "/api/v1/exams", handle_get_all_exams);
     http_router_register(router, HTTP_METHOD_POST, "/api/v1/exams", handle_create_exam);
-    http_router_register(router, HTTP_METHOD_GET, "/api/v1/exams/:id", handle_get_exam_by_id);
-    http_router_register(router, HTTP_METHOD_PUT, "/api/v1/exams/:id", handle_update_exam);
-    http_router_register(router, HTTP_METHOD_DELETE, "/api/v1/exams/:id", handle_delete_exam);
-    http_router_register(router, HTTP_METHOD_GET, "/api/v1/exams/:id/questions", handle_get_exam_questions);
-    http_router_register(router, HTTP_METHOD_POST, "/api/v1/exams/:id/questions", handle_create_question);
+    http_router_register(router,
+                         HTTP_METHOD_GET,
+                         "/api/v1/exams/:id",
+                         handle_get_exam_by_id);
+    http_router_register(router,
+                         HTTP_METHOD_PUT,
+                         "/api/v1/exams/:id",
+                         handle_update_exam);
+    http_router_register(router,
+                         HTTP_METHOD_DELETE,
+                         "/api/v1/exams/:id",
+                         handle_delete_exam);
+    http_router_register(router,
+                         HTTP_METHOD_GET,
+                         "/api/v1/exams/:id/questions",
+                         handle_get_exam_questions);
+    http_router_register(router,
+                         HTTP_METHOD_POST,
+                         "/api/v1/exams/:id/questions",
+                         handle_create_question);
 
-    // Stateless REST Polling Room Routes (Server Authoritative Timestamp)
+    // Các tuyến đường phòng thi trực tuyến theo mô hình Stateless HTTP Short Polling
     http_router_register(router, HTTP_METHOD_GET, "/api/v1/rooms", handle_get_all_rooms);
     http_router_register(router, HTTP_METHOD_POST, "/api/v1/rooms", handle_create_room);
-    http_router_register(router, HTTP_METHOD_GET, "/api/v1/rooms/:code/state", handle_get_room_state);
-    http_router_register(router, HTTP_METHOD_POST, "/api/v1/rooms/:code/join", handle_join_room);
-    http_router_register(router, HTTP_METHOD_POST, "/api/v1/rooms/:code/start", handle_start_room);
-    http_router_register(router, HTTP_METHOD_POST, "/api/v1/rooms/:code/submit", handle_submit_room_attempt);
-    http_router_register(router, HTTP_METHOD_POST, "/api/v1/rooms/:code/finish", handle_finish_room);
+    http_router_register(router,
+                         HTTP_METHOD_GET,
+                         "/api/v1/rooms/:code/state",
+                         handle_get_room_state);
+    http_router_register(router,
+                         HTTP_METHOD_POST,
+                         "/api/v1/rooms/:code/join",
+                         handle_join_room);
+    http_router_register(router,
+                         HTTP_METHOD_POST,
+                         "/api/v1/rooms/:code/start",
+                         handle_start_room);
+    http_router_register(router,
+                         HTTP_METHOD_POST,
+                         "/api/v1/rooms/:code/submit",
+                         handle_submit_room_attempt);
+    http_router_register(router,
+                         HTTP_METHOD_POST,
+                         "/api/v1/rooms/:code/finish",
+                         handle_finish_room);
 }

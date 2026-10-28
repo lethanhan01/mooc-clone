@@ -5,6 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Handler mặc định trả về phản hồi JSON 404 Not Found khi không khớp route nào.
+ *
+ * @param[in]  req Con trỏ tới HTTP request.
+ * @param[out] res Con trỏ tới HTTP response.
+ */
 static void default_not_found_handler(const http_request_t *req, http_response_t *res) {
     (void)req;
     http_response_init(res, HTTP_STATUS_NOT_FOUND);
@@ -12,19 +18,28 @@ static void default_not_found_handler(const http_request_t *req, http_response_t
 }
 
 void http_router_init(http_router_t *router) {
-    if (!router) return;
+    if (!router) {
+        return;
+    }
     memset(router, 0, sizeof(http_router_t));
     router->enable_cors = true;
     router->not_found_handler = default_not_found_handler;
 }
 
 void http_router_enable_cors(http_router_t *router, bool enable) {
-    if (!router) return;
+    if (!router) {
+        return;
+    }
     router->enable_cors = enable;
 }
 
-int http_router_register(http_router_t *router, http_method_t method, const char *path_pattern, http_handler_func_t handler) {
-    if (!router || !path_pattern || !handler || router->route_count >= 128) return -1;
+int http_router_register(http_router_t *router,
+                         http_method_t method,
+                         const char *path_pattern,
+                         http_handler_func_t handler) {
+    if (!router || !path_pattern || !handler || router->route_count >= HTTP_MAX_ROUTES) {
+        return -1;
+    }
     http_route_entry_t *entry = &router->routes[router->route_count++];
     entry->method = method;
     strncpy(entry->path_pattern, path_pattern, HTTP_MAX_PATH_LEN - 1);
@@ -32,40 +47,56 @@ int http_router_register(http_router_t *router, http_method_t method, const char
     return 0;
 }
 
-// Hàm so khớp đường dẫn tĩnh và tham số động (:id)
+/**
+ * @brief So khớp đường dẫn yêu cầu thực tế với mẫu route (hỗ trợ tham số động :param).
+ *
+ * Sử dụng strtok_r (reentrant) để tách từng phân đoạn URL một cách an toàn đa luồng.
+ * Các tham số động chỉ được ghi vào cấu trúc req sau khi toàn bộ các phân đoạn đều khớp.
+ *
+ * @param[in]     pattern Chuỗi mẫu đường dẫn đã đăng ký (ví dụ "/api/v1/exams/:id").
+ * @param[in]     path    Đường dẫn URL thực tế từ HTTP request.
+ * @param[in,out] req     Con trỏ HTTP request để lưu các cặp tham số động trích xuất được.
+ * @return bool true nếu đường dẫn khớp hoàn toàn với mẫu, false nếu không khớp.
+ */
 static bool match_route(const char *pattern, const char *path, http_request_t *req) {
-    char pat_buf[HTTP_MAX_PATH_LEN];
+    char pattern_buf[HTTP_MAX_PATH_LEN];
     char path_buf[HTTP_MAX_PATH_LEN];
-    strncpy(pat_buf, pattern, sizeof(pat_buf) - 1);
+    memset(pattern_buf, 0, sizeof(pattern_buf));
+    memset(path_buf, 0, sizeof(path_buf));
+    strncpy(pattern_buf, pattern, sizeof(pattern_buf) - 1);
     strncpy(path_buf, path, sizeof(path_buf) - 1);
 
-    char *pat_save = NULL;
-    char *path_save = NULL;
-    char *p_tok = strtok_r(pat_buf, "/", &pat_save);
-    char *r_tok = strtok_r(path_buf, "/", &path_save);
+    char *pattern_saveptr = NULL;
+    char *path_saveptr = NULL;
+    char *pattern_token = strtok_r(pattern_buf, "/", &pattern_saveptr);
+    char *request_token = strtok_r(path_buf, "/", &path_saveptr);
 
-    // Lưu tạm các params nếu match toàn bộ mới commit vào req
-    char temp_keys[8][32];
-    char temp_vals[8][64];
+    // Lưu tạm các tham số động; chỉ commit vào req khi toàn bộ đường dẫn khớp hoàn toàn
+    char temp_keys[HTTP_MAX_PARAMS][HTTP_MAX_PARAM_KEY_LEN];
+    char temp_vals[HTTP_MAX_PARAMS][HTTP_MAX_PARAM_VAL_LEN];
     size_t temp_count = 0;
 
-    while (p_tok && r_tok) {
-        if (p_tok[0] == ':') {
-            // Dynamic parameter segment
-            if (temp_count < 8) {
-                strncpy(temp_keys[temp_count], p_tok + 1, sizeof(temp_keys[0]) - 1);
-                strncpy(temp_vals[temp_count], r_tok, sizeof(temp_vals[0]) - 1);
+    while (pattern_token && request_token) {
+        if (pattern_token[0] == ':') {
+            if (temp_count < HTTP_MAX_PARAMS) {
+                memset(temp_keys[temp_count], 0, sizeof(temp_keys[0]));
+                memset(temp_vals[temp_count], 0, sizeof(temp_vals[0]));
+                strncpy(temp_keys[temp_count],
+                        pattern_token + 1,
+                        sizeof(temp_keys[0]) - 1);
+                strncpy(temp_vals[temp_count],
+                        request_token,
+                        sizeof(temp_vals[0]) - 1);
                 temp_count++;
             }
-        } else if (strcmp(p_tok, r_tok) != 0) {
+        } else if (strcmp(pattern_token, request_token) != 0) {
             return false;
         }
-        p_tok = strtok_r(NULL, "/", &pat_save);
-        r_tok = strtok_r(NULL, "/", &path_save);
+        pattern_token = strtok_r(NULL, "/", &pattern_saveptr);
+        request_token = strtok_r(NULL, "/", &path_saveptr);
     }
 
-    if (p_tok == NULL && r_tok == NULL) {
-        // Cả 2 cùng kết thúc -> Match thành công!
+    if (pattern_token == NULL && request_token == NULL) {
         for (size_t i = 0; i < temp_count; i++) {
             http_request_set_param(req, temp_keys[i], temp_vals[i]);
         }
@@ -75,21 +106,27 @@ static bool match_route(const char *pattern, const char *path, http_request_t *r
 }
 
 void http_router_dispatch(http_router_t *router, http_request_t *req, http_response_t *res) {
-    if (!router || !req || !res) return;
+    if (!router || !req || !res) {
+        return;
+    }
 
-    // 1. CORS Preflight Handling (OPTIONS method)
+    // 1. Xử lý yêu cầu CORS Preflight (phương thức OPTIONS từ trình duyệt)
     if (req->method == HTTP_METHOD_OPTIONS) {
         http_response_init(res, HTTP_STATUS_NO_CONTENT);
         if (router->enable_cors) {
             http_response_add_header(res, "Access-Control-Allow-Origin", "*");
-            http_response_add_header(res, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            http_response_add_header(res, "Access-Control-Allow-Headers", "Content-Type, Authorization");
+            http_response_add_header(res,
+                                     "Access-Control-Allow-Methods",
+                                     "GET, POST, PUT, DELETE, OPTIONS");
+            http_response_add_header(res,
+                                     "Access-Control-Allow-Headers",
+                                     "Content-Type, Authorization");
             http_response_add_header(res, "Access-Control-Max-Age", "86400");
         }
         return;
     }
 
-    // 2. Route Matching
+    // 2. Duyệt bảng định tuyến để tìm handler khớp cả Method lẫn URL Pattern
     for (size_t i = 0; i < router->route_count; i++) {
         http_route_entry_t *entry = &router->routes[i];
         if (entry->method == req->method) {
@@ -104,7 +141,7 @@ void http_router_dispatch(http_router_t *router, http_request_t *req, http_respo
         }
     }
 
-    // 3. Fallback Not Found
+    // 3. Không khớp route nào -> gọi handler 404 Not Found
     router->not_found_handler(req, res);
     if (router->enable_cors) {
         http_response_add_header(res, "Access-Control-Allow-Origin", "*");

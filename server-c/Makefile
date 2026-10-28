@@ -37,7 +37,7 @@ TARGET_TESTS = $(BUILD_DIR)/unit_tests
 TARGET_TESTS_VALGRIND = $(BUILD_DIR)/unit_tests_valgrind
 TARGET_SERVER_VALGRIND = $(BUILD_DIR)/http_server_valgrind
 
-.PHONY: all build run run-seq run-pool test memcheck clean dirs
+.PHONY: all build run run-seq run-pool test lint memcheck clean dirs
 
 all: build
 
@@ -75,6 +75,13 @@ run-seq: $(TARGET_SERVER)
 
 test: $(TARGET_TESTS)
 	@./$(TARGET_TESTS)
+
+lint:
+	@python3 -c 'import glob, sys; files = sorted(glob.glob("include/*.h") + glob.glob("src/*.c") + glob.glob("tests/*.c")); errs = 0; \
+	[print(f"[FAIL] {f}:{i+1}: Line length {len(l)} > 100") or (errs := errs + 1) for f in files for i, l in enumerate(open(f, encoding="utf-8").read().splitlines()) if len(l) > 100]; \
+	[print(f"[FAIL] {f}:{i+1}: Tab character found") or (errs := errs + 1) for f in files for i, l in enumerate(open(f, encoding="utf-8").read().splitlines()) if "\t" in l]; \
+	[print(f"[FAIL] {f}: Missing Doxygen @brief") or (errs := errs + 1) for f in sorted(glob.glob("include/*.h")) if "@brief" not in open(f, encoding="utf-8").read()]; \
+	print(f"[PASS] CONVENTIONS.md static check passed across {len(files)} files (0 tabs, <=100 chars/line, Doxygen verified).") if errs == 0 else sys.exit(1)'
 
 $(TARGET_TESTS_VALGRIND): $(TEST_SRCS) $(COMMON_SRCS) | dirs
 	$(CC) $(VALGRIND_CFLAGS) $(TEST_SRCS) $(COMMON_SRCS) -o $@ $(VALGRIND_LDFLAGS)
