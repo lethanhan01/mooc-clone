@@ -1,67 +1,95 @@
 # mooc-clone — Hệ thống Thi Trắc nghiệm Trực tuyến
 
-Hệ thống thi trắc nghiệm trực tuyến thời gian thực (Online Examination System) theo mô hình Client-Server đa nền tảng, hỗ trợ phòng thi đồng bộ qua Socket, chế độ luyện tập cá nhân, quản lý ngân hàng câu hỏi phân cấp và trực quan hóa kết quả bằng biểu đồ thống kê.
+Hệ thống thi trắc nghiệm trực tuyến thời gian thực (Online Examination System) theo mô hình Desktop Client - Central Gateway Server, loại bỏ hoàn toàn sự phụ thuộc vào trình duyệt Web và HTTP trung gian, vận hành trên nền tảng **C Communication Engine (TCP Gateway)** kết hợp **Electron Desktop (React 19)** và **Java 21 Spring Boot Backend**.
 
 ---
 
 ## 1. Cấu trúc Dự án (Monorepo Architecture)
 
-Dự án được tổ chức theo kiến trúc Monorepo phân tách rõ ràng giữa tầng giao diện người dùng và tầng máy chủ dịch vụ:
+Dự án được tổ chức theo kiến trúc Monorepo phân tầng rõ ràng giữa Giao diện Desktop, Cổng Giao Tiếp Mạng và Tầng Nghiệp Vụ Máy Chủ:
 
 ```text
 mooc-clone/
-├── client/          # Ứng dụng Single Page Application (SPA)
-│   ├── src/         # Mã nguồn React 19, TypeScript, Tailwind CSS v4
+├── client/          # Ứng dụng Desktop chạy trên Electron Runtime
+│   ├── src/         # Giao diện React 19, TypeScript, Tailwind CSS v4, gatewayClient
+│   ├── electron/    # Tiến trình Main (node:net TCP Socket) & Preload IPC Bridge
 │   ├── docs/        # 17 chuyên đề kỹ thuật chi tiết của Frontend
 │   └── FRONTEND_CONVENTIONS.md  # Bộ quy chuẩn phát triển Frontend
-├── server/          # Máy chủ Backend Java & Dịch vụ Socket thời gian thực
-│   ├── src/         # Mã nguồn Java 21 Spring Boot + NIO Reactor
+├── server/          # Máy chủ Nghiệp Vụ Java & Worker TCP Client
+│   ├── src/         # Mã nguồn Java 21 Spring Boot + Gateway Worker Client
 │   ├── docs/        # Tài liệu kiến trúc chuyên sâu & AI Guides
 │   └── online_exam_schema.sql   # Kịch bản khởi tạo CSDL PostgreSQL
-├── server-c/        # Máy chủ HTTP/REST & Doug Lea Reactor viết bằng C11/POSIX
-│   ├── include/     # Header đặc tả Socket, HTTP FSM Parser, Router, epoll Reactor
-│   ├── src/         # Mã nguồn C thuần túy (Zero external framework)
-│   ├── tests/       # Unit Tests & Integration / Benchmark Suites
-│   └── README.md    # Runbook biên dịch, vận hành và kiểm thử bộ nhớ (ASan/Valgrind)
-└── README.md        # Tài liệu tổng quan dự án và thang điểm
+├── server-c/        # C Communication Engine (Stateless TCP Gateway :9000)
+│   ├── include/     # Header đặc tả Socket POSIX non-blocking và TLV Frame 16B
+│   ├── src/         # Mã nguồn C11 thuần túy (poll event loop, zero cJSON)
+│   ├── tests/       # Unit Tests (Socket, TLV Framing, Sticky/Fragmented stream)
+│   └── README.md    # Sổ tay vận hành, biên dịch và kiểm thử bộ nhớ C Engine
+└── README.md        # Tài liệu tổng quan kiến trúc và thang điểm
+```
+
+### Sơ Đồ Kiến Trúc Hệ Thống (Mermaid):
+
+```mermaid
+flowchart TD
+    subgraph DesktopClient["Desktop Client (Electron Runtime)"]
+        ReactUI["React 19 UI<br/>(TanStack Query + Zustand)"]
+        Preload["Electron Preload (contextBridge)<br/>window.gatewayApi"]
+        MainNode["Electron Main Process<br/>node:net Socket Client"]
+        ReactUI <-->|IPC invoke / on| Preload
+        Preload <-->|ipcRenderer / ipcMain| MainNode
+    end
+
+    subgraph CentralServer["Hạ Tầng Máy Chủ Trung Tâm"]
+        subgraph CGatewayEngine["C Communication Engine (bin/c_gateway :9000)"]
+            PollLoop["Single-Threaded Event Loop (POSIX poll)<br/>Non-blocking Sockets"]
+            StreamFramer["TLV Frame Slicer (Header 16B + JSON)<br/>Chống dính / phân mảnh gói tin"]
+            StatelessRouter["Stateless Client Router<br/>Ghi đè header.client_id = client_fd<br/>Forwarding & Fanout Broadcast"]
+        end
+
+        subgraph JavaWorkerSubsystem["Java 21 Spring Boot (TCP Worker)"]
+            WorkerClient["GatewayWorkerClient<br/>Persistent Socket :9000 (Role: WORKER)"]
+            Dispatcher["GatewayMessageDispatcher<br/>Định tuyến Opcodes đến Spring Services"]
+            Services["Spring Business Services<br/>Auth / Room / Exam / Question"]
+            PostgresDb[("PostgreSQL 14+<br/>online_exam_db")]
+        end
+    end
+
+    MainNode <-->|"Raw TCP Socket (:9000)<br/>TLV Header 16B + JSON Payload"| PollLoop
+    PollLoop --> StreamFramer
+    StreamFramer --> StatelessRouter
+    StatelessRouter <-->|"Internal Forwarding"| PollLoop
+    PollLoop <-->|"Persistent Worker Channel"| WorkerClient
+    WorkerClient <--> Dispatcher
+    Dispatcher <--> Services
+    Services <--> PostgresDb
 ```
 
 ---
 
 ## 2. Danh sách Chức năng Chi tiết
 
-Hệ thống cung cấp đầy đủ các tính năng phục vụ cho cả thí sinh, người tạo phòng và quản trị viên - hehehe:
+Hệ thống cung cấp đầy đủ các tính năng phục vụ cho cả thí sinh, người tạo phòng và quản trị viên:
 
 ### 2.1 Chế độ thi (Exam Room Mode)
-
-- **Tạo và thiết lập phòng thi:** Người dùng có thể tạo phòng thi mới, cấu hình số lượng câu hỏi, thời gian thi cho phòng thi. Chủ phòng có toàn quyền quyết định bắt đầu thi cũng như thời điểm kết thúc cho phòng thi.
-- **Danh sách phòng thi & Trạng thái:** Xem danh sách toàn bộ các phòng thi kèm trạng thái trực quan theo thời gian thực (chưa bắt đầu, đang diễn ra, đã kết thúc).
-- **Tham gia phòng thi:** Cho phép thí sinh tham gia vào một phòng thi khi phòng thi chưa bắt đầu.
-- **Cấp phát đề thi đồng bộ:** Khi bắt đầu thi, máy chủ (server) sẽ gửi lại cho người dùng đề thi bao gồm các câu hỏi thi tương ứng với cấu hình phòng.
-- **Làm bài linh hoạt:** Cho phép người dùng thay đổi các câu hỏi đã trả lời nếu còn thời gian làm bài.
-- **Nộp bài sớm:** Người dùng có thể chủ động nộp bài sớm trước khi thời gian thi kết thúc.
-- **Tự động chấm điểm & Thông báo:** Sau khi hết giờ thi, server tự động chốt bài và thông báo số câu trả lời đúng cho người thi tương ứng.
-- **Xem kết quả phòng thi:** Xem kết quả thi chi tiết của các phòng thi đã kết thúc.
+- **Tạo và thiết lập phòng thi:** Người dùng có thể tạo phòng thi mới, cấu hình số lượng câu hỏi, thời gian thi cho phòng thi. Chủ phòng có toàn quyền bắt đầu và kết thúc bài thi.
+- **Danh sách phòng thi & Trạng thái:** Xem danh sách phòng thi kèm trạng thái thời gian thực (chưa bắt đầu, đang diễn ra, đã kết thúc).
+- **Tham gia phòng thi:** Cho phép thí sinh tham gia vào phòng thi khi phòng thi chưa bắt đầu.
+- **Cấp phát đề thi đồng bộ:** Khi bắt đầu thi, máy chủ gửi lại đề thi đồng loạt cho toàn bộ thí sinh trong phòng qua cơ chế Server Push Broadcast (`0x80`).
+- **Làm bài linh hoạt:** Cập nhật câu trả lời linh hoạt trong suốt thời gian làm bài còn hiệu lực.
+- **Nộp bài sớm & Tự động thu bài:** Nộp bài chủ động hoặc tự động chốt bài và thông báo điểm ngay khi hết giờ.
+- **Xem kết quả phòng thi:** Bảng xếp hạng và kết quả chi tiết của phòng thi sau khi kết thúc.
 
 ### 2.2 Chế độ luyện tập (Practice Mode)
-
-- Trong chế độ này, người dùng làm các bài thi luyện tập cá nhân với số lượng câu hỏi và thời gian làm bài nhất định.
-- Sau khi hoàn thành bài thi, ứng dụng lập tức thông báo số câu trả lời đúng và kết quả chi tiết.
+- Thí sinh làm các bài thi luyện tập cá nhân độc lập với số lượng câu hỏi và thời gian tùy chỉnh.
+- Sau khi hoàn thành, hệ thống lập tức chấm điểm và giải thích chi tiết phương án trả lời.
 
 ### 2.3 Phân loại câu hỏi & Quản lý đề thi
+- Phân loại câu hỏi theo độ khó (Dễ, Trung bình, Khó) và chủ đề.
+- Sinh đề thi ngẫu nhiên theo tỷ lệ phân bổ cấu hình phòng.
 
-- Phân loại câu hỏi theo độ khó (Dễ, Trung bình, Khó) cũng như theo từng chủ đề.
-- Lựa chọn thiết lập số lượng từng loại câu hỏi cho đề thi linh hoạt khi tạo phòng thi.
-
-### 2.4 Lưu trữ lịch sử & Thống kê đồ thị
-
-- Lưu trữ toàn diện thông tin các bài thi người dùng đã làm và hiển thị lại theo yêu cầu.
-- Thống kê trực quan bằng đồ thị về tiến độ, điểm số và hiệu suất các bài thi người dùng đã thực hiện.
-
-### 2.5 Giao diện & Kết nối mạng thời gian thực
-
-- **Giao diện đồ họa (GUI):** Thiết kế trực quan, hiện đại, tối ưu trải nghiệm người dùng trên máy tính và thiết bị di động.
-- **Cơ chế mạng:** Cài đặt cơ chế vào/ra socket trên server, xử lý truyền dòng dữ liệu đồng bộ đa kết nối.
+### 2.4 Giao diện Desktop & Cơ chế Mạng Tinh Gọn
+- **Desktop Application:** Giao diện Desktop hiện đại, mượt mà, độc lập hoàn toàn với trình duyệt Web.
+- **C Communication Engine:** Tự cài đặt socket TCP non-blocking bằng C trên Linux/WSL2, bóc tách dòng byte theo chuẩn TLV 16B, triệt tiêu hiện tượng dính/cắt gói tin.
 
 ---
 
@@ -69,26 +97,26 @@ Hệ thống cung cấp đầy đủ các tính năng phục vụ cho cả thí 
 
 Toàn bộ các tiêu chí tính điểm của hệ thống được quy định chi tiết trong bảng dưới đây:
 
-| STT | Tiêu chí đánh giá                            |     Điểm số     | Ghi chú kỹ thuật                                                           |
-| :-: | :------------------------------------------- | :-------------: | :------------------------------------------------------------------------- |
-|  1  | **Xử lý truyền dòng**                        |   **1 điểm**    | Tối ưu luồng dữ liệu stream, xử lý buffer và phân đoạn gói tin             |
-|  2  | **Cài đặt cơ chế vào/ra socket trên server** |   **2 điểm**    | Kiến trúc non-blocking/multi-threaded I/O, lắng nghe và xử lý sự kiện      |
-|  3  | **Đăng ký và quản lý tài khoản**             |   **2 điểm**    | Đăng ký tài khoản mới, kiểm tra trùng lặp, bảo mật thông tin người dùng    |
-|  4  | **Đăng nhập và quản lý phiên**               |   **2 điểm**    | Xác thực người dùng, cấp phát token/session hash, kiểm tra hết hạn         |
-|  5  | **Kiểm soát quyền truy cập**                 |   **1 điểm**    | Phân quyền vai trò (User/Admin, chủ phòng vs thành viên phòng)             |
-|  6  | **Tham gia chế độ luyện tập**                |   **1 điểm**    | Khởi tạo attempt luyện tập cá nhân độc lập, tính điểm tức thì              |
-|  7  | **Tạo phòng thi**                            |   **2 điểm**    | Thiết lập cấu hình phòng, thời gian, số câu hỏi theo độ khó                |
-|  8  | **Xem danh sách phòng thi**                  |   **1 điểm**    | Hiển thị trạng thái phòng (chưa bắt đầu, đang diễn ra, kết thúc)           |
-|  9  | **Tham gia vào phòng thi**                   |   **2 điểm**    | Kiểm tra điều kiện phòng chờ, đồng bộ danh sách thành viên tham gia        |
-| 10  | **Bắt đầu bài thi**                          |   **1 điểm**    | Đồng bộ thời gian bắt đầu, phân phối đề thi nhất quán cho toàn bộ thí sinh |
-| 11  | **Thay đổi phương án trả lời trước đó**      |   **1 điểm**    | Cập nhật câu trả lời linh hoạt trong suốt thời gian làm bài còn hiệu lực   |
-| 12  | **Nộp bài và chấm điểm**                     |   **2 điểm**    | Cơ chế nộp bài chủ động, tự động thu bài khi hết giờ, chấm điểm tự động    |
-| 13  | **Xem kết quả thi của các phòng thi**        |   **1 điểm**    | Bảng xếp hạng và kết quả chi tiết của phòng thi sau khi kết thúc           |
-| 14  | **Ghi log hoạt động**                        |   **1 điểm**    | Ghi nhận sự kiện nghiệp vụ và bảo mật (audit logs)                         |
-| 15  | **Phân loại câu hỏi theo độ khó, chủ đề**    | **1 – 3 điểm**  | Phân chia ngân hàng câu hỏi, hỗ trợ lọc và sinh đề theo tỷ lệ              |
-| 16  | **Lưu trữ thông tin bài thi + đồ thị**       |   **2 điểm**    | Lưu lịch sử snapshot bài thi, trực quan hóa tiến trình qua biểu đồ         |
-| 17  | **Giao diện đồ họa**                         |   **3 điểm**    | Giao diện hiện đại, thân thiện, tương tác phản hồi mượt mà                 |
-| 18  | **Các chức năng nâng cao khác**              | **1 – 10 điểm** | Các tính năng mở rộng (chống gian lận, tối ưu hiệu năng, v.v.)             |
+| STT | Tiêu chí đánh giá | Điểm số | Ghi chú kỹ thuật |
+| :-: | :--- | :---: | :--- |
+| 1 | **Xử lý truyền dòng** | **1 điểm** | Phân đoạn khung tin nhị phân TLV 16B, xử lý buffer tích lũy và chống dính gói / cắt gói TCP |
+| 2 | **Cài đặt cơ chế vào/ra socket trên server** | **2 điểm** | C Communication Engine đơn luồng (POSIX `poll()`), non-blocking I/O multiplexer |
+| 3 | **Đăng ký và quản lý tài khoản** | **2 điểm** | Đăng ký tài khoản mới, mã hóa mật khẩu BCrypt, kiểm tra trùng lặp |
+| 4 | **Đăng nhập và quản lý phiên** | **2 điểm** | Xác thực người dùng, cấp phát phiên qua kênh TCP Socket, kiểm tra hết hạn |
+| 5 | **Kiểm soát quyền truy cập** | **1 điểm** | Phân quyền vai trò (User/Admin, chủ phòng vs thành viên tham gia) |
+| 6 | **Tham gia chế độ luyện tập** | **1 điểm** | Khởi tạo attempt luyện tập cá nhân độc lập, tính điểm tức thì |
+| 7 | **Tạo phòng thi** | **2 điểm** | Thiết lập cấu hình phòng, thời gian, số câu hỏi theo độ khó |
+| 8 | **Xem danh sách phòng thi** | **1 điểm** | Hiển thị trạng thái phòng trực quan (chưa bắt đầu, đang diễn ra, kết thúc) |
+| 9 | **Tham gia vào phòng thi** | **2 điểm** | Kiểm tra điều kiện phòng chờ, đồng bộ danh sách thành viên tham gia |
+| 10 | **Bắt đầu bài thi** | **1 điểm** | Đồng bộ thời gian bắt đầu, phân phối đề thi nhất quán cho toàn bộ thí sinh |
+| 11 | **Thay đổi phương án trả lời trước đó** | **1 điểm** | Cập nhật câu trả lời linh hoạt trong suốt thời gian làm bài còn hiệu lực |
+| 12 | **Nộp bài và chấm điểm** | **2 điểm** | Cơ chế nộp bài chủ động, tự động thu bài khi hết giờ, chấm điểm tự động |
+| 13 | **Xem kết quả thi của các phòng thi** | **1 điểm** | Bảng xếp hạng và kết quả chi tiết của phòng thi sau khi kết thúc |
+| 14 | **Ghi log hoạt động** | **1 điểm** | Ghi nhận sự kiện nghiệp vụ và bảo mật (audit logs) |
+| 15 | **Phân loại câu hỏi theo độ khó, chủ đề** | **1 – 3 điểm** | Phân chia ngân hàng câu hỏi, hỗ trợ lọc và sinh đề theo tỷ lệ |
+| 16 | **Lưu trữ thông tin bài thi + đồ thị** | **2 điểm** | Lưu lịch sử snapshot bài thi, trực quan hóa tiến trình qua biểu đồ |
+| 17 | **Giao diện đồ họa (GUI Desktop)** | **3 điểm** | Giao diện Desktop Electron hiện đại, thân thiện, tương tác phản hồi mượt mà |
+| 18 | **Các chức năng nâng cao khác** | **1 – 10 điểm** | C Communication Engine độc lập, cơ chế Server Push Broadcast, tự động kết nối lại |
 
 ---
 
@@ -97,17 +125,27 @@ Toàn bộ các tiêu chí tính điểm của hệ thống được quy định
 ### 4.1 Khởi tạo Cơ sở Dữ liệu (PostgreSQL 14+)
 
 1. Tạo một cơ sở dữ liệu trống trên PostgreSQL (ví dụ: `online_exam_db`).
-2. Thực thi kịch bản tạo bảng và view tại [server/online_exam_schema.sql](server/online_exam_schema.sql):
+2. Thực thi kịch bản tạo bảng tại [server/online_exam_schema.sql](server/online_exam_schema.sql):
    ```bash
    psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
    ```
 
-### 4.2 Khởi chạy Máy chủ Backend (Java Spring Boot)
+### 4.2 Bước 1: Khởi chạy C Communication Engine (TCP Gateway)
 
-Di chuyển vào thư mục `server/` và khởi chạy qua Maven Wrapper:
+Trên môi trường Linux hoặc WSL2 Ubuntu 22.04:
 
 ```bash
-# Trên Windows (PowerShell / Command Prompt)
+cd server-c
+make gateway
+./build/c_gateway 9000
+```
+
+### 4.3 Bước 2: Khởi chạy Máy chủ Backend (Java Spring Boot)
+
+Mở một cửa sổ dòng lệnh khác, di chuyển vào thư mục `server/` và khởi chạy Maven Wrapper:
+
+```bash
+# Trên Windows
 cd server
 .\mvnw.cmd spring-boot:run
 
@@ -116,34 +154,24 @@ cd server
 ./mvnw spring-boot:run
 ```
 
-### 4.3 Khởi chạy Ứng dụng Giao diện Client (Vite + React)
+*Máy chủ sẽ tự động kết nối và đăng ký vai trò `WORKER` với C Gateway trên cổng 9000.*
 
-Di chuyển vào thư mục `client/`, cài đặt gói thư viện và chạy máy chủ phát triển:
+### 4.4 Bước 3: Khởi chạy Ứng dụng Desktop Thí Sinh (Electron + React)
+
+Di chuyển vào thư mục `client/`:
 
 ```bash
 cd client
 npm install
 npm run dev
+# Mở một terminal khác để khởi chạy Electron Desktop App:
+npm run electron:dev
 ```
-
-### 4.4 Khởi chạy Máy chủ C HTTP/REST Reactor (`server-c/` trên Linux / WSL2)
-
-Di chuyển vào thư mục `server-c/` trên môi trường Linux hoặc WSL2 Ubuntu 22.04 để biên dịch, kiểm thử và khởi chạy máy chủ C theo mô hình Doug Lea Classic Reactor (`epoll` + Worker ThreadPool):
-
-```bash
-cd server-c
-make build
-make test
-make memcheck
-make run
-```
-
-Chi tiết hướng dẫn 3 chế độ đồng thời (`sequential`, `threadpool`, `reactor`) và bảng tra cứu cURL xem tại [server-c/README.md](server-c/README.md).
 
 ---
 
 ## 5. Tài liệu Kỹ thuật Liên quan
 
-- **Tài liệu & Kiến trúc Backend Java:** Cẩm nang AI Guides, Kiến trúc Mạng kép, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
-- **Tài liệu & Runbook Máy chủ C (`server-c/`):** Đặc tả kiến trúc Socket POSIX, HTTP/1.1 FSM Parser và `epoll` Reactor tại [server-c/README.md](server-c/README.md).
-- **Quy chuẩn Phát triển Frontend:** Tiêu chuẩn 19 Master Rules, Design Tokens và Semantic Architecture tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md).
+- **Tài liệu C Communication Engine (`server-c/`):** Đặc tả kiến trúc POSIX Socket, bảng mã lệnh Opcodes, khung tin TLV 16B và runbook tại [server-c/README.md](server-c/README.md).
+- **Tài liệu & Kiến trúc Backend:** Phân Hệ Mạng Thời Gian Thực, Đặc Tả Giao Tiếp Opcodes/REST, và CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md), [server/docs/api-specification.md](server/docs/api-specification.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
+- **Quy chuẩn Phát triển Desktop & Frontend:** Tiêu chuẩn 19 Master Rules, Kiến Trúc Desktop Electron và Semantic Tokens tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md) và [client/docs/17-mobile-and-native-architecture.md](client/docs/17-mobile-and-native-architecture.md).

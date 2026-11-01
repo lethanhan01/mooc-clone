@@ -1,8 +1,8 @@
 # Phân Hệ Máy Chủ Thi Trắc Nghiệm Trực Tuyến Backend (`server/`)
 
 > **Học phần:** Lập trình Mạng (IT4062) — Hệ sinh thái `mooc-clone`  
-> **Kiến trúc:** Pure Layered Architecture (Phân tầng thuần khiết) kết hợp Phân hệ Mạng Kép (NIO Reactor TCP 9090 & Stateless REST Short Polling 8080)  
-> **Công nghệ Nền tảng:** Java 21 LTS, Spring Boot 3.4.3, Spring Data JPA, Spring Security 6, SpringDoc OpenAPI 3, PostgreSQL 14+ (Supabase)
+> **Kiến trúc:** Pure Layered Architecture kết hợp Đồng bộ Phòng thi Stateless REST Short Polling (:8080) & Phân hệ Mạng C11 Doug Lea Reactor ([server-c/](../server-c/README.md))  
+> **Công nghệ Nền tảng:** Java 21 LTS, Spring Boot 3.4.3, Spring Data JPA, Spring Security 6, SpringDoc OpenAPI 3, PostgreSQL 14+ (Supabase), POSIX C11 `epoll` Reactor
 
 ---
 
@@ -27,12 +27,12 @@ Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân
 | Nhóm Tài Liệu   | Tên Tài Liệu & Đường Dẫn                                            | Mô Tả Trọng Tâm                                                                                       |
 | :-------------- | :------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------- |
 | **AI Guides**   | [API_GENERATION_GUIDE.md](docs/ai-guides/API_GENERATION_GUIDE.md)   | Cẩm nang tạo CRUD API kế thừa Bộ ba Generic (`BaseController`, `BaseServiceImpl`, DTO Records)        |
-| **AI Guides**   | [CUSTOM_API_GUIDE.md](docs/ai-guides/CUSTOM_API_GUIDE.md)           | Cẩm nang tạo Custom API độc lập: Máy trạng thái, Chấm điểm, Đa Repo, Bắn sự kiện thời gian thực       |
+| **AI Guides**   | [CUSTOM_API_GUIDE.md](docs/ai-guides/CUSTOM_API_GUIDE.md)           | Cẩm nang tạo Custom API độc lập: Máy trạng thái, Chấm điểm, Đa Repo, Đồng bộ trạng thái phòng thi     |
 | **Chuyên Đề**   | [database-architecture.md](docs/database-architecture.md)           | Kiến trúc CSDL Chuẩn 3NF, Sơ đồ Mermaid ERD 9 bảng cốt lõi và 5 Dynamic Views tính điểm tức thì       |
-| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng kép: Non-blocking TCP Reactor 9090 (Khung nhị phân 8-byte, 12+ Opcodes) & REST Polling 8080 |
+| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng C11 `epoll` Doug Lea Reactor, HTTP/1.1 FSM Parser & Đồng bộ phòng thi REST Short Polling |
 | **Chuyên Đề**   | [security-architecture.md](docs/security-architecture.md)           | Cơ chế bảo mật Opaque Session Token SHA-256, Bộ lọc Filter và 4 nguyên tắc chống gian lận bài thi     |
 | **Chuyên Đề**   | [api-specification.md](docs/api-specification.md)                   | Đặc tả RESTful API, Chuẩn hóa `ApiResponse<T>`, Bảng mã lỗi `ErrorCode` và Hướng dẫn Swagger UI       |
-| **Quy Chuẩn**   | [CONVENTIONS.md](CONVENTIONS.md)                                    | Quy chuẩn Lập trình Socket NIO Java (Thao tác ByteBuffer, Thread-safe writes, SLF4J, Test Socket)     |
+| **Quy Chuẩn**   | [CONVENTIONS.md](CONVENTIONS.md)                                    | Quy chuẩn Lập trình Backend & Liên kết chuẩn Socket POSIX C11 ([server-c/CONVENTIONS.md](../server-c/CONVENTIONS.md)) |
 | **Master Rule** | [AGENTS.md](../AGENTS.md)                                           | Chỉ thị Master AI Directives quản trị toàn bộ dự án `mooc-clone`                                      |
 
 ---
@@ -46,8 +46,8 @@ Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân
 | **Data Persistence** | Spring Data JPA + Hibernate ORM               | **6.6.8**            | Quản lý vòng đời thực thể, kết nối CSDL PostgreSQL qua HikariCP             |
 | **Cơ sở Dữ liệu**    | PostgreSQL Cloud (Supabase)                   | **14+ / 17**         | Lưu trữ quan hệ chuẩn 3NF, JSONB metadata, Network INET, Session Token Hash |
 | **Bảo mật**          | Spring Security                               | **6.4.3**            | Pipeline xác thực Session Token SHA-256, Stateless SecurityContext          |
-| **Mạng TCP**         | Java NIO (Channels, Selector, Buffers)        | **Java 21 Built-in** | Máy chủ TCP Non-blocking Classic Reactor Pattern (Cổng 9090)                |
-| **Đồng bộ Phòng thi**| Stateless REST + Server Authoritative Clock   | **3.4.3**            | Đồng bộ trạng thái phòng thi & thời gian chuẩn (`serverNow`, `endsAt`)      |
+| **Mạng & Reactor**   | POSIX C11 Socket + Linux `epoll`              | **C11 / POSIX**      | Máy chủ HTTP/1.1 Non-blocking Doug Lea Classic Reactor ([server-c/](../server-c/README.md)) |
+| **Đồng bộ Phòng thi**| Stateless REST + Server Authoritative Clock   | **3.4.3 / C11**      | Đồng bộ trạng thái phòng thi & thời gian chuẩn (`serverNow`, `endsAt`)      |
 | **Validation**       | Jakarta Bean Validation (Hibernate Validator) | **3.1.3**            | Kiểm tra tính hợp lệ dữ liệu đầu vào DTO (`@NotNull`, `@Size`, v.v.)        |
 | **Tài liệu API**     | SpringDoc OpenAPI Starter WebMVC              | **2.8.5**            | Tự động sinh Swagger UI và đặc tả OpenAPI 3 tương tác trực tiếp             |
 | **Build Tool**       | Apache Maven Wrapper (`mvnw`)                 | **3.9.x**            | Quản lý vòng đời dự án, biên dịch, kiểm thử tự động                         |
@@ -72,7 +72,6 @@ Thông số vận hành được nạp từ [src/main/resources/application.prop
 | Tên Biến Môi trường | Giá trị Mặc định | Bắt buộc | Ý nghĩa Kỹ thuật |
 | :--- | :--- | :--- | :--- |
 | `SERVER_PORT` | `8080` | Không | Cổng dịch vụ HTTP REST API & Short Polling |
-| `TCP_PORT` | `9090` | Không | Cổng lắng nghe Non-blocking TCP Socket Reactor |
 | `DB_URL` | `jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require` | Không (đã có mặc định) | JDBC URL kết nối tới Transaction Pooler PostgreSQL của Supabase |
 | `DB_USERNAME` | `postgres.sijjqpfyxccrswiqthxn` | Không (đã có mặc định) | Tên người dùng CSDL Supabase |
 | `DB_PASSWORD` | `Nh8jXnH76qEI5WfC` | Không (đã có mặc định) | Mật khẩu truy cập CSDL Supabase |
@@ -118,16 +117,15 @@ cd server
 
 ### Bước 3: Xác Minh Khởi Động Thành Công
 
-Khi máy chủ khởi động thành công, cửa sổ console sẽ xuất hiện các dòng log thông báo cả 2 cổng mạng đã sẵn sàng:
+Khi máy chủ khởi động thành công, cửa sổ console sẽ xuất hiện các dòng log thông báo cổng mạng HTTP/REST đã sẵn sàng:
 
 ```text
->>> [NIO Classic Reactor] Server started on port 9090 (Non-blocking)
 Tomcat started on port 8080 (http) with context path '/'
 Started ServerApplication in X.XXX seconds
 ```
 
 - **Cổng 8080 (HTTP / Stateless REST):** Tiếp nhận RESTful API và Adaptive Short Polling với đồng hồ chuẩn `serverNow`.
-- **Cổng 9090 (TCP Socket):** Tiếp nhận kết nối mạng nhị phân Reactor.
+- **Phân hệ C11 Reactor (`server-c/`):** Xem hướng dẫn biên dịch và khởi chạy máy chủ C11 `epoll` Reactor tại [server-c/README.md](../server-c/README.md).
 - **Swagger UI Trực Quan:** Truy cập tại [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) để kiểm tra danh mục API.
 - **OpenAPI 3 JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
 
@@ -191,13 +189,10 @@ Mã nguồn `server/` tuân thủ nguyên tắc một chiều nghiêm ngặt:
 
 ```mermaid
 graph TD
-    Client["Client (React SPA Web / TCP Tester)"]
+    Client["Client (React 19 SPA Web)"]
     Client -->|"HTTP / REST + Short Polling (8080)"| Controller["Controller Layer (@RestController)"]
-    Client -->|"Raw TCP Binary (9090)"| Reactor["NioClassicReactorServer"]
 
     Controller -->|"DTO Records (serverNow, endsAt)"| Service["Service Layer (@Service)"]
-    Reactor -->|"Opcode Frames"| EventBus["RoomEventBus"]
-    EventBus -->|"Room State"| Service
 
     Service -->|"Entities"| Repository["Repository Layer (Spring Data JPA)"]
     Repository -->|"SQL / JDBC Pooler"| Database[("Supabase PostgreSQL 14+")]
@@ -218,10 +213,10 @@ graph TD
 Hệ thống loại bỏ hoàn toàn dữ liệu phái sinh dư thừa, quản lý quan hệ thi cử qua 9 bảng cốt lõi và tính điểm tức thì qua 5 Khung nhìn nghiệp vụ (`v_attempt_results`, `v_room_list`, `v_room_results`, `v_user_statistics`, `v_user_topic_performance`).  
 👉 _Xem chi tiết:_ [docs/database-architecture.md](docs/database-architecture.md) | [online_exam_schema.sql](online_exam_schema.sql) | [online_exam_seed_data.sql](online_exam_seed_data.sql)
 
-### 5.2. Phân Hệ Mạng Kép (TCP 9090 & Stateless REST Short Polling 8080)
+### 5.2. Phân Hệ Mạng C11 Doug Lea Reactor & Đồng Bộ Phòng Thi Stateless REST
 
-Hệ thống vận hành đồng thời kênh Non-blocking TCP Socket 9090 với giao thức đóng khung nhị phân 8-byte (Magic, Opcode, Length, Payload, Checksum) và kênh HTTP Short Polling + Server Authoritative Timestamp (`serverNow`, `endsAt`, Lazy State Transition) trên cổng 8080.  
-👉 _Xem chi tiết:_ [docs/realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | [CONVENTIONS.md](CONVENTIONS.md)
+Hệ thống triển khai kiến trúc mạng từ tầng Socket POSIX bằng C11 (`epoll` `EPOLLET | EPOLLONESHOT`, Incremental HTTP/1.1 FSM Parser 13 trạng thái, Worker ThreadPool, `pthread_rwlock_t`) tại [server-c/](../server-c/README.md) kết hợp cơ chế đồng bộ phòng thi trực tuyến qua HTTP Short Polling + Server Authoritative Timestamp (`serverNow`, `endsAt`, Lazy State Transition, Grace Period 2000ms).  
+👉 _Xem chi tiết:_ [docs/realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | [server-c/CONVENTIONS.md](../server-c/CONVENTIONS.md) | [CONVENTIONS.md](CONVENTIONS.md)
 
 ### 5.3. Bảo Mật Session Token SHA-256 & Chống Gian Lận Đề Thi
 

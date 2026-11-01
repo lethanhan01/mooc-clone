@@ -1,5 +1,5 @@
-import api from './api'
-import type { ApiResponse, AuthResponse, AuthUser, LoginRequest, RegisterRequest, UserProfileResponse } from '@/types'
+import { gatewayClient, GATEWAY_OPCODES } from './gatewayClient'
+import type { AuthResponse, AuthUser, LoginRequest, RegisterRequest, UserProfileResponse } from '@/types'
 
 export type { LoginRequest, AuthResponse, RegisterRequest, UserProfileResponse }
 export type LoginResponse = AuthResponse
@@ -8,28 +8,20 @@ import { useAuthStore } from '@/stores/authStore'
 
 export const authService = {
   async register(payload: RegisterRequest): Promise<UserProfileResponse> {
-    const response = await api.post<ApiResponse<UserProfileResponse>>('/auth/register', payload)
-    return response.data.data
+    return gatewayClient.request<UserProfileResponse>(GATEWAY_OPCODES.AUTH_REGISTER_REQ, payload)
   },
 
   async login(payload: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', payload)
-    return response.data.data
+    return gatewayClient.request<AuthResponse>(GATEWAY_OPCODES.AUTH_LOGIN_REQ, payload)
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    const response = await api.get<ApiResponse<AuthUser>>('/auth/me')
-    return response.data.data
+    const user = useAuthStore.getState().user
+    if (user) return user
+    return gatewayClient.request<AuthUser>(GATEWAY_OPCODES.AUTH_LOGIN_REQ, { action: 'me' })
   },
 
   async logout(): Promise<void> {
-    try {
-      await api.post('/auth/logout')
-    } catch {
-      // Ignore network errors during logout
-    } finally {
-      useAuthStore.getState().clearAuth(true)
-    }
+    useAuthStore.getState().clearAuth(true)
   },
 }
-

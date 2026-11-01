@@ -1,9 +1,8 @@
-import api from './api'
-import type { ApiResponse, AuditLogResponse } from '@/types'
+import { gatewayClient, GATEWAY_OPCODES } from './gatewayClient'
+import type { AuditLogResponse } from '@/types'
 
 export const auditService = {
   async getLogs(): Promise<AuditLogResponse[]> {
-    const response = await api.get<ApiResponse<AuditLogResponse[]>>('/audit-logs')
-    return response.data.data
+    return gatewayClient.request<AuditLogResponse[]>(GATEWAY_OPCODES.ROOM_LIST_REQ, { type: 'audit-logs' })
   },
 }

@@ -1,6 +1,5 @@
-import api from './api'
+import { gatewayClient, GATEWAY_OPCODES } from './gatewayClient'
 import type {
-  ApiResponse,
   RoomSummaryDto,
   RoomDetailResponse,
   CreateRoomRequest,
@@ -9,49 +8,42 @@ import type {
 
 export const roomService = {
   async getRooms(): Promise<RoomSummaryDto[]> {
-    const response = await api.get<ApiResponse<RoomSummaryDto[]>>('/rooms')
-    return response.data.data
+    return gatewayClient.request<RoomSummaryDto[]>(GATEWAY_OPCODES.ROOM_LIST_REQ)
   },
 
   async getRoomById(id: number): Promise<RoomSummaryDto> {
-    const response = await api.get<ApiResponse<RoomSummaryDto>>(`/rooms/${id}`)
-    return response.data.data
+    return gatewayClient.request<RoomSummaryDto>(GATEWAY_OPCODES.ROOM_LIST_REQ, { id })
   },
 
   async getRoomDetail(roomCode: string): Promise<RoomDetailResponse> {
-    const response = await api.get<ApiResponse<RoomDetailResponse>>(`/rooms/${roomCode}/detail`)
-    return response.data.data
+    return gatewayClient.request<RoomDetailResponse>(GATEWAY_OPCODES.ROOM_LIST_REQ, { roomCode, detail: true })
   },
 
   async createRoom(payload: CreateRoomRequest): Promise<RoomSummaryDto> {
-    const response = await api.post<ApiResponse<RoomSummaryDto>>('/rooms', payload)
-    return response.data.data
+    return gatewayClient.request<RoomSummaryDto>(GATEWAY_OPCODES.ROOM_CREATE_REQ, payload)
   },
 
   async updateRoom(id: number, payload: UpdateRoomRequest): Promise<RoomSummaryDto> {
-    const response = await api.put<ApiResponse<RoomSummaryDto>>(`/rooms/${id}`, payload)
-    return response.data.data
+    return gatewayClient.request<RoomSummaryDto>(GATEWAY_OPCODES.ROOM_CREATE_REQ, { id, ...payload })
   },
 
   async deleteRoom(id: number): Promise<void> {
-    await api.delete(`/rooms/${id}`)
+    await gatewayClient.request(GATEWAY_OPCODES.ROOM_CREATE_REQ, { id, action: 'delete' })
   },
 
   async joinRoom(roomCode: string): Promise<RoomSummaryDto> {
-    const response = await api.post<ApiResponse<RoomSummaryDto>>(`/rooms/${roomCode}/join`)
-    return response.data.data
+    return gatewayClient.request<RoomSummaryDto>(GATEWAY_OPCODES.ROOM_JOIN_REQ, { roomCode })
   },
 
   async leaveRoom(roomCode: string): Promise<void> {
-    await api.post(`/rooms/${roomCode}/leave`)
+    await gatewayClient.request(GATEWAY_OPCODES.ROOM_JOIN_REQ, { roomCode, action: 'leave' })
   },
 
   async startRoom(roomCode: string): Promise<void> {
-    await api.post(`/rooms/${roomCode}/start`)
+    await gatewayClient.request(GATEWAY_OPCODES.EXAM_START_REQ, { roomCode })
   },
 
   async finishRoom(roomCode: string): Promise<Record<string, number>> {
-    const response = await api.post<ApiResponse<Record<string, number>>>(`/rooms/${roomCode}/finish`)
-    return response.data.data
+    return gatewayClient.request<Record<string, number>>(GATEWAY_OPCODES.EXAM_SUBMIT_REQ, { roomCode })
   },
 }

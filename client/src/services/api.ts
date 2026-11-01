@@ -1,40 +1,8 @@
-import axios, { AxiosHeaders } from 'axios'
-import { useAuthStore } from '@/stores/authStore'
+/**
+ * Legacy API Compatibility Layer
+ * Tương thích ngược: Mọi yêu cầu được chuyển hướng qua C Communication Engine (gatewayClient).
+ */
+import { gatewayClient } from './gatewayClient'
 
-declare module 'axios' {
-  export interface AxiosRequestConfig {
-    suppressAuthRedirect?: boolean
-    _retry?: boolean
-  }
-}
+export default gatewayClient
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 60000,
-  withCredentials: true,
-})
-
-// Attach Bearer token to every request if available
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
-  const headers = AxiosHeaders.from(config.headers)
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
-  config.headers = headers
-  return config
-})
-
-// Response interceptor for handling 401 Unauthorized
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && !error.config?.suppressAuthRedirect) {
-      useAuthStore.getState().clearAuth()
-    }
-    return Promise.reject(error)
-  }
-)
-
-export default api
