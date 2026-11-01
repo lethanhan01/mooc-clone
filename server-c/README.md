@@ -59,8 +59,8 @@ flowchart TD
 - **Chống Rớt Gói Trên Non-blocking Socket ([tcp_socket.c](src/tcp_socket.c)):** Hàm `tcp_send_all()` tích hợp `poll(POLLOUT)` khi gặp `EAGAIN` / `EWOULDBLOCK`, đảm bảo gửi trọn vẹn payload lớn ngay cả khi bộ đệm gửi của nhân Linux tạm thời đầy dưới tải cao.
 
 > [!NOTE]
-> **Đối chiếu kiến trúc HTTP/1.1 Server, WebSocket và Giải pháp Thuần HTTP (SSE / Polling):**  
-> Xem phân tích chuyên sâu về lý do hệ thống thi trực tuyến kết hợp HTTP với WebSocket, cũng như 3 giải pháp loại bỏ WebSocket bằng thuần HTTP/1.1 (`Server-Sent Events`, `Short Polling + Server Timestamp`, `Long Polling`) tại [realtime-network-subsystem.md](../server/docs/realtime-network-subsystem.md).
+> **Phân tích chuyên sâu Kiến trúc Mạng & Đồng bộ Phòng thi Thời gian thực:**  
+> Xem tài liệu đặc tả chi tiết về cơ chế dồn kênh `epoll` (`EPOLLET | EPOLLONESHOT`), máy trạng thái HTTP/1.1 FSM Parser 13 trạng thái và kiến trúc đồng bộ phòng thi qua `HTTP Short Polling + Server Authoritative Timestamp` tại [realtime-network-subsystem.md](../server/docs/realtime-network-subsystem.md).
 
 ---
 

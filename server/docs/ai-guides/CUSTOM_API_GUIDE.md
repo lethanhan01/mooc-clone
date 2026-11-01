@@ -1,8 +1,8 @@
 # Cẩm Nang AI & Developer: Xây Dựng Custom API Nghiệp Vụ Chuyên Biệt
 
 > **Phân hệ:** Máy chủ Backend (`server/`) — Nền tảng Spring Boot 3.4.3 & Java 21 LTS  
-> **Kiến trúc:** Pure Layered Architecture kết hợp Bộ điều phối Realtime `RoomEventBus`  
-> **Mục tiêu:** Hướng dẫn chi tiết cho AI Agents và lập trình viên khi xây dựng các API nghiệp vụ phức hợp, độc lập với `BaseController`, đòi hỏi tính toàn vẹn cao của máy trạng thái, kiểm tra gian lận và đồng bộ mạng thời gian thực.
+> **Kiến trúc:** Pure Layered Architecture kết hợp Đồng bộ Phòng thi Stateless REST Short Polling  
+> **Mục tiêu:** Hướng dẫn chi tiết cho AI Agents và lập trình viên khi xây dựng các API nghiệp vụ phức hợp, độc lập với `BaseController`, đòi hỏi tính toàn vẹn cao của máy trạng thái, kiểm tra gian lận và đồng bộ thời gian chuẩn.
 
 ---
 
@@ -12,7 +12,7 @@ Trong khi [API_GENERATION_GUIDE.md](API_GENERATION_GUIDE.md) hướng dẫn xây
 
 1. **Điều khiển Vòng Đời & Máy Trạng Thái (State Machine):** Các hành động thay đổi trạng thái theo quy trình một chiều (ví dụ: Bắt đầu làm bài, Nộp bài thi, Mở phòng thi, Kết thúc phòng thi).
 2. **Nghiệp Vụ Đa Thực Thể & Bảo Mật Cao:** Các tác vụ tính điểm thi, kiểm tra đáp án đúng/sai, sinh đề ngẫu nhiên theo tỷ lệ phân bổ độ khó (`easy_count`, `medium_count`, `hard_count`).
-3. **Kích Hoạt Sự Kiện Thời Gian Thực:** Khi API cần phát thanh (broadcast) trạng thái tới Client qua [Phân Hệ Mạng Kép](../realtime-network-subsystem.md) (NIO TCP Port 9090 và WebSocket Port 8080).
+3. **Đồng Bộ Trạng Thái Phòng Thi Thời Gian Thực:** Khi API cần trả về trạng thái phòng thi kèm mốc thời gian chuẩn máy chủ (`serverNow`, `endsAt`) và đánh giá hết hạn lười (Lazy Expiration) theo [Phân Hệ Mạng & Đồng Bộ Thời Gian Thực](../realtime-network-subsystem.md).
 4. **Truy Vấn Tổng Hợp Phức Tạp:** Khi cần trích xuất báo cáo, thống kê năng lực hoặc bảng xếp hạng từ [5 Dynamic Views](../database-architecture.md).
 
 ---
@@ -23,21 +23,20 @@ Khác với CRUD API, Custom API sử dụng **Controller và Service độc l�
 
 ```mermaid
 graph TD
-    Client["Client (Browser Web / TCP Socket Client)"]
+    Client["Client (React 19 SPA Web)"]
     Client -->|"POST /api/attempts/{id}/submit"| Controller["Custom Controller (@RestController)<br/>ExamAttemptController"]
     Controller -->|"StartAttemptRequest / SubmitAnswerRequest"| Service["Custom Service Interface & Impl<br/>ExamAttemptServiceImpl"]
     
     Service -->|"Trích xuất người dùng hiện tại"| SecurityUtil["SecurityUtil (SecurityContext)"]
     Service -->|"Kiểm tra trạng thái & ném lỗi"| ErrorCode["ErrorCode & AppException"]
     Service -->|"Phối hợp nhiều Repo trong 1 Transaction"| Repositories["Repositories (@Transactional)<br/>AttemptRepo, AnswerRepo, QuestionRepo"]
-    Service -->|"Đồng bộ sự kiện thời gian thực"| RoomEventBus["RoomEventBus (Dual Channel)"]
     
     Repositories -->|"SQL & Dynamic Views"| Database[("Supabase PostgreSQL")]
 ```
 
 > **Nguyên Tắc Thiết Kế:**
 > - Controller chỉ đóng vai trò phân giải HTTP Request, kích hoạt validation `@Valid`, gọi Service và bọc dữ liệu vào `ApiResponse.success(...)`. Tuyệt đối không chứa logic nghiệp vụ.
-> - Service độc lập chịu trách nhiệm toàn bộ logic: Kiểm tra quyền hạn, kiểm tra máy trạng thái, phối hợp nhiều Repository trong một transaction `@Transactional`, phát tán sự kiện mạng và trả về DTO Record chuyên biệt.
+> - Service độc lập chịu trách nhiệm toàn bộ logic: Kiểm tra quyền hạn, kiểm tra máy trạng thái, phối hợp nhiều Repository trong một transaction `@Transactional` và trả về DTO Record chuyên biệt.
 
 ---
 
@@ -143,37 +142,21 @@ Khi cần truy vấn số liệu tổng hợp (ví dụ bảng xếp hạng phò
 
 ---
 
-### Kịch Bản 4: Bắn Sự Kiện Mạng Thời Gian Thực Qua `RoomEventBus`
+### Kịch Bản 4: Đồng Bộ Thời Gian Chuẩn Máy Chủ & Lazy Expiration Cho Phòng Thi
 
-Khi API tạo ra sự thay đổi trạng thái mà các thí sinh khác trong phòng thi cần biết ngay lập tức (bắt đầu thi, có người vào/ra phòng, kết thúc thi), hãy inject [RoomEventBus.java](../../src/main/java/com/example/server/socket/RoomEventBus.java):
+Khi API thao tác với phòng thi trực tuyến (bắt đầu thi, lấy trạng thái phòng qua Short Polling, nộp bài), tầng Service tại [RoomServiceImpl.java](../../src/main/java/com/example/server/service/impl/RoomServiceImpl.java) (tương đồng với [in_memory_store.c](../../../server-c/src/in_memory_store.c)) sử dụng mốc thời gian chuẩn của máy chủ (`serverNow`, `endsAt`) kết hợp **Lazy State Transition**:
 
 ```java
-@Service
-@Transactional
-public class ExamRoomServiceImpl implements ExamRoomService {
-
-    private final ExamRoomRepository roomRepository;
-    private final RoomEventBus roomEventBus; // Trạm điều phối mạng kép
-
-    public ExamRoomServiceImpl(ExamRoomRepository roomRepository, RoomEventBus roomEventBus) {
-        this.roomRepository = roomRepository;
-        this.roomEventBus = roomEventBus;
-    }
-
-    @Override
-    public void startRoomExam(String roomCode) {
-        ExamRoomEntity room = findByCodeOrThrow(roomCode);
-        room.setStatus("IN_PROGRESS");
-        roomRepository.save(room);
-
-        // Phát sóng sự kiện thời gian thực tới toàn bộ thí sinh trong phòng (cả TCP & WebSocket)
-        roomEventBus.broadcastExamStarted(room.getId().toString(), room.getDurationMinutes() * 60);
-    }
+// Trong RoomServiceImpl.java:
+Instant now = Instant.now();
+if ("RUNNING".equals(room.getStatus()) && room.getEndsAt() != null && !now.isBefore(room.getEndsAt())) {
+    room.setStatus("ENDED");
+    roomRepository.save(room);
 }
 ```
 
 > [!IMPORTANT]
-> **Quy Tắc Vàng Khi Gọi Socket Từ REST:** CSDL phải được commit hoặc cập nhật trạng thái hợp lệ TRƯỚC KHI phát thanh sự kiện mạng, đảm bảo khi client nhận được event và gọi API tra cứu thì dữ liệu mới nhất đã sẵn sàng.
+> **Quy Tắc Vàng Khi Đồng Bộ Thời Gian Phòng Thi:** Luôn đính kèm mốc giờ chuẩn `serverNow` và `endsAt` trong DTO phản hồi để Client tính độ lệch đồng hồ ($\Delta t = T_{\text{serverNow}} - T_{\text{clientNow}}$), ngăn chặn triệt để hành vi gian lận chỉnh giờ hệ điều hành.
 
 ---
 
@@ -290,7 +273,7 @@ Khi bạn hoặc AI tạo mới một Custom API, hãy kiểm tra danh sách 7 t
 | **Nhận `userId` từ Request Body** | Gây lỗ hổng bảo mật IDOR nghiêm trọng | Luôn lấy từ `SecurityUtil.getCurrentUser()` |
 | **Xử lý tính điểm trong Controller** | Phá vỡ mô hình phân tầng Pure Layered | Chuyển toàn bộ logic tính toán vào Service |
 | **Quên kiểm tra Deadline làm bài** | Thí sinh có thể nộp bài trễ giờ quy định | Kiểm tra `OffsetDateTime.now() > deadlineAt` trước khi chấm |
-| **Bắn sự kiện Socket trước khi lưu DB** | Thí sinh khác nhận event nhưng DB chưa cập nhật | Lưu CSDL xong mới gọi `RoomEventBus` |
+| **Không trả kèm `serverNow` / `endsAt`** | Đồng hồ đếm ngược bị lệch nếu thí sinh chỉnh giờ OS | Luôn đính kèm mốc thời gian chuẩn của máy chủ trong Response DTO |
 | **Hardcode mã lỗi trong exception** | Lỗi trả về Client không đồng nhất cấu trúc ApiResponse | Sử dụng Enum `ErrorCode` tập trung |
 
 ---

@@ -144,6 +144,6 @@ Chi tiết hướng dẫn 3 chế độ đồng thời (`sequential`, `threadpoo
 
 ## 5. Tài liệu Kỹ thuật Liên quan
 
-- **Tài liệu & Kiến trúc Backend Java:** Cẩm nang AI Guides, Kiến trúc Mạng kép, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
+- **Tài liệu & Kiến trúc Backend:** Cẩm nang AI Guides, Kiến trúc Mạng & Đồng bộ Thời gian thực, Bảo mật Session Token và Thiết kế CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
 - **Tài liệu & Runbook Máy chủ C (`server-c/`):** Đặc tả kiến trúc Socket POSIX, HTTP/1.1 FSM Parser và `epoll` Reactor tại [server-c/README.md](server-c/README.md).
 - **Quy chuẩn Phát triển Frontend:** Tiêu chuẩn 19 Master Rules, Design Tokens và Semantic Architecture tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md).
