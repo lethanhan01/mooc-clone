@@ -29,6 +29,7 @@
    - [4.3. Bảng Đối Chiếu Anti-Patterns vs Chuẩn Mực Doanh Nghiệp](#43-bảng-đối-chiếu-anti-patterns-vs-chuẩn-mực-doanh-nghiệp)
 5. [Toàn Bộ 38 Quy Tắc Vercel React Native Ánh Xạ Sang Môi Trường Doanh Nghiệp](#5-toàn-bộ-38-quy-tắc-vercel-react-native-ánh-xạ-sang-môi-trường-doanh-nghiệp)
 6. [Ánh Xạ Tooling Kiểm Toán CI & Checklist Review PR](#6-ánh-xạ-tooling-kiểm-toán-ci-checklist-review-pr)
+7. [Kiến Trúc Ứng Dụng Desktop Runtime (Electron + React 19 + Native TCP Socket C Gateway)](#7-kiến-trúc-ứng-dụng-desktop-runtime-electron-react-19-native-tcp-socket-c-gateway)
 
 ---
 
@@ -401,5 +402,40 @@ Dưới đây là bảng tra cứu đầy đủ **38 quy tắc Vercel React Nati
 | **4** | `CHECK-MOB-04` | Tuyệt đối không dùng toán tử `&&` với các biểu thức số hoặc chuỗi trong JSX. | Code Review file JSX | Bắt buộc |
 | **5** | `CHECK-MOB-05` | 100% animations chỉ chạy trên `transform` và `opacity`. | Thanh tra thuộc tính CSS / Reanimated | Bắt buộc |
 | **6** | `CHECK-MOB-06` | Có cơ chế fallback hiển thị dữ liệu đệm khi mất mạng tại phòng tập. | Thử nghiệm chế độ Offline DevTools | Bắt buộc |
+
+---
+
+## 7. Kiến Trúc Ứng Dụng Desktop Runtime (Electron + React 19 + Native TCP Socket C Gateway)
+
+### 7.1. Bối Cảnh & Ranh Giới Bảo Mật Desktop
+Nhằm loại bỏ hoàn toàn việc phụ thuộc vào trình duyệt Web và các tầng HTTP/REST trung gian, hệ thống `mooc-clone` được đóng gói thành ứng dụng Desktop độc lập thông qua Electron:
+- **Sandbox & Context Isolation:** Kích hoạt `sandbox: true` và `contextIsolation: true` trong `BrowserWindow`. Tuyệt đối cấm bật `nodeIntegration` tại Renderer Process.
+- **Tách bạch I/O Socket:** Tầng giao diện React 19 không bao giờ gọi socket hệ thống trực tiếp; thay vào đó, toàn bộ kết nối TCP Socket tầng Transport được quản lý tập trung trong `Electron Main Process` thông qua module chuẩn `node:net`.
+
+### 7.2. Tầng Cầu Nối Preload IPC Bridge
+Cung cấp API an toàn cho React thông qua `contextBridge` tại [client/electron/preload.cjs](../electron/preload.cjs):
+```javascript
+contextBridge.exposeInMainWorld('gatewayApi', {
+  request: (msgType, payload) => ipcRenderer.invoke('gateway:request', { msgType, payload }),
+  getStatus: () => ipcRenderer.invoke('gateway:status'),
+  onPush: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('gateway:push', handler);
+    return () => ipcRenderer.removeListener('gateway:push', handler);
+  },
+  isDesktop: true,
+});
+```
+
+### 7.3. Thuật Toán Bóc Tách Khung Tin TLV 16B Chống Dính Gói
+Trong [client/electron/main.cjs](../electron/main.cjs), toàn bộ dòng byte TCP đến từ C Gateway (`:9000`) được tích lũy vào bộ đệm `accumulationBuffer`:
+1. Kiểm tra nếu `accumulationBuffer.length >= 16`: Đọc `magic == 0x4D43`, `version == 0x01`, `seqId` và `payloadLen`.
+2. Kiểm tra nếu `accumulationBuffer.length >= 16 + payloadLen`: Đã nhận trọn vẹn 1 khung tin.
+3. Nếu `msgType === 0x80` (Broadcast): Phát sang React UI qua `mainWindow.webContents.send('gateway:push', data)`.
+4. Nếu là phản hồi Request: Tra cứu `seqId` trong `pendingRequests` Map và gọi `resolve(data)`.
+5. Dịch chuyển phần byte chưa xử lý (xử lý triệt để hiện tượng dính gói TCP).
+
+### 7.4. Adapter Client Tầng Nghiệp Vụ (`gatewayClient.ts`)
+Tầng Client Service ([client/src/services/gatewayClient.ts](../src/services/gatewayClient.ts)) đóng gói toàn bộ Opcodes (`0x01` Auth, `0x10` Room, `0x20` Exam), cung cấp giao diện lập trình Promise bất đồng bộ mượt mà cho React Query và Zustand Stores mà không cần đến Axios hay HTTP.
 
 

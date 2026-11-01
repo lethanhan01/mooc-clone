@@ -8,6 +8,7 @@
     "type-check": "tsc --noEmit",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "electron:dev": "electron electron/main.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

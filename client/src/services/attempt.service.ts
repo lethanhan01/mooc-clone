@@ -1,6 +1,5 @@
-import api from './api'
+import { gatewayClient, GATEWAY_OPCODES } from './gatewayClient'
 import type {
-  ApiResponse,
   AttemptResultResponse,
   StartAttemptRequest,
   SubmitAnswerRequest,
@@ -8,21 +7,18 @@ import type {
 
 export const attemptService = {
   async startAttempt(payload: StartAttemptRequest): Promise<AttemptResultResponse> {
-    const response = await api.post<ApiResponse<AttemptResultResponse>>('/attempts/start', payload)
-    return response.data.data
+    return gatewayClient.request<AttemptResultResponse>(GATEWAY_OPCODES.EXAM_START_REQ, payload)
   },
 
   async submitAnswer(attemptId: number, payload: SubmitAnswerRequest): Promise<void> {
-    await api.post(`/attempts/${attemptId}/answers`, payload)
+    await gatewayClient.request(GATEWAY_OPCODES.EXAM_SUBMIT_REQ, { attemptId, ...payload })
   },
 
   async submitExam(attemptId: number): Promise<AttemptResultResponse> {
-    const response = await api.post<ApiResponse<AttemptResultResponse>>(`/attempts/${attemptId}/submit`)
-    return response.data.data
+    return gatewayClient.request<AttemptResultResponse>(GATEWAY_OPCODES.EXAM_SUBMIT_REQ, { attemptId })
   },
 
   async getResult(attemptId: number): Promise<AttemptResultResponse> {
-    const response = await api.get<ApiResponse<AttemptResultResponse>>(`/attempts/${attemptId}/result`)
-    return response.data.data
+    return gatewayClient.request<AttemptResultResponse>(GATEWAY_OPCODES.EXAM_SUBMIT_REQ, { attemptId, action: 'result' })
   },
 }

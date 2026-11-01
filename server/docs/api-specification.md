@@ -1,152 +1,200 @@
-# Đặc Tả Chuẩn Hóa RESTful API, Khung Phản Hồi ApiResponse & Swagger UI
+# Đặc Tả Giao Tiếp Hệ Thống mooc-clone (C Gateway TLV Protocol & Admin REST API)
 
-> **Phân hệ:** Máy chủ Backend (`server/`) — Nền tảng Spring Boot 3.4.3 & SpringDoc OpenAPI 2.8.5  
-> **Cấu trúc bao gói:** Chuẩn hóa dữ liệu JSON đầu ra qua [ApiResponse.java](../src/main/java/com/example/server/dto/common/ApiResponse.java)  
-> **Phân trang:** Chuẩn hóa cấu trúc phân trang qua [PageResponse.java](../src/main/java/com/example/server/dto/common/PageResponse.java)  
-> **Giao diện trực quan:** Swagger UI tích hợp tại `http://localhost:8080/swagger-ui/index.html`
+> **Phân hệ trọng tâm:** C Communication Engine (`server-c/`) & Java Spring Boot Backend (`server/`)  
+> **Kênh giao tiếp chính:** TCP Socket nhị phân qua C Gateway (Cổng 9000, 16-byte TLV Header + JSON Payload)  
+> **Kênh quản trị phụ lục:** Spring Boot REST API & Swagger UI (Cổng 8080)  
+> **Đặc tả khung nhị phân:** Xem tại [server-c/README.md](../../server-c/README.md)
 
 ---
 
-## 1. Chuẩn Hóa Khung Phản Hồi Duy Nhất (`ApiResponse<T>`)
+## 1. Đặc Tả Giao Thức C Communication Engine (Kênh Chính Cổng :9000)
 
-Mọi yêu cầu gửi tới REST API của `mooc-clone` đều nhận được cấu trúc phản hồi đồng nhất, giúp Client dễ dàng bóc tách dữ liệu và hiển thị thông báo lỗi nhất quán.
+Mọi trao đổi dữ liệu nghiệp vụ thời gian thực giữa ứng dụng máy trạm **Electron Desktop** và **Java Spring Boot Worker** đều đi qua C Gateway theo cấu trúc **TLV (Type-Length-Value)** với **Header cố định 16 bytes** (Big-Endian):
 
-### 1.1. Cấu Trúc Khi Thành Công (Success Envelope)
-Khi xử lý thành công, trường `code` luôn có giá trị `1000` và trường `errors` là `null`:
-
-```json
-{
-  "code": 1000,
-  "message": "Thành công",
-  "data": {
-    "id": 1,
-    "name": "Đề thi giữa kỳ Lập trình mạng",
-    "status": "ACTIVE"
-  },
-  "errors": null,
-  "timestamp": "2026-10-26T03:15:00.000Z"
-}
+```text
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|          MAGIC (0x4D43)       |    VERSION    |    MSG_TYPE   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         SEQUENCE_ID                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          CLIENT_ID                            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         PAYLOAD_LEN                           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     PAYLOAD (JSON UTF-8) ...                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-### 1.2. Cấu Trúc Khi Có Lỗi Dữ Liệu Đầu Vào (Validation Error)
-Khi vi phạm Bean Validation (`@NotBlank`, `@Size`, `@NotNull`), mã `code` là `1002` kèm danh sách chi tiết các trường bị lỗi trong mảng `errors`:
+### 1.1. Bảng Danh Mục Opcodes & Payloads Chi Tiết
 
-```json
-{
-  "code": 1002,
-  "message": "Dữ liệu yêu cầu không hợp lệ",
-  "data": null,
-  "errors": [
+#### `0x00` — `OP_SYS_HANDSHAKE` (Đăng ký Worker nội bộ)
+- **Chiều:** Java Worker -> C Gateway.
+- **Payload:** `{"role": "WORKER"}`
+- **Ý nghĩa:** C Gateway lưu lại `worker_fd` để chuyển tiếp toàn bộ yêu cầu từ các client.
+
+#### `0x01` / `0x02` — `OP_AUTH_LOGIN_REQ` / `OP_AUTH_LOGIN_RESP`
+- **Request Payload (`0x01`):**
+  ```json
+  {
+    "usernameOrEmail": "student1",
+    "password": "password123"
+  }
+  ```
+- **Response Payload (`0x02`):**
+  ```json
+  {
+    "token": "sess_8f3a9e2...",
+    "userId": 1,
+    "username": "student1",
+    "displayName": "Nguyễn Văn A",
+    "role": "STUDENT"
+  }
+  ```
+
+#### `0x03` / `0x04` — `OP_AUTH_REGISTER_REQ` / `OP_AUTH_REGISTER_RESP`
+- **Request Payload (`0x03`):**
+  ```json
+  {
+    "username": "student2",
+    "email": "student2@mooc.local",
+    "password": "password123",
+    "displayName": "Trần Thị B"
+  }
+  ```
+- **Response Payload (`0x04`):**
+  ```json
+  {
+    "id": 2,
+    "username": "student2",
+    "displayName": "Trần Thị B"
+  }
+  ```
+
+#### `0x10` / `0x11` — `OP_ROOM_LIST_REQ` / `OP_ROOM_LIST_RESP`
+- **Request Payload (`0x10`):** `{}`
+- **Response Payload (`0x11`):**
+  ```json
+  [
     {
-      "field": "content",
-      "message": "Nội dung câu hỏi không được để trống"
-    },
-    {
-      "field": "options",
-      "message": "Câu hỏi phải có tối thiểu 2 phương án lựa chọn"
+      "id": 1,
+      "roomCode": "IT4062-01",
+      "roomName": "Phòng thi Lập trình mạng",
+      "status": "WAITING",
+      "durationSeconds": 3600,
+      "totalQuestions": 40,
+      "participantsCount": 15
     }
-  ],
-  "timestamp": "2026-10-26T03:15:00.000Z"
-}
-```
+  ]
+  ```
 
-### 1.3. Cấu Trúc Phân Trang Chuẩn (`PageResponse<T>`)
-Đối với các API danh sách có phân trang (`GET /api/<resource>/page?page=0&size=20`), phần `data` được bọc trong đối tượng `PageResponse`:
+#### `0x12` / `0x13` — `OP_ROOM_CREATE_REQ` / `OP_ROOM_CREATE_RESP`
+- **Request Payload (`0x12`):**
+  ```json
+  {
+    "roomCode": "ROOM88",
+    "name": "Kiểm tra giữa kỳ",
+    "durationSeconds": 2700,
+    "easyCount": 10,
+    "mediumCount": 15,
+    "hardCount": 5,
+    "visibility": "PUBLIC"
+  }
+  ```
+- **Response Payload (`0x13`):** Trả về đối tượng `RoomSummaryDto` vừa được tạo.
 
+#### `0x14` / `0x15` — `OP_ROOM_JOIN_REQ` / `OP_ROOM_JOIN_RESP`
+- **Request Payload (`0x14`):**
+  ```json
+  {
+    "roomCode": "ROOM88",
+    "username": "student1",
+    "displayName": "Nguyễn Văn A"
+  }
+  ```
+- **Response Payload (`0x15`):** Xác nhận tham gia thành công kèm cấu hình phòng thi.
+
+#### `0x20` / `0x21` — `OP_EXAM_START_REQ` / `OP_EXAM_START_RESP`
+- **Request Payload (`0x20`):**
+  ```json
+  {
+    "roomCode": "ROOM88"
+  }
+  ```
+- **Response Payload (`0x21`):**
+  ```json
+  {
+    "status": "EXAM_STARTED",
+    "roomCode": "ROOM88"
+  }
+  ```
+
+#### `0x22` / `0x23` — `OP_EXAM_SUBMIT_REQ` / `OP_EXAM_SUBMIT_RESP`
+- **Request Payload (`0x22`):**
+  ```json
+  {
+    "attemptId": 105,
+    "answers": [
+      { "questionId": 1, "selectedOptionId": 3 },
+      { "questionId": 2, "selectedOptionId": 1 }
+    ]
+  }
+  ```
+- **Response Payload (`0x23`):**
+  ```json
+  {
+    "attemptId": 105,
+    "score": 8.5,
+    "correctCount": 34,
+    "totalCount": 40,
+    "passed": true
+  }
+  ```
+
+#### `0x80` — `OP_SERVER_BROADCAST` (Server Push Broadcast)
+- **Chiều:** Java Worker -> C Gateway -> Toàn bộ Desktop Clients.
+- **Payload Ví Dụ (Bắt đầu thi đồng bộ):**
+  ```json
+  {
+    "eventType": "EXAM_STARTED",
+    "roomCode": "ROOM88",
+    "timestamp": 1730462400000
+  }
+  ```
+
+---
+
+## 2. Phụ Lục: RESTful API Phục Vụ Quản Trị & Swagger UI
+
+Ngoài kênh TCP Gateway phục vụ thí sinh trên Desktop, máy chủ Java Spring Boot tiếp tục duy trì các REST Endpoints để quản trị dữ liệu và tích hợp Swagger UI:
+
+- **Giao diện Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
+- **Đặc tả OpenAPI 3 định dạng JSON:** `http://localhost:8080/v3/api-docs`
+
+### 2.1. Cấu Trúc Khung Phản Hồi Duy Nhất (`ApiResponse<T>`)
 ```json
 {
   "code": 1000,
   "message": "Thành công",
-  "data": {
-    "content": [ ... ],
-    "pageNumber": 0,
-    "pageSize": 20,
-    "totalElements": 85,
-    "totalPages": 5,
-    "last": false
-  },
+  "data": { ... },
   "errors": null,
-  "timestamp": "2026-10-26T03:15:00.000Z"
+  "timestamp": "2026-11-01T12:00:00.000Z"
 }
 ```
 
----
+### 2.2. Danh Mục Các Endpoint Quản Trị
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+- `GET /api/rooms`, `POST /api/rooms`, `GET /api/rooms/{id}`
+- `GET /api/questions`, `POST /api/questions`, `PUT /api/questions/{id}`, `DELETE /api/questions/{id}`
+- `POST /api/attempts/start`, `POST /api/attempts/{id}/submit`, `GET /api/attempts/{id}/result`
 
-## 2. Bảng Danh Mục Mã Lỗi Nghiệp Vụ Hệ Thống (System Error Codes)
-
-Định nghĩa tập trung tại [ErrorCode.java](../src/main/java/com/example/server/exception/ErrorCode.java):
-
-| Mã Lỗi (Code) | Tên Định Danh Enum | HTTP Status | Ý Nghĩa Kỹ Thuật |
-| :--- | :--- | :--- | :--- |
-| `1000` | `SUCCESS` | `200 OK` | Yêu cầu xử lý thành công |
-| `1001` | `UNCATEGORIZED_EXCEPTION` | `500 INTERNAL_SERVER_ERROR` | Lỗi máy chủ không xác định |
-| `1002` | `INVALID_REQUEST` | `400 BAD_REQUEST` | Dữ liệu đầu vào không hợp lệ hoặc sai định dạng |
-| `1003` | `RESOURCE_NOT_FOUND` | `404 NOT_FOUND` | Không tìm thấy bản ghi theo ID |
-| `1004` | `UNAUTHORIZED` | `401 UNAUTHORIZED` | Chưa đăng nhập hoặc mã phiên làm việc không hợp lệ |
-| `1005` | `FORBIDDEN` | `403 FORBIDDEN` | Không đủ quyền hạn thực hiện thao tác này |
-| `1010` | `USER_ALREADY_EXISTS` | `400 BAD_REQUEST` | Tên đăng nhập hoặc email đã được sử dụng |
-| `1011` | `INVALID_CREDENTIALS` | `400 BAD_REQUEST` | Tên đăng nhập hoặc mật khẩu không chính xác |
-| `1020` | `EXAM_ROOM_NOT_FOUND` | `404 NOT_FOUND` | Phòng thi không tồn tại hoặc đã kết thúc |
-| `1030` | `EXAM_ALREADY_SUBMITTED` | `400 BAD_REQUEST` | Bài thi đã được nộp hoặc đã hết hạn làm bài |
-| `1031` | `EXAM_DEADLINE_EXCEEDED`| `400 BAD_REQUEST` | Đã quá hạn thời gian nộp bài thi quy định |
-
----
-
-## 3. Danh Mục Chi Tiết Toàn Bộ Endpoints RESTful
-
-### 3.1. Phân Hệ Xác Thực (`/api/auth`)
-- `POST /api/auth/register`: Đăng ký tài khoản mới cho thí sinh (`username`, `password`, `email`, `fullName`).
-- `POST /api/auth/login`: Xác thực tài khoản, cấp Session Token 64 ký tự hex.
-- `POST /api/auth/logout`: Thu hồi token hiện tại (`revoked_at = now()`).
-- `GET /api/auth/me`: Tra cứu thông tin hồ sơ của tài khoản đang đăng nhập.
-
-### 3.2. Phân Hệ Ngân Hàng Câu Hỏi (`/api/questions`) — Kế thừa `BaseController`
-- `GET /api/questions`: Lấy toàn bộ danh sách câu hỏi hoạt động.
-- `GET /api/questions/page?page=0&size=20`: Phân trang danh sách câu hỏi.
-- `GET /api/questions/{id}`: Tra cứu chi tiết một câu hỏi kèm các phương án lựa chọn.
-- `POST /api/questions`: *(Quyền TEACHER)* Tạo câu hỏi mới kèm tối thiểu 2 phương án và 1 phương án đúng.
-- `PUT /api/questions/{id}`: *(Quyền TEACHER)* Cập nhật nội dung câu hỏi và các phương án.
-- `DELETE /api/questions/{id}`: *(Quyền TEACHER)* Xóa mềm câu hỏi (`status = 'ARCHIVED'`).
-- `GET /api/questions/topic/{topic}`: Lọc câu hỏi theo chủ đề chuyên biệt.
-
-### 3.3. Phân Hệ Phòng Thi (`/api/rooms`) — Kế thừa `BaseController`
-- `GET /api/rooms`: Danh sách toàn bộ phòng thi.
-- `GET /api/rooms/page?page=0&size=20`: Phân trang danh sách phòng thi.
-- `GET /api/rooms/{id}`: Xem chi tiết phòng thi theo ID.
-- `GET /api/rooms/code/{code}`: Tra cứu thông tin tóm tắt phòng thi theo mã phòng `room_code`.
-- `POST /api/rooms`: Tạo phòng thi mới kèm cấu hình số lượng câu hỏi (`easy_count`, `medium_count`, `hard_count`).
-- `POST /api/rooms/{code}/join`: Thí sinh tham gia phòng thi.
-- `POST /api/rooms/{code}/leave`: Thí sinh rời khỏi phòng thi.
-- `POST /api/rooms/{code}/start`: *(Chủ phòng)* Bắt đầu phòng thi và phát lệnh đếm ngược.
-- `POST /api/rooms/{code}/finish`: *(Chủ phòng)* Kết thúc phòng thi và khóa nộp bài.
-
-### 3.4. Phân Hệ Lượt Thi & Chấm Điểm (`/api/attempts`) — Custom API
-- `POST /api/attempts/start`: Bắt đầu lượt thi chính thức hoặc luyện tập (sinh ngẫu nhiên danh sách câu hỏi).
-- `POST /api/attempts/{id}/answers`: Lưu lựa chọn đáp án cho từng câu hỏi trong quá trình thi.
-- `POST /api/attempts/{id}/submit`: Nộp bài thi chính thức, chốt điểm và kết quả.
-- `GET /api/attempts/{id}/result`: Tra cứu kết quả chi tiết của lượt thi (điểm số, tỷ lệ đúng, đáp án chi tiết).
-
----
-
-## 4. Tích Hợp Swagger UI & OpenAPI 3
-
-Hệ thống sử dụng thư viện **SpringDoc OpenAPI WebMVC**, tự động phân tích mã nguồn Controller và DTO Record để tạo tài liệu tương tác trực quan.
-
-### 4.1. Đường Dẫn Truy Cập Cục Bộ
-- **Giao diện Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **Đặc tả OpenAPI 3 định dạng JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-
-### 4.2. Hướng Dẫn Xác Thực (Authorize) Trên Swagger UI
-Cấu hình tại [OpenApiConfig.java](../src/main/java/com/example/server/config/OpenApiConfig.java) đã bật sẵn `BearerAuth`. Để thử nghiệm các API yêu cầu quyền đăng nhập:
-1. Gọi API `POST /api/auth/login` trên giao diện Swagger UI để nhận chuỗi `token`.
-2. Nhấn nút **Authorize** màu xanh ở góc trên bên phải màn hình Swagger.
-3. Dán chuỗi token vào ô `Value` (không cần gõ thêm chữ `Bearer `) và nhấn **Authorize**.
-4. Mọi yêu cầu thử nghiệm tiếp theo sẽ tự động đính kèm Header `Authorization: Bearer <TOKEN>`.
-
----
-
-## 5. Liên Kết Đối Chiếu
-
-- Hướng dẫn thêm mới API CRUD chuẩn: [API_GENERATION_GUIDE.md](ai-guides/API_GENERATION_GUIDE.md).
-- Hướng dẫn thêm mới API nghiệp vụ chuyên biệt: [CUSTOM_API_GUIDE.md](ai-guides/CUSTOM_API_GUIDE.md).
-- Kiến trúc bảo mật và xác thực Session Token: [security-architecture.md](security-architecture.md).
+### 2.3. Bảng Mã Lỗi Hệ Thống
+| Mã Lỗi | Tên Định Danh | Ý Nghĩa |
+| :--- | :--- | :--- |
+| `1000` | `SUCCESS` | Yêu cầu xử lý thành công |
+| `1001` | `UNCATEGORIZED_EXCEPTION` | Lỗi máy chủ không xác định |
+| `1002` | `INVALID_REQUEST` | Dữ liệu đầu vào sai định dạng |
+| `1003` | `RESOURCE_NOT_FOUND` | Không tìm thấy bản ghi |
+| `1004` | `UNAUTHORIZED` | Chưa xác thực phiên |
+| `1005` | `FORBIDDEN` | Không đủ quyền truy cập |

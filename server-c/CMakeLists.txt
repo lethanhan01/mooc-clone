@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
-project(mooc_c_http_server C)
+project(mooc_c_communication_engine C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-include_directories(include third_party)
+include_directories(include)
 
 add_definitions(-D_GNU_SOURCE)
 add_compile_options(-Wall -Wextra -Werror -pedantic -g)
@@ -17,32 +17,19 @@ endif()
 
 set(COMMON_SOURCES
     src/tcp_socket.c
-    src/http_parser.c
-    src/http_response.c
-    src/http_router.c
-    src/rest_controllers.c
-    src/in_memory_store.c
-    src/thread_pool.c
-    src/reactor.c
-    third_party/cJSON.c
+    src/engine_protocol.c
 )
 
-# Server executable
-add_executable(http_server src/main.c ${COMMON_SOURCES})
-target_link_libraries(http_server pthread)
-
-# TCP Echo Server executable (Phase 1)
-add_executable(tcp_echo_server src/echo_server.c src/tcp_socket.c)
-target_link_libraries(tcp_echo_server pthread)
+# C Communication Engine TCP Gateway executable
+add_executable(c_gateway src/c_gateway_main.c ${COMMON_SOURCES})
+target_link_libraries(c_gateway pthread)
 
 # Unit Tests executable
 enable_testing()
 add_executable(unit_tests
     tests/test_main.c
     tests/test_tcp_socket.c
-    tests/test_http_parser.c
-    tests/test_http_router.c
-    tests/test_in_memory_store.c
+    tests/test_engine_protocol.c
     ${COMMON_SOURCES}
 )
 target_link_libraries(unit_tests pthread)
