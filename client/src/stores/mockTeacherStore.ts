@@ -55,14 +55,22 @@ interface MockTeacherState {
   roomLogs: typeof MOCK_ROOM_LOGS
   setSemester: (id: string) => void
   createBank: (input: CreateBankInput) => MockQuestionBank
+  updateBank: (bankId: string, patch: { name: string }) => void
   cloneBank: (bankId: string) => MockQuestionBank | null
   addQuestion: (input: CreateQuestionInput) => MockQuestion
+  updateQuestion: (questionId: string, input: Omit<CreateQuestionInput, 'bankId'>) => void
+  deleteQuestion: (questionId: string) => void
+  deleteBank: (bankId: string) => void
   importQuestionsCsv: (bankId: string, rows: { content: string; difficulty: Difficulty; topic: string; answer: string; options: string[] }[]) => number
   generateExams: (input: GenerateExamsInput) => MockExamPaper[]
   updateExamTitle: (examId: string, title: string) => void
   addQuestionToExam: (examId: string, questionId: string) => void
   removeQuestionFromExam: (examId: string, questionId: string) => void
   moveExamQuestion: (examId: string, questionId: string, direction: -1 | 1) => void
+  updateRoom: (roomId: string, patch: Partial<Omit<MockRoom, 'id' | 'assigneeIds'>>) => void
+  deleteRoom: (roomId: string) => void
+  assignQuestionBank: (roomId: string, bankId: string) => void
+  removeStudent: (studentId: string) => void
   setRoomAssignees: (roomId: string, studentIds: string[]) => void
   importRoomAssignees: (
     roomId: string,
@@ -105,6 +113,16 @@ export const useMockTeacherStore = create<MockTeacherState>((set, get) => ({
     }
     set((s) => ({ banks: [bank, ...s.banks] }))
     return bank
+  },
+
+  updateBank: (bankId, patch) => {
+    const name = patch.name.trim()
+    if (!name) return
+    set((s) => ({
+      banks: s.banks.map((bank) =>
+        bank.id === bankId ? { ...bank, name, updatedAt: new Date().toISOString() } : bank
+      ),
+    }))
   },
 
   cloneBank: (bankId) => {
@@ -157,6 +175,53 @@ export const useMockTeacherStore = create<MockTeacherState>((set, get) => ({
       ),
     }))
     return question
+  },
+
+  deleteQuestion: (questionId) => {
+    const question = get().questions.find((item) => item.id === questionId)
+    if (!question) return
+    set((s) => ({
+      questions: s.questions.filter((item) => item.id !== questionId),
+      banks: s.banks.map((bank) =>
+        bank.id === question.bankId
+          ? { ...bank, questionCount: Math.max(0, bank.questionCount - 1), updatedAt: new Date().toISOString() }
+          : bank
+      ),
+      exams: s.exams.map((exam) => ({
+        ...exam,
+        questionIds: exam.questionIds.filter((id) => id !== questionId),
+      })),
+    }))
+  },
+
+  deleteBank: (bankId) => {
+    set((s) => ({
+      banks: s.banks.filter((bank) => bank.id !== bankId),
+      questions: s.questions.filter((question) => question.bankId !== bankId),
+      exams: s.exams.filter((exam) => exam.bankId !== bankId),
+      rooms: s.rooms.map((room) => (room.questionBankId === bankId ? { ...room, questionBankId: null } : room)),
+    }))
+  },
+
+  updateQuestion: (questionId, input) => {
+    set((s) => ({
+      questions: s.questions.map((question) => {
+        if (question.id !== questionId) return question
+        return {
+          ...question,
+          type: input.type,
+          content: input.content,
+          difficulty: input.difficulty,
+          topic: input.topic,
+          options: input.options.map((option, index) => ({
+            id: question.options[index]?.id ?? uid('opt'),
+            label: input.type === 'FILL' ? 'Đáp án' : String.fromCodePoint(65 + index),
+            content: option.content,
+            isCorrect: option.isCorrect,
+          })),
+        }
+      }),
+    }))
   },
 
   importQuestionsCsv: (bankId, rows) => {
@@ -247,6 +312,37 @@ export const useMockTeacherStore = create<MockTeacherState>((set, get) => ({
         questionIds.splice(next, 0, item)
         return { ...e, questionIds }
       }),
+    }))
+  },
+
+  deleteRoom: (roomId) => {
+    set((s) => ({
+      rooms: s.rooms.filter((room) => room.id !== roomId),
+      roomLogs: s.roomLogs.filter((log) => log.roomId !== roomId),
+    }))
+  },
+
+  updateRoom: (roomId, patch) => {
+    set((s) => ({
+      rooms: s.rooms.map((r) => (r.id === roomId ? { ...r, ...patch, id: r.id, assigneeIds: r.assigneeIds } : r)),
+    }))
+  },
+
+  assignQuestionBank: (roomId, bankId) => {
+    set((s) => ({
+      rooms: s.rooms.map((r) =>
+        r.id === roomId ? { ...r, questionBankId: bankId, examPaperIds: [] } : r
+      ),
+    }))
+  },
+
+  removeStudent: (studentId) => {
+    set((s) => ({
+      students: s.students.filter((stu) => stu.id !== studentId),
+      rooms: s.rooms.map((r) => ({
+        ...r,
+        assigneeIds: r.assigneeIds.filter((id) => id !== studentId),
+      })),
     }))
   },
 

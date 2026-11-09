@@ -62,6 +62,7 @@ export interface MockRoom {
   subjectId: string
   classCode: string
   examPaperIds: string[]
+  questionBankId: string | null
   mode: RoomMode
   status: RoomLifecycle
   capacity: number
@@ -253,7 +254,8 @@ export const MOCK_ROOMS: MockRoom[] = [
     name: 'Thi cuối kỳ 2025-2 ngày 10.7 kíp 5',
     subjectId: 'sub-it4549',
     classCode: '148123',
-    examPaperIds: ['exam-1', 'exam-2'],
+    examPaperIds: [],
+    questionBankId: 'bank-1',
     mode: 'EXAM',
     status: 'OPEN',
     capacity: 100,
@@ -267,7 +269,8 @@ export const MOCK_ROOMS: MockRoom[] = [
     name: 'Luyện tập IT4441',
     subjectId: 'sub-it4441',
     classCode: 'PUBLIC',
-    examPaperIds: ['exam-1'],
+    examPaperIds: [],
+    questionBankId: null,
     mode: 'PRACTICE',
     status: 'OPEN',
     capacity: 200,
