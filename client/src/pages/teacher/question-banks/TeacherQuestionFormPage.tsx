@@ -60,7 +60,7 @@ export default function TeacherQuestionFormPage() {
           Thêm câu hỏi
         </Heading>
         <Text size="sm" tone="muted">
-          Form kiểu Google Form — bộ {bank.name}
+          Bộ {bank.name}
         </Text>
       </header>
 

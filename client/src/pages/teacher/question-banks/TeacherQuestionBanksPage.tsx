@@ -5,6 +5,7 @@ import { Card, Badge } from '@/components/ui/data-display'
 import { Button, ButtonLink } from '@/components/ui/actions'
 import { Form, FormField, Input, Textarea } from '@/components/ui/forms'
 import { Heading, Text } from '@/components/ui/typography'
+import { ConfirmDialog } from '@/components/ui/overlay'
 import { useMockTeacherStore } from '@/stores/mockTeacherStore'
 import { toast } from '@/lib/toast'
 
@@ -15,6 +16,8 @@ export default function TeacherQuestionBanksPage() {
   const subjects = useMockTeacherStore((s) => s.subjects)
   const createBank = useMockTeacherStore((s) => s.createBank)
   const cloneBank = useMockTeacherStore((s) => s.cloneBank)
+  const deleteBank = useMockTeacherStore((s) => s.deleteBank)
+  const [deleteBankId, setDeleteBankId] = useState<string | null>(null)
 
   const [showCreate, setShowCreate] = useState(false)
   const [name, setName] = useState('')
@@ -159,12 +162,30 @@ export default function TeacherQuestionBanksPage() {
                   >
                     Nhân bản
                   </Button>
+                  <Button type="button" variant="danger" size="sm" onClick={() => setDeleteBankId(bank.id)}>
+                    Xóa
+                  </Button>
                 </footer>
               </Card>
             </li>
           )
         })}
       </ul>
+      <ConfirmDialog
+        open={Boolean(deleteBankId)}
+        onClose={() => setDeleteBankId(null)}
+        title="Xóa bộ câu hỏi?"
+        description={`Bộ “${banks.find((bank) => bank.id === deleteBankId)?.name ?? ''}” và các câu hỏi bên trong sẽ bị xóa.`}
+        confirmLabel="Xóa bộ"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={() => {
+          if (!deleteBankId) return
+          deleteBank(deleteBankId)
+          setDeleteBankId(null)
+          toast.success('Đã xóa bộ câu hỏi')
+        }}
+      />
     </div>
   )
 }

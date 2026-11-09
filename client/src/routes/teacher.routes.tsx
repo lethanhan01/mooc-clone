@@ -16,6 +16,7 @@ const TeacherQuestionBankDetailPage = lazy(
 )
 const TeacherQuestionImportPage = lazy(() => import('@/pages/teacher/question-banks/TeacherQuestionImportPage'))
 const TeacherQuestionFormPage = lazy(() => import('@/pages/teacher/question-banks/TeacherQuestionFormPage'))
+const TeacherQuestionEditPage = lazy(() => import('@/pages/teacher/question-banks/TeacherQuestionEditPage'))
 const TeacherExamsPage = lazy(() => import('@/pages/teacher/exams/TeacherExamsPage'))
 const TeacherExamGeneratePage = lazy(() => import('@/pages/teacher/exams/TeacherExamGeneratePage'))
 const TeacherExamDetailPage = lazy(() => import('@/pages/teacher/exams/TeacherExamDetailPage'))
@@ -31,11 +32,13 @@ export const teacherRoutes = (
     <Route path="/teacher/question-banks/:bankId" element={<TeacherQuestionBankDetailPage />} />
     <Route path="/teacher/question-banks/:bankId/import" element={<TeacherQuestionImportPage />} />
     <Route path="/teacher/question-banks/:bankId/questions/new" element={<TeacherQuestionFormPage />} />
+    <Route path="/teacher/question-banks/:bankId/questions/:questionId" element={<TeacherQuestionEditPage />} />
     <Route path="/teacher/exams" element={<TeacherExamsPage />} />
     <Route path="/teacher/exams/generate" element={<TeacherExamGeneratePage />} />
     <Route path="/teacher/exams/:examId" element={<TeacherExamDetailPage />} />
     <Route path="/teacher/rooms" element={<TeacherRoomsPage />} />
     <Route path="/teacher/rooms/create" element={<TeacherRoomCreatePage />} />
+    <Route path="/teacher/rooms/:roomId/edit" element={<TeacherRoomCreatePage />} />
     <Route path="/teacher/rooms/:roomId/questions" element={<TeacherRoomQuestionsPage />} />
     <Route path="/teacher/rooms/:roomId/monitor" element={<TeacherRoomMonitorPage />} />
     <Route path="/teacher/rooms/:roomId/results" element={<TeacherRoomResultsPage />} />

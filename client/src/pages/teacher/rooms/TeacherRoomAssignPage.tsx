@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Search } from 'lucide-react'
 import { Card } from '@/components/ui/data-display'
 import { Button, ButtonLink } from '@/components/ui/actions'
+import { Input } from '@/components/ui/forms'
 import { Heading, Text } from '@/components/ui/typography'
+import { ConfirmDialog } from '@/components/ui/overlay'
 import { useMockTeacherStore } from '@/stores/mockTeacherStore'
 import { toast } from '@/lib/toast'
 
@@ -29,12 +32,22 @@ export default function TeacherRoomAssignPage() {
   const students = useMockTeacherStore((s) => s.students)
   const setRoomAssignees = useMockTeacherStore((s) => s.setRoomAssignees)
   const importRoomAssignees = useMockTeacherStore((s) => s.importRoomAssignees)
+  const removeStudent = useMockTeacherStore((s) => s.removeStudent)
   const [selected, setSelected] = useState<string[]>(room?.assigneeIds ?? [])
   const [csv, setCsv] = useState(SAMPLE)
+  const [keyword, setKeyword] = useState('')
+  const [appliedQuery, setAppliedQuery] = useState('')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   if (!room) return <Text tone="muted">Không tìm thấy phòng mock.</Text>
 
   const modeLabel = room.mode === 'PRACTICE' ? 'Luyện tập' : 'Thi chính thức'
+  const query = appliedQuery.trim().toLowerCase()
+  const visibleStudents = students.filter((stu) => {
+    if (!query) return true
+    return stu.fullName.toLowerCase().includes(query) || stu.username.toLowerCase().includes(query)
+  })
+  const studentToDelete = students.find((stu) => stu.id === deleteId) ?? null
 
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page stack] */
@@ -52,27 +65,67 @@ export default function TeacherRoomAssignPage() {
         <Heading level={2} className="mb-3 text-sm font-bold">
           Danh sách đã có trong hệ thống
         </Heading>
+        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Search row] */}
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row">
+          <Input
+            id="assignee-search"
+            aria-label="Tìm sinh viên theo tên hoặc MSSV"
+            placeholder="Tên hoặc MSSV"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            leftIcon={<Search size={14} />}
+            className="min-h-11 sm:flex-1"
+          />
+          <Button type="button" variant="primary" size="sm" className="min-h-11" onClick={() => setAppliedQuery(keyword)}>
+            Tìm kiếm
+          </Button>
+          {appliedQuery ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-11"
+              onClick={() => {
+                setKeyword('')
+                setAppliedQuery('')
+              }}
+            >
+              Xóa lọc
+            </Button>
+          ) : null}
+        </div>
         <ul className="m-0 list-none space-y-2 p-0">
-          {students.map((stu) => {
+          {visibleStudents.map((stu) => {
             const checked = selected.includes(stu.id)
             return (
               <li key={stu.id}>
-                <label className="flex min-h-11 items-center gap-3 rounded-lg border border-line-subtle px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() =>
-                      setSelected((prev) => (checked ? prev.filter((id) => id !== stu.id) : [...prev, stu.id]))
-                    }
-                  />
-                  <span className="text-sm">
-                    {stu.fullName} · {stu.username} · {stu.email}
-                  </span>
-                </label>
+                {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Student row] */}
+                <div className="flex min-h-11 items-center gap-3 rounded-lg border border-line-subtle px-3 py-2">
+                  <label className="flex min-h-11 flex-1 items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        setSelected((prev) => (checked ? prev.filter((id) => id !== stu.id) : [...prev, stu.id]))
+                      }
+                    />
+                    <span className="text-sm">
+                      {stu.fullName} · MSSV {stu.username} · {stu.email}
+                    </span>
+                  </label>
+                  <Button type="button" variant="danger" size="sm" className="min-h-11" onClick={() => setDeleteId(stu.id)}>
+                    Xóa
+                  </Button>
+                </div>
               </li>
             )
           })}
         </ul>
+        {visibleStudents.length === 0 ? (
+          <Text size="sm" tone="muted">
+            Không có sinh viên khớp tên hoặc MSSV.
+          </Text>
+        ) : null}
         <footer className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"
@@ -129,6 +182,27 @@ export default function TeacherRoomAssignPage() {
           Gắn CSV vào phòng
         </Button>
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(studentToDelete)}
+        onClose={() => setDeleteId(null)}
+        title="Xóa sinh viên?"
+        description={
+          studentToDelete
+            ? `${studentToDelete.fullName} (MSSV ${studentToDelete.username}) sẽ bị xóa khỏi danh sách và khỏi mọi phòng mock.`
+            : ''
+        }
+        confirmLabel="Xóa sinh viên"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={() => {
+          if (!studentToDelete) return
+          removeStudent(studentToDelete.id)
+          setSelected((prev) => prev.filter((id) => id !== studentToDelete.id))
+          setDeleteId(null)
+          toast.success('Đã xóa sinh viên')
+        }}
+      />
     </div>
   )
 }
