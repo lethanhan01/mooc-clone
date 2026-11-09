@@ -1,5 +1,3 @@
-import { ThemeToggle } from '@/components/ui/navigation'
-import { LanguageSwitcher } from '@/components/ui/typography'
 import { TopbarAvatarDropdown } from './TopbarAvatarDropdown'
 import type { TopbarProps } from './topbar.types'
 import { cn } from '@/utils/cn'
@@ -12,8 +10,6 @@ export function Topbar({ className }: Readonly<TopbarProps> = {}) {
         className
       )}
     >
-      <ThemeToggle />
-      <LanguageSwitcher />
       <TopbarAvatarDropdown />
     </header>
   )

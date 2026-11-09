@@ -1,126 +1,126 @@
-import { DoorOpen, FileQuestion, Users, Plus, RefreshCw } from 'lucide-react'
-import { Card, StatCard, Badge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/data-display'
-import { Button, ButtonLink } from '@/components/ui/actions'
+import { BookOpen, Layers3 } from 'lucide-react'
+import { Card, Badge } from '@/components/ui/data-display'
+import { ButtonLink } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
-import { useRoomsListQuery } from '@/hooks/queries'
-import { roomStatusLabel, roomStatusTone } from '@/lib/room-status'
+import { useMockTeacherStore } from '@/stores/mockTeacherStore'
 
 export default function TeacherDashboardPage() {
-  const { data: rooms = [], isLoading, refetch } = useRoomsListQuery()
+  const semesters = useMockTeacherStore((s) => s.semesters)
+  const selectedSemesterId = useMockTeacherStore((s) => s.selectedSemesterId)
+  const setSemester = useMockTeacherStore((s) => s.setSemester)
+  const subjects = useMockTeacherStore((s) => s.subjects)
+  const banks = useMockTeacherStore((s) => s.banks)
+  const rooms = useMockTeacherStore((s) => s.rooms)
 
-  const openCount = rooms.filter(
-    (r) =>
-      r.status?.toUpperCase() === 'WAITING' ||
-      r.status?.toUpperCase() === 'RUNNING' ||
-      r.status === 'waiting' ||
-      r.status === 'in_progress'
-  ).length
-  const questionTotal = rooms.reduce((sum, r) => sum + (r.totalQuestions || 0), 0)
-  const participantsTotal = rooms.reduce((sum, r) => sum + (r.participantsCount || 0), 0)
-  const recent = rooms.slice(0, 5)
+  const visibleSubjects = subjects.filter((sub) => sub.semesterId === selectedSemesterId)
 
   return (
     /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Page vertical stack] */
     <div className="space-y-4">
-      <header className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+      <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Title stack] */}
         <div>
-          <Heading level={1} className="text-lg font-bold text-text-primary">
-            Tổng quan Giáo viên
+          <Heading level={1} className="text-lg font-bold text-fg-primary">
+            Tổng quan giáo viên
           </Heading>
           <Text size="xs" tone="muted">
-            Theo dõi phòng thi, đề đã soạn và lượt dự thi trong cơ sở dữ liệu
+            Danh sách môn theo kỳ — mock UI, chưa nối backend
           </Text>
         </div>
-        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Header actions] */}
-        <div className="flex flex-wrap gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-            leftIcon={<RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />}
-            onClick={() => refetch()}
+        <label className="flex items-center gap-2 text-sm text-fg-secondary">
+          <span>Kỳ học</span>
+          <select
+            className="min-h-11 rounded-lg border border-line-subtle bg-surface-card px-3 text-fg-primary"
+            value={selectedSemesterId}
+            onChange={(e) => setSemester(e.target.value)}
           >
-            Làm mới
-          </Button>
-          <ButtonLink to="/teacher/rooms/create" variant="primary" size="sm" leftIcon={<Plus size={14} />}>
-            Tạo phòng thi mới
-          </ButtonLink>
-        </div>
+            {semesters.map((sem) => (
+              <option key={sem.id} value={sem.id}>
+                {sem.label}
+                {sem.current ? ' (hiện tại)' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
       </header>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Thống kê nhanh">
-        <StatCard label="Phòng đang mở" value={String(openCount)} icon={<DoorOpen size={16} />} hint="Chờ thi + Đang thi" />
-        <StatCard label="Câu hỏi đã gắn đề" value={String(questionTotal)} icon={<FileQuestion size={16} />} hint="Tổng qua các phòng" />
-        <StatCard label="Thí sinh tham gia" value={String(participantsTotal)} icon={<Users size={16} />} hint="Đang kết nối trong phòng" />
+        <Card as="article" className="border border-line-subtle bg-surface-card p-4 shadow-none">
+          <Text size="xs" tone="muted">
+            Môn trong kỳ
+          </Text>
+          <p className="m-0 text-2xl font-bold text-fg-primary">{visibleSubjects.length}</p>
+        </Card>
+        <Card as="article" className="border border-line-subtle bg-surface-card p-4 shadow-none">
+          <Text size="xs" tone="muted">
+            Bộ câu hỏi
+          </Text>
+          <p className="m-0 text-2xl font-bold text-fg-primary">{banks.length}</p>
+        </Card>
+        <Card as="article" className="border border-line-subtle bg-surface-card p-4 shadow-none">
+          <Text size="xs" tone="muted">
+            Phòng thi mock
+          </Text>
+          <p className="m-0 text-2xl font-bold text-fg-primary">{rooms.length}</p>
+        </Card>
       </section>
 
-
-      <Card as="section" className="rounded-lg border-line-subtle bg-surface p-3 shadow-none sm:p-4">
-        <header className="mb-3 flex items-center justify-between gap-2">
-          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Section title stack] */}
-          <div>
-            <Heading level={2} className="text-sm font-bold">
-              Phòng thi gần đây
-            </Heading>
-            <Text size="xs" tone="muted">
-              Nhấn để quản lý chi tiết
-            </Text>
-          </div>
-          <ButtonLink to="/teacher/rooms" variant="ghost" size="sm">
-            Xem tất cả
+      <section aria-label="Danh sách môn" className="space-y-3">
+        <header className="flex items-center justify-between gap-2">
+          <Heading level={2} className="text-sm font-bold">
+            Môn học
+          </Heading>
+          <ButtonLink to="/teacher/question-banks" variant="primary" size="sm" leftIcon={<Layers3 size={14} />}>
+            Ngân hàng câu hỏi
           </ButtonLink>
         </header>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Mã</TableHead>
-              <TableHead>Tên phòng</TableHead>
-              <TableHead className="text-center">Số câu</TableHead>
-              <TableHead className="text-center">Trạng thái</TableHead>
-              <TableHead className="text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recent.map((room) => {
-              const statusUpper = room.status?.toUpperCase()
+        {visibleSubjects.length === 0 ? (
+          <Text tone="muted">Không có môn nào trong kỳ đã chọn.</Text>
+        ) : (
+          <ul className="m-0 list-none space-y-3 p-0">
+            {visibleSubjects.map((subject) => {
+              const bankCount = banks.filter((b) => b.subjectId === subject.id).length
+              const roomCount = rooms.filter((r) => r.subjectId === subject.id).length
               return (
-                <TableRow key={room.id}>
-                  <TableCell className="font-mono text-xs font-semibold text-action-accent">{room.roomCode}</TableCell>
-                  <TableCell>
-                    <p className="text-sm font-medium text-text-primary">{room.roomName}</p>
-                    <p className="text-[11px] text-text-muted">{room.ownerDisplayName || 'Giáo viên'}</p>
-                  </TableCell>
-                  <TableCell className="text-center text-sm">{room.totalQuestions}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge tone={roomStatusTone(room.status)} size="sm">
-                      {roomStatusLabel(room.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {statusUpper === 'RUNNING' || room.status === 'in_progress' ? (
-                      <ButtonLink to={`/teacher/rooms/${room.roomCode}/monitor`} variant="primary" size="sm">
-                        Giám sát
+                <li key={subject.id}>
+                  <Card
+                    as="article"
+                    className="flex flex-col gap-3 border border-line-subtle bg-surface-card p-4 shadow-none sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Subject meta] */}
+                    <div className="min-w-0 space-y-1">
+                      <Heading level={3} className="text-base font-bold">
+                        {subject.code} — {subject.name}
+                      </Heading>
+                      <Text size="xs" tone="muted">
+                        {subject.department} · {bankCount} bộ câu hỏi · {roomCount} phòng
+                      </Text>
+                      <Badge tone="info" size="sm">
+                        {semesters.find((s) => s.id === selectedSemesterId)?.label}
+                      </Badge>
+                    </div>
+                    {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Subject actions] */}
+                    <div className="flex flex-wrap gap-2">
+                      <ButtonLink
+                        to={`/teacher/question-banks?subjectId=${subject.id}`}
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<BookOpen size={14} />}
+                      >
+                        Ngân hàng
                       </ButtonLink>
-                    ) : statusUpper === 'ENDED' || room.status === 'finished' ? (
-                      <ButtonLink to={`/teacher/rooms/${room.roomCode}/results`} variant="outline" size="sm">
-                        Xem điểm
+                      <ButtonLink to="/teacher/rooms" variant="primary" size="sm">
+                        Phòng thi
                       </ButtonLink>
-                    ) : (
-                      <ButtonLink to={`/teacher/rooms/${room.roomCode}/questions`} variant="outline" size="sm">
-                        Soạn đề
-                      </ButtonLink>
-                    )}
-                  </TableCell>
-                </TableRow>
+                    </div>
+                  </Card>
+                </li>
               )
             })}
-          </TableBody>
-        </Table>
-      </Card>
-
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

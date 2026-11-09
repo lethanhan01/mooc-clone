@@ -3,8 +3,6 @@ import { Outlet, Link } from 'react-router-dom'
 import { GraduationCap } from 'lucide-react'
 import { PageLoader } from '@/components/shared/spinner/Spinner'
 import { ErrorBoundary } from '@/components/shared/error-boundary/ErrorBoundary'
-import { ThemeToggle } from '@/components/ui/navigation'
-import { LanguageSwitcher } from '@/components/ui/typography'
 import { ButtonLink } from '@/components/ui/actions'
 
 export default function AuthLayout() {
@@ -19,13 +17,9 @@ export default function AuthLayout() {
           <strong className="text-lg font-extrabold tracking-tight">MOOC Clone</strong>
         </Link>
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Auth header actions cluster] */}
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <LanguageSwitcher />
-          <ButtonLink to="/register" variant="ghost" size="sm" className="hidden sm:inline-flex">
-            Đăng ký ngay
-          </ButtonLink>
-        </div>
+        <ButtonLink to="/register" variant="ghost" size="sm" className="hidden sm:inline-flex">
+          Đăng ký ngay
+        </ButtonLink>
       </header>
 
       <main className="flex-1 flex flex-col justify-center py-8 sm:px-6 lg:px-8">

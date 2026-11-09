@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Flag, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, Badge } from '@/components/ui/data-display'
 import { Button } from '@/components/ui/actions'
 import { Heading, Text } from '@/components/ui/typography'
 import { ConfirmDialog } from '@/components/ui/overlay'
+import { ExamShell } from '@/components/exam/ExamShell'
+import { QuestionNavigator, type QuestionNavStatus } from '@/components/exam/QuestionNavigator'
 import {
   useRoomDetailQuery,
   useQuestionsListQuery,
@@ -15,34 +17,59 @@ import {
 import { useExamStore } from '@/stores/examStore'
 import { formatDuration } from '@/lib/room-status'
 import { toast } from '@/lib/toast'
+import { MOCK_QUESTIONS } from '@/mocks/teacher-workflow.fixtures'
 
 export default function StudentLiveExamPage() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
 
   const { data: room, isLoading: isRoomLoading } = useRoomDetailQuery(roomId)
-  const { data: allQuestions = [], isLoading: isQuestionsLoading } = useQuestionsListQuery()
+  const { data: allQuestions = [], isLoading: isQuestionsLoading, isError } = useQuestionsListQuery()
   const startAttemptMutation = useStartAttemptMutation()
   const submitAnswerMutation = useSubmitAnswerMutation()
   const submitExamMutation = useSubmitExamMutation()
 
   const {
-    activeAttemptId, currentIndex, answers, flaggedQuestionIds: flagged,
-    remainingSeconds, startSession, syncServerClock, selectAnswer: selectAnswerInStore,
-    toggleFlag, setCurrentIndex, decrementTimer,
+    activeAttemptId,
+    currentIndex,
+    answers,
+    flaggedQuestionIds: flagged,
+    remainingSeconds,
+    startSession,
+    syncServerClock,
+    selectAnswer: selectAnswerInStore,
+    toggleFlag,
+    setCurrentIndex,
+    decrementTimer,
   } = useExamStore()
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const [confirmedIds, setConfirmedIds] = useState<number[]>([])
   const autoSubmitted = useRef(false)
 
+  const mockFallback = useMemo(
+    () =>
+      MOCK_QUESTIONS.filter((q) => q.bankId === 'bank-1').map((q, index) => ({
+        id: index + 1,
+        content: q.content,
+        difficulty: q.difficulty,
+        options: q.options.map((o, oi) => ({ id: oi + 1, content: o.content })),
+      })),
+    []
+  )
+
   const roomTopic = room?.topic
-  const questions = (roomTopic
+  const apiQuestions = (roomTopic
     ? allQuestions.filter((q) => q.topic.toLowerCase().includes(roomTopic.toLowerCase()))
     : allQuestions
   ).slice(0, (room?.easyCount ?? 5) + (room?.mediumCount ?? 5) + (room?.hardCount ?? 0) || 10)
 
+  const questions = apiQuestions.length > 0 ? apiQuestions : mockFallback
+  const usingMock = apiQuestions.length === 0 || activeAttemptId === -1
+
   useEffect(() => {
-    if (!room || activeAttemptId) return
+    if (!room || activeAttemptId || usingMock) return
     startAttemptMutation
       .mutateAsync({ roomCode: room.roomCode, mode: 'EXAM' })
       .then((res) =>
@@ -54,14 +81,26 @@ export default function StudentLiveExamPage() {
           serverNow: room.serverNow,
         })
       )
-      .catch(() => toast.error('Không thể khởi tạo lượt thi từ máy chủ'))
-  }, [room, activeAttemptId, startAttemptMutation, startSession])
+      .catch(() => toast.error('Không thể khởi tạo lượt thi từ máy chủ — dùng mock local'))
+  }, [room, activeAttemptId, startAttemptMutation, startSession, usingMock])
 
   useEffect(() => {
-    if (activeAttemptId && room?.endsAt) {
+    if (usingMock && !activeAttemptId) {
+      startSession({
+        attemptId: -1,
+        roomCode: roomId || 'MOCK',
+        durationSeconds: 60 * 60,
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        serverNow: new Date().toISOString(),
+      })
+    }
+  }, [usingMock, activeAttemptId, startSession, roomId])
+
+  useEffect(() => {
+    if (activeAttemptId && room?.endsAt && !usingMock) {
       syncServerClock({ endsAt: room.endsAt, serverNow: room.serverNow })
     }
-  }, [activeAttemptId, room?.endsAt, room?.serverNow, syncServerClock])
+  }, [activeAttemptId, room?.endsAt, room?.serverNow, syncServerClock, usingMock])
 
   useEffect(() => {
     if (!activeAttemptId) return
@@ -74,6 +113,11 @@ export default function StudentLiveExamPage() {
   useEffect(() => {
     if (activeAttemptId && (remainingSeconds === 0 || isRoomEnded) && !autoSubmitted.current) {
       autoSubmitted.current = true
+      if (usingMock) {
+        toast.warning('Hết thời gian — nộp mock')
+        navigate(`/student/rooms/${room?.roomCode ?? roomId}/summary?attemptId=mock-attempt`)
+        return
+      }
       submitExamMutation
         .mutateAsync(activeAttemptId)
         .then((res) => {
@@ -82,12 +126,12 @@ export default function StudentLiveExamPage() {
         })
         .catch(() => toast.error('Không thể nộp bài tự động'))
     }
-  }, [remainingSeconds, isRoomEnded, activeAttemptId, submitExamMutation, navigate, room, roomId])
+  }, [remainingSeconds, isRoomEnded, activeAttemptId, submitExamMutation, navigate, room, roomId, usingMock])
 
-  if (isRoomLoading || isQuestionsLoading || questions.length === 0) {
+  if ((!usingMock && (isRoomLoading || isQuestionsLoading)) || questions.length === 0) {
     return (
-      <Card as="section" className="p-8 text-center bg-surface border-line-subtle rounded-2xl">
-        <Text tone="muted">Đang chuẩn bị đề thi từ cơ sở dữ liệu…</Text>
+      <Card as="section" className="rounded-xl border-line-subtle bg-surface-card p-8 text-center shadow-none">
+        <Text tone="muted">{isError ? 'Lỗi tải đề — thử mock' : 'Đang chuẩn bị đề thi…'}</Text>
       </Card>
     )
   }
@@ -95,19 +139,45 @@ export default function StudentLiveExamPage() {
   const currentQuestion = questions[currentIndex] ?? questions[0]
   const answeredCount = Object.keys(answers).length
 
+  function navStatus(index: number, questionId: number): QuestionNavStatus {
+    if (index === currentIndex) return 'current'
+    if (flagged.includes(questionId)) return 'flagged'
+    if (confirmedIds.includes(questionId)) return 'confirmed'
+    if (answers[questionId] != null) return 'answered'
+    return 'unanswered'
+  }
+
   function handleSelectOption(optionId: number) {
     selectAnswerInStore(currentQuestion.id, optionId)
+    setFeedback('Đã ghi nhận đáp án (Answer submitted)')
+    window.setTimeout(() => setFeedback(null), 2500)
+    if (usingMock) {
+      setConfirmedIds((prev) => (prev.includes(currentQuestion.id) ? prev : [...prev, currentQuestion.id]))
+      return
+    }
     if (activeAttemptId) {
-      submitAnswerMutation.mutate({
-        attemptId: activeAttemptId,
-        payload: { questionId: currentQuestion.id, selectedOptionId: optionId },
-      })
+      submitAnswerMutation.mutate(
+        {
+          attemptId: activeAttemptId,
+          payload: { questionId: currentQuestion.id, selectedOptionId: optionId },
+        },
+        {
+          onSuccess: () => {
+            setConfirmedIds((prev) => (prev.includes(currentQuestion.id) ? prev : [...prev, currentQuestion.id]))
+          },
+        }
+      )
     }
   }
 
   async function handleSubmitExam() {
-    if (!activeAttemptId) return
     setConfirmOpen(false)
+    if (usingMock) {
+      toast.success('Nộp bài mock thành công')
+      navigate(`/student/rooms/${room?.roomCode ?? roomId}/summary?attemptId=mock-attempt`)
+      return
+    }
+    if (!activeAttemptId) return
     try {
       const res = await submitExamMutation.mutateAsync(activeAttemptId)
       toast.success('Nộp bài thi thành công')
@@ -118,131 +188,94 @@ export default function StudentLiveExamPage() {
   }
 
   return (
-    /* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Exam layout grid] */
-    <div className="min-h-[70vh] grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
-      <main className="space-y-4">
-        <header className="flex flex-wrap items-center justify-between gap-3 p-4 bg-surface border border-line-subtle rounded-2xl shadow-card">
-          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Title stack] */}
-          <div>
-            <Heading level={1} className="text-base sm:text-lg font-bold">
-              {room?.name ?? 'Phòng thi trực tuyến'}
-            </Heading>
-            <Text size="xs" tone="muted">
-              Câu {currentIndex + 1}/{questions.length} · Đã trả lời {answeredCount}
-            </Text>
-          </div>
-          <p
-            className={`font-mono text-xl font-extrabold tabular-nums ${remainingSeconds < 60 ? 'text-status-danger-fg' : 'text-action-accent'}`}
-            aria-live="polite"
-          >
-            {formatDuration(remainingSeconds)}
-          </p>
+    <ExamShell
+      title={room?.name ?? 'Bài thi trực tuyến'}
+      subtitle={`Câu ${currentIndex + 1}/${questions.length} · Đã trả lời ${answeredCount}${usingMock ? ' · MOCK' : ''}`}
+      timerLabel={formatDuration(remainingSeconds)}
+      timerUrgent={remainingSeconds < 60}
+      onSubmitClick={() => setConfirmOpen(true)}
+      feedback={feedback}
+      navigator={
+        <QuestionNavigator
+          items={questions.map((item, i) => ({
+            id: item.id,
+            status: navStatus(i, item.id),
+          }))}
+          onSelect={setCurrentIndex}
+        />
+      }
+    >
+      <Card as="article" className="space-y-4 rounded-xl border-line-subtle bg-surface-card p-5 shadow-none sm:p-6">
+        <header className="flex items-start justify-between gap-2">
+          <Heading level={2} className="text-base font-semibold leading-relaxed">
+            {currentQuestion.content}
+          </Heading>
+          <Badge tone="neutral" size="sm">
+            {currentQuestion.difficulty}
+          </Badge>
         </header>
-
-        <Card as="article" className="p-5 sm:p-6 bg-surface border-line-subtle shadow-card rounded-2xl space-y-4">
-          <header className="flex items-start justify-between gap-2">
-            <Heading level={2} className="text-base font-semibold leading-relaxed">
-              {currentQuestion.content}
-            </Heading>
-            <Badge tone="neutral" size="sm">
-              {currentQuestion.difficulty}
-            </Badge>
-          </header>
-          <fieldset className="space-y-2 border-0 p-0 m-0">
-            <legend className="sr-only">Chọn đáp án</legend>
-            {currentQuestion.options.map((opt, oi) => {
-              const selected = answers[currentQuestion.id] === opt.id
-              return (
-                <Button
-                  key={opt.id}
-                  type="button"
-                  variant={selected ? 'primary' : 'outline'}
-                  className="w-full justify-start min-h-11 text-left whitespace-normal h-auto py-3"
-                  onClick={() => handleSelectOption(opt.id)}
-                >
-                  <strong className="mr-2">{String.fromCodePoint(65 + oi)}.</strong> {opt.content}
-                </Button>
-              )
-            })}
-          </fieldset>
-          <footer className="flex flex-wrap items-center justify-between gap-2 pt-2">
-            {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Nav buttons] */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                leftIcon={<ChevronLeft size={16} />}
-                disabled={currentIndex <= 0}
-                onClick={() => setCurrentIndex(currentIndex - 1)}
-              >
-                Trước
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                rightIcon={<ChevronRight size={16} />}
-                disabled={currentIndex >= questions.length - 1}
-                onClick={() => setCurrentIndex(currentIndex + 1)}
-              >
-                Sau
-              </Button>
-            </div>
-            <Button
-              type="button"
-              variant={flagged.includes(currentQuestion.id) ? 'secondary' : 'ghost'}
-              size="sm"
-              leftIcon={<Flag size={14} />}
-              onClick={() => toggleFlag(currentQuestion.id)}
-            >
-              Đánh dấu
-            </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => setConfirmOpen(true)}>
-              Nộp bài
-            </Button>
-          </footer>
-        </Card>
-      </main>
-
-      <aside aria-label="Bảng câu hỏi" className="p-4 bg-surface border border-line-subtle rounded-2xl shadow-card h-fit">
-        <Heading level={2} className="text-sm font-bold mb-3">
-          Danh sách câu
-        </Heading>
-        {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Question palette grid] */}
-        <div className="grid grid-cols-5 gap-2">
-          {questions.map((item, i) => {
-            const has = Boolean(answers[item.id])
-            const isFlagged = flagged.includes(item.id)
-            let buttonVariant: 'primary' | 'secondary' | 'outline' = 'outline'
-            if (i === currentIndex) buttonVariant = 'primary'
-            else if (has) buttonVariant = 'secondary'
+        <fieldset className="m-0 space-y-2 border-0 p-0">
+          <legend className="sr-only">Chọn đáp án</legend>
+          {currentQuestion.options.map((opt, oi) => {
+            const selected = answers[currentQuestion.id] === opt.id
             return (
               <Button
-                key={item.id}
+                key={opt.id}
                 type="button"
-                size="sm"
-                variant={buttonVariant}
-                className={`min-h-10 ${isFlagged ? 'ring-2 ring-status-warning-fg' : ''}`}
-                onClick={() => setCurrentIndex(i)}
-                aria-label={`Câu ${i + 1}`}
+                variant={selected ? 'primary' : 'outline'}
+                className="h-auto min-h-11 w-full justify-start whitespace-normal py-3 text-left"
+                onClick={() => handleSelectOption(opt.id)}
               >
-                {i + 1}
+                <strong className="mr-2">{String.fromCodePoint(65 + oi)}.</strong> {opt.content}
               </Button>
             )
           })}
-        </div>
-      </aside>
+        </fieldset>
+        <footer className="flex flex-wrap items-center justify-between gap-2 pt-2">
+          {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Nav buttons] */}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={<ChevronLeft size={16} />}
+              disabled={currentIndex <= 0}
+              onClick={() => setCurrentIndex(currentIndex - 1)}
+            >
+              Trước
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              rightIcon={<ChevronRight size={16} />}
+              disabled={currentIndex >= questions.length - 1}
+              onClick={() => setCurrentIndex(currentIndex + 1)}
+            >
+              Sau
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant={flagged.includes(currentQuestion.id) ? 'secondary' : 'ghost'}
+            size="sm"
+            leftIcon={<Flag size={14} />}
+            onClick={() => toggleFlag(currentQuestion.id)}
+          >
+            Đánh dấu
+          </Button>
+        </footer>
+      </Card>
 
       <ConfirmDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleSubmitExam}
         title="Nộp bài thi?"
-        description={`Bạn đã trả lời ${answeredCount}/${questions.length} câu hỏi. Sau khi nộp, hệ thống sẽ chấm điểm tức thì.`}
+        description={`Bạn đã trả lời ${answeredCount}/${questions.length} câu hỏi. Sau khi nộp, hệ thống sẽ chấm điểm.`}
         variant="danger"
         confirmLabel="Xác nhận nộp bài"
       />
-    </div>
+    </ExamShell>
   )
 }

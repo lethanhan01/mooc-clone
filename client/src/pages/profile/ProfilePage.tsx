@@ -9,10 +9,13 @@ import { useAuthStore, getHomePathForRoles } from '@/stores/authStore'
 import { authService } from '@/services/auth.service'
 
 import { toast } from '@/lib/toast'
+import { PasswordReminderBanner } from '@/components/student/PasswordReminderBanner'
+import { useMockTeacherStore } from '@/stores/mockTeacherStore'
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
+  const clearPasswordReminder = useMockTeacherStore((s) => s.clearPasswordReminder)
   const navigate = useNavigate()
 
   const [fullName, setFullName] = useState(user?.fullName ?? '')
@@ -45,6 +48,7 @@ export default function ProfilePage() {
     try {
       setUser({ ...user, fullName: fullName.trim(), email: email.trim() })
       if (newPassword) {
+        clearPasswordReminder({ email: user.email, studentId: user.studentId })
         toast.success('Đã đổi mật khẩu', { description: 'Bạn sẽ được đăng xuất trên mọi thiết bị' })
         await authService.logout()
         navigate('/login', { replace: true })
@@ -74,6 +78,8 @@ export default function ProfilePage() {
           Về trang chủ
         </ButtonLink>
       </header>
+
+      <PasswordReminderBanner showAction={false} className="mb-6" />
 
       <section className="mb-6 rounded-xl bg-action-accent-soft px-4 py-3 flex items-center gap-2">
         <User size={18} className="text-action-accent shrink-0" />
