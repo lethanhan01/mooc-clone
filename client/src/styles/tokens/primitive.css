@@ -6,7 +6,7 @@
        TUYỆT ĐỐI KHÔNG sử dụng trực tiếp trong component/page; chỉ gán cho Semantic.
        ========================================================================== */
 
-    /* Brand Green (Primary Action) */
+    /* Brand Green (kept for success / legacy charts) */
     --primitive-green-400: #08d891;
     --primitive-green-500: #06c384;
     --primitive-green-600: #059669;
@@ -25,6 +25,23 @@
     --primitive-green-light-fg: #065f46;
     --primitive-green-light-bg: #ecfdf5;
     --primitive-green-light-border: #a7f3d0;
+
+    /* Brand Blue — Daotao.ai primary CTA */
+    --primitive-brand-blue-400: #5b61e8;
+    --primitive-brand-blue-500: #3f3dde;
+    --primitive-brand-blue-600: #3036d9;
+    --primitive-brand-blue-700: #252ac0;
+    --primitive-brand-blue-800: #1c208f;
+    --primitive-brand-blue-soft: #3036d914;
+    --primitive-brand-blue-soft-border: #3036d938;
+    --primitive-brand-blue-subtle-fg: #c7caff;
+    --primitive-brand-blue-subtle-bg: #3036d921;
+    --primitive-brand-blue-subtle-border: #3036d945;
+    --primitive-brand-blue-toast-surface: #1a1c3d;
+    --primitive-brand-blue-light-fg: #252ac0;
+    --primitive-brand-blue-light-bg: #eef0fb;
+    --primitive-brand-blue-light-border: #c5c8f5;
+    --primitive-brand-blue-input-fill: #e8eaf6;
 
     /* Secondary Accent Teal */
     --primitive-teal-300: #99f6e4;
@@ -125,9 +142,9 @@
     --primitive-dark-border-white-button: #ffffff73;
     --primitive-dark-border-white-hover: #ffffff;
 
-    /* Light Theme Palette (Slate / Neutral / Pure White) */
-    --primitive-light-bg-base: #f8fafc;
-    --primitive-light-bg-deep: #f1f5f9;
+    /* Light Theme Palette (Daotao-inspired cool white) */
+    --primitive-light-bg-base: #f7f8fc;
+    --primitive-light-bg-deep: #eef0f6;
     --primitive-light-bg-card: #ffffff;
     --primitive-light-bg-card-hover: #f1f5f9;
     --primitive-light-bg-elevated: #ffffff;

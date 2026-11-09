@@ -73,8 +73,8 @@ describe('P4-07: Semantic Design Tokens Test Suite', () => {
     expect(rootScope).toBeDefined()
 
     // Key baseline anchors from Phase 0 Oracle
-    expect(rootScope['--rogym-green']).toBe('#06c384')
-    expect(rootScope['--rogym-teal']).toBe('#42e09e')
+    expect(rootScope['--rogym-green']).toBe('#3f3dde')
+    expect(rootScope['--rogym-teal']).toBe('#5b61e8')
     expect(rootScope['--rogym-bg-base']).toBe('#080e0b')
     expect(rootScope['--rogym-bg-card']).toBe('#0f1c16')
     expect(rootScope['--rogym-text-primary']).toBe('#ffffff')

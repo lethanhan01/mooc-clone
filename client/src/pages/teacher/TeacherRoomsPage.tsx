@@ -10,6 +10,7 @@ import { useRoomsListQuery, useDeleteRoomMutation, useFinishRoomMutation } from 
 import { roomStatusLabel, roomStatusTone, formatDuration } from '@/lib/room-status'
 import type { RoomStatus } from '@/types'
 import { toast } from '@/lib/toast'
+import { useMockTeacherStore } from '@/stores/mockTeacherStore'
 
 const FILTERS: Array<{ id: 'all' | 'waiting' | 'in_progress' | 'finished'; label: string }> = [
   { id: 'all', label: 'Tất cả' },
@@ -22,6 +23,7 @@ export default function TeacherRoomsPage() {
   const { data: rooms = [], isLoading, refetch } = useRoomsListQuery()
   const deleteRoomMutation = useDeleteRoomMutation()
   const finishRoomMutation = useFinishRoomMutation()
+  const mockRooms = useMockTeacherStore((s) => s.rooms)
 
   const [filter, setFilter] = useState<'all' | 'waiting' | 'in_progress' | 'finished'>('all')
   const [query, setQuery] = useState('')
@@ -71,7 +73,7 @@ export default function TeacherRoomsPage() {
           Quản lý danh sách phòng thi
         </Heading>
         <Text size="xs" tone="muted">
-          Tạo mới và theo dõi các phòng thi chính thức & luyện tập trực tiếp từ database
+          Phần mock UI (phân SV / log) + danh sách API nếu backend sẵn sàng
         </Text>
         {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Toolbar row] */}
         <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
@@ -102,6 +104,36 @@ export default function TeacherRoomsPage() {
           />
         </div>
       </header>
+
+      <section aria-label="Phòng mock UI" className="space-y-2">
+        <Heading level={2} className="text-sm font-bold">
+          Phòng mock (phân SV / log)
+        </Heading>
+        <ul className="m-0 list-none space-y-2 p-0">
+          {mockRooms.map((room) => (
+            <li key={room.id}>
+              <Card as="article" className="flex flex-col gap-2 border border-line-subtle bg-surface-card p-3 shadow-none sm:flex-row sm:items-center sm:justify-between">
+                {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Mock room meta] */}
+                <div>
+                  <p className="m-0 font-medium text-fg-primary">{room.name}</p>
+                  <Text size="xs" tone="muted">
+                    {room.mode} · {room.status} · {room.assigneeIds.length}/{room.capacity} SV
+                  </Text>
+                </div>
+                {/* rogym-convention-exempt: NO_NONSEMANTIC_TAGS [Mock room actions] */}
+                <div className="flex flex-wrap gap-2">
+                  <ButtonLink to={`/teacher/rooms/${room.id}/assign`} variant="primary" size="sm">
+                    Phân SV
+                  </ButtonLink>
+                  <ButtonLink to={`/teacher/rooms/${room.id}/logs`} variant="outline" size="sm">
+                    Log
+                  </ButtonLink>
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <nav aria-label="Lọc trạng thái" className="flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (

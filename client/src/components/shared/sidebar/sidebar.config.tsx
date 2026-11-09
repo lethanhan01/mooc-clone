@@ -8,6 +8,9 @@ import {
   ScrollText,
   LineChart,
   UserCircle,
+  Layers3,
+  FileStack,
+  UserPlus,
 } from 'lucide-react'
 import type { NavSection } from './sidebar.types'
 import type { Role } from '@/stores/authStore'
@@ -26,9 +29,24 @@ export function getMoocNavSections(roles: Role[] = ['student']): NavSection[] {
             icon: <LayoutDashboard size={16} />,
           },
           {
-            label: 'Quản lý phòng thi',
+            label: 'Ngân hàng câu hỏi',
+            to: '/teacher/question-banks',
+            icon: <Layers3 size={16} />,
+          },
+          {
+            label: 'Quản lý đề thi',
+            to: '/teacher/exams',
+            icon: <FileStack size={16} />,
+          },
+          {
+            label: 'Phòng thi',
             to: '/teacher/rooms',
             icon: <DoorOpen size={16} />,
+          },
+          {
+            label: 'Đăng ký sinh viên',
+            to: '/teacher/students/import',
+            icon: <UserPlus size={16} />,
           },
           {
             label: 'Báo cáo thống kê',

@@ -16,9 +16,10 @@ describe('Phase 0 Oracle: CSS Token Computed Snapshot (P0-02)', () => {
     const computedTokens = resolveCssVariables(rawTokens, ':root')
 
     // Verify key core tokens are properly resolved to hex/string values
-    expect(computedTokens[':root']['--rogym-green']).toBe('#06c384')
-    expect(computedTokens[':root']['--rogym-teal']).toBe('#42e09e')
-    expect(computedTokens[':root']['--primary']).toBe('#06c384')
+    // Legacy --rogym-green aliases action-primary (now Daotao brand blue)
+    expect(computedTokens[':root']['--rogym-green']).toBe('#3f3dde')
+    expect(computedTokens[':root']['--rogym-teal']).toBe('#5b61e8')
+    expect(computedTokens[':root']['--primary']).toBe('#3f3dde')
     expect(computedTokens[':root']['--background']).toBe('#080e0b')
     expect(computedTokens[':root']['--border-teal-focus']).toBeUndefined() // check correct name
     expect(computedTokens[':root']['--rogym-border-teal-focus']).toBe('#42e09e')

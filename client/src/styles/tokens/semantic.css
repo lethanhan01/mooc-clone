@@ -19,7 +19,7 @@
     --color-surface-card-hover: var(--primitive-dark-bg-card-hover);
     --color-surface-card-inset: var(--primitive-dark-bg-card-darker);
     --color-surface-elevated: var(--primitive-dark-bg-elevated);
-    --color-surface-elevated-accent: var(--primitive-green-950);
+    --color-surface-elevated-accent: var(--primitive-brand-blue-toast-surface);
     --color-surface-inverse: var(--primitive-white);
     --color-surface-glass: var(--primitive-dark-bg-glass);
     --color-surface-overlay: var(--primitive-dark-bg-overlay);
@@ -44,18 +44,18 @@
     --color-line-accent-hover: var(--primitive-teal-border-hover);
     --color-line-focus: var(--primitive-teal-400);
 
-    /* Actions & Brand (Bản sắc & Tương tác) */
-    --color-action-primary: var(--primitive-green-500);
-    --color-action-primary-hover: var(--primitive-green-400);
-    --color-action-primary-fg: var(--primitive-green-800);
-    --color-action-primary-fg-strong: var(--primitive-green-900);
-    --color-action-primary-soft: var(--primitive-green-soft);
-    --color-action-primary-soft-border: var(--primitive-green-soft-border);
-    --color-action-accent: var(--primitive-teal-400);
-    --color-action-accent-soft: var(--primitive-teal-soft);
-    --color-accent: var(--primitive-teal-400);
-    --color-accent-soft: var(--primitive-teal-soft);
-    --color-focus-ring: var(--primitive-teal-400);
+    /* Actions & Brand (Daotao blue) */
+    --color-action-primary: var(--primitive-brand-blue-500);
+    --color-action-primary-hover: var(--primitive-brand-blue-400);
+    --color-action-primary-fg: var(--primitive-white);
+    --color-action-primary-fg-strong: var(--primitive-white);
+    --color-action-primary-soft: var(--primitive-brand-blue-soft);
+    --color-action-primary-soft-border: var(--primitive-brand-blue-soft-border);
+    --color-action-accent: var(--primitive-brand-blue-400);
+    --color-action-accent-soft: var(--primitive-brand-blue-soft);
+    --color-accent: var(--primitive-brand-blue-400);
+    --color-accent-soft: var(--primitive-brand-blue-soft);
+    --color-focus-ring: var(--primitive-brand-blue-400);
 
     /* Status: Success */
     --color-status-success-solid: var(--primitive-green-500);
@@ -131,7 +131,7 @@
     --color-surface-card-hover: var(--primitive-light-bg-card-hover);
     --color-surface-card-inset: var(--primitive-light-bg-base);
     --color-surface-elevated: var(--primitive-light-bg-elevated);
-    --color-surface-elevated-accent: var(--primitive-green-light-bg);
+    --color-surface-elevated-accent: var(--primitive-brand-blue-light-bg);
     --color-surface-inverse: var(--primitive-light-text-primary);
     --color-surface-glass: var(--primitive-light-bg-glass);
     --color-surface-overlay: var(--primitive-light-bg-overlay);
@@ -156,18 +156,18 @@
     --color-line-accent-hover: var(--primitive-teal-500);
     --color-line-focus: var(--primitive-teal-600);
 
-    /* Actions & Brand Light */
-    --color-action-primary: var(--primitive-green-700);
-    --color-action-primary-hover: var(--primitive-green-800);
+    /* Actions & Brand Light (Daotao blue) */
+    --color-action-primary: var(--primitive-brand-blue-600);
+    --color-action-primary-hover: var(--primitive-brand-blue-700);
     --color-action-primary-fg: var(--primitive-white);
     --color-action-primary-fg-strong: var(--primitive-white);
-    --color-action-primary-soft: var(--primitive-green-light-bg);
-    --color-action-primary-soft-border: var(--primitive-green-light-border);
-    --color-action-accent: var(--primitive-teal-600);
-    --color-action-accent-soft: var(--primitive-teal-300);
-    --color-accent: var(--primitive-teal-600);
-    --color-accent-soft: var(--primitive-teal-300);
-    --color-focus-ring: var(--primitive-teal-600);
+    --color-action-primary-soft: var(--primitive-brand-blue-light-bg);
+    --color-action-primary-soft-border: var(--primitive-brand-blue-light-border);
+    --color-action-accent: var(--primitive-brand-blue-600);
+    --color-action-accent-soft: var(--primitive-brand-blue-input-fill);
+    --color-accent: var(--primitive-brand-blue-600);
+    --color-accent-soft: var(--primitive-brand-blue-input-fill);
+    --color-focus-ring: var(--primitive-brand-blue-600);
 
     /* Status: Success Light */
     --color-status-success-solid: var(--primitive-green-600);
