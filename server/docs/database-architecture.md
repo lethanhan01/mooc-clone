@@ -109,6 +109,6 @@ psql -U postgres -d online_exam_db -f server/online_exam_schema.sql
 
 ## 7. Liên Kết Đối Chiếu
 
-- Hướng dẫn tạo Entity và Repository ánh xạ tới bảng CSDL: [API_GENERATION_GUIDE.md](ai-guides/API_GENERATION_GUIDE.md).
-- Hướng dẫn viết truy vấn custom và khai thác Dynamic Views: [CUSTOM_API_GUIDE.md](ai-guides/CUSTOM_API_GUIDE.md).
-- Kiến trúc lưu trữ Session Token bảo mật: [security-architecture.md](security-architecture.md).
+- Kiến trúc mạng thời gian thực và điều phối Opcodes TLV 16B: [realtime-network-subsystem.md](realtime-network-subsystem.md).
+- Kiến trúc lưu trữ Session Token bảo mật và chống gian lận đề thi: [security-architecture.md](security-architecture.md).
+- Quy chuẩn lập trình Backend Java 21: [../CONVENTIONS.md](../CONVENTIONS.md).

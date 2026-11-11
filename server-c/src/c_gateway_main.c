@@ -65,6 +65,9 @@ static void forward_frame(int conn_idx, const uint8_t *frame_data,
     connection_t *conn = &g_conns[conn_idx - 1];
 
     if (header->msg_type == OP_SYS_HANDSHAKE) {
+        for (int i = 1; i < g_poll_count; i++) {
+            g_conns[i - 1].is_worker = false;
+        }
         conn->is_worker = true;
         g_worker_fd = conn->fd;
         printf("[GATEWAY] Registered Java Worker on fd %d\n", g_worker_fd);

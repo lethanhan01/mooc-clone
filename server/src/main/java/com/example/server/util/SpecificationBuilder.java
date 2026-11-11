@@ -1,13 +1,11 @@
 package com.example.server.util;
 
 import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Tiện ích xây dựng Specification type-safe an toàn chống SQL Injection
@@ -52,31 +50,5 @@ public class SpecificationBuilder<E> {
                     .toList();
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    public static <E> Specification<E> fromRequest(
-            HttpServletRequest request,
-            Set<String> exactMatchFields,
-            Set<String> likeFields) {
-        if (request == null) return null;
-        SpecificationBuilder<E> builder = builder();
-
-        if (exactMatchFields != null) {
-            for (String field : exactMatchFields) {
-                String val = request.getParameter(field);
-                if (val != null && !val.isBlank()) {
-                    builder.withEqual(field, val);
-                }
-            }
-        }
-        if (likeFields != null) {
-            for (String field : likeFields) {
-                String val = request.getParameter(field);
-                if (val != null && !val.isBlank()) {
-                    builder.like(field, val);
-                }
-            }
-        }
-        return builder.build();
     }
 }

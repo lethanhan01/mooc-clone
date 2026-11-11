@@ -73,10 +73,14 @@ function connectToGateway() {
       } else {
         // Response cho một Request trước đó
         if (pendingRequests.has(seqId)) {
-          const { resolve, timer } = pendingRequests.get(seqId);
+          const { resolve, reject, timer } = pendingRequests.get(seqId);
           clearTimeout(timer);
           pendingRequests.delete(seqId);
-          resolve(payloadData);
+          if (payloadData && typeof payloadData === 'object' && payloadData.error === true) {
+            reject(new Error(payloadData.message || 'Lỗi xử lý yêu cầu từ máy chủ'));
+          } else {
+            resolve(payloadData);
+          }
         }
       }
 

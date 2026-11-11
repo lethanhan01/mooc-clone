@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "socket.tcp.port=0")
+@SpringBootTest(properties = "mooc.gateway.enabled=false")
 class RoomServiceTest {
 
     @Autowired

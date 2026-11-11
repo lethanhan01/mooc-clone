@@ -22,7 +22,7 @@ import java.sql.Statement;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@SpringBootTest(properties = "mooc.gateway.enabled=false")
 class SupabaseIntegrationTest {
 
     @Autowired

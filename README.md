@@ -173,5 +173,5 @@ npm run electron:dev
 ## 5. Tài liệu Kỹ thuật Liên quan
 
 - **Tài liệu C Communication Engine (`server-c/`):** Đặc tả kiến trúc POSIX Socket, bảng mã lệnh Opcodes, khung tin TLV 16B và runbook tại [server-c/README.md](server-c/README.md).
-- **Tài liệu & Kiến trúc Backend:** Phân Hệ Mạng Thời Gian Thực, Đặc Tả Giao Tiếp Opcodes/REST, và CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md), [server/docs/api-specification.md](server/docs/api-specification.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
+- **Tài liệu & Kiến trúc Backend:** Phân Hệ Mạng Thời Gian Thực, Bảo Mật Phiên & Chống Gian Lận, và CSDL 3NF tại [server/README.md](server/README.md), [server/docs/realtime-network-subsystem.md](server/docs/realtime-network-subsystem.md), [server/docs/security-architecture.md](server/docs/security-architecture.md) và [server/docs/database-architecture.md](server/docs/database-architecture.md).
 - **Quy chuẩn Phát triển Desktop & Frontend:** Tiêu chuẩn 19 Master Rules, Kiến Trúc Desktop Electron và Semantic Tokens tại [client/FRONTEND_CONVENTIONS.md](client/FRONTEND_CONVENTIONS.md) và [client/docs/17-mobile-and-native-architecture.md](client/docs/17-mobile-and-native-architecture.md).

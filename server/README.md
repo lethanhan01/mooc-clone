@@ -1,8 +1,8 @@
-# Phân Hệ Máy Chủ Thi Trắc Nghiệm Trực Tuyến Backend (`server/`)
+# Phân Hệ Máy Chủ Nghiệp Vụ Headless TCP Worker (`server/`)
 
 > **Học phần:** Lập trình Mạng (IT4062) — Hệ sinh thái `mooc-clone`  
-> **Kiến trúc:** Pure Layered Architecture kết hợp Đồng bộ Phòng thi Stateless REST Short Polling (:8080) & Phân hệ Mạng C11 Doug Lea Reactor ([server-c/](../server-c/README.md))  
-> **Công nghệ Nền tảng:** Java 21 LTS, Spring Boot 3.4.3, Spring Data JPA, Spring Security 6, SpringDoc OpenAPI 3, PostgreSQL 14+ (Supabase), POSIX C11 `epoll` Reactor
+> **Kiến trúc:** Headless Spring Boot TCP Worker (`spring.main.web-application-type=none`) kết nối bền vững tới C Communication Engine ([server-c/](../server-c/README.md) tại cổng `:9000`)  
+> **Công nghệ Nền tảng:** Java 21 LTS, Spring Boot 3.4.3, Spring Data JPA, Spring Security Crypto (BCrypt), PostgreSQL 14+ (`online_exam_db`), Giao thức nhị phân 16-byte TLV Framing
 
 ---
 
@@ -22,16 +22,11 @@
 
 ## Bảng Điều Hướng Tài Liệu Backend (Backend Documentation Hub)
 
-Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân tách thành các cẩm nang chuyên biệt, hỗ trợ tối đa cho việc phát triển tự động của AI Agents và lập trình viên:
-
 | Nhóm Tài Liệu   | Tên Tài Liệu & Đường Dẫn                                            | Mô Tả Trọng Tâm                                                                                       |
 | :-------------- | :------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------- |
-| **AI Guides**   | [API_GENERATION_GUIDE.md](docs/ai-guides/API_GENERATION_GUIDE.md)   | Cẩm nang tạo CRUD API kế thừa Bộ ba Generic (`BaseController`, `BaseServiceImpl`, DTO Records)        |
-| **AI Guides**   | [CUSTOM_API_GUIDE.md](docs/ai-guides/CUSTOM_API_GUIDE.md)           | Cẩm nang tạo Custom API độc lập: Máy trạng thái, Chấm điểm, Đa Repo, Đồng bộ trạng thái phòng thi     |
 | **Chuyên Đề**   | [database-architecture.md](docs/database-architecture.md)           | Kiến trúc CSDL Chuẩn 3NF, Sơ đồ Mermaid ERD 9 bảng cốt lõi và 5 Dynamic Views tính điểm tức thì       |
-| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng C11 `epoll` Doug Lea Reactor, HTTP/1.1 FSM Parser & Đồng bộ phòng thi REST Short Polling |
-| **Chuyên Đề**   | [security-architecture.md](docs/security-architecture.md)           | Cơ chế bảo mật Opaque Session Token SHA-256, Bộ lọc Filter và 4 nguyên tắc chống gian lận bài thi     |
-| **Chuyên Đề**   | [api-specification.md](docs/api-specification.md)                   | Đặc tả RESTful API, Chuẩn hóa `ApiResponse<T>`, Bảng mã lỗi `ErrorCode` và Hướng dẫn Swagger UI       |
+| **Chuyên Đề**   | [realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | Phân hệ mạng C11 `poll()` Multiplexer, Giao thức nhị phân 16B TLV Framing & Server Push Broadcast     |
+| **Chuyên Đề**   | [security-architecture.md](docs/security-architecture.md)           | Cơ chế bảo mật Opaque Session Token SHA-256, Phiên TCP theo `clientId` và 4 nguyên tắc chống gian lận |
 | **Quy Chuẩn**   | [CONVENTIONS.md](CONVENTIONS.md)                                    | Quy chuẩn Lập trình Backend & Liên kết chuẩn Socket POSIX C11 ([server-c/CONVENTIONS.md](../server-c/CONVENTIONS.md)) |
 | **Master Rule** | [AGENTS.md](../AGENTS.md)                                           | Chỉ thị Master AI Directives quản trị toàn bộ dự án `mooc-clone`                                      |
 
@@ -42,206 +37,75 @@ Hệ thống tài liệu kỹ thuật máy chủ được chuẩn hóa và phân
 | Thành phần           | Công nghệ / Thư viện                          | Phiên bản            | Vai trò & Mục đích sử dụng                                                  |
 | :------------------- | :-------------------------------------------- | :------------------- | :-------------------------------------------------------------------------- |
 | **Ngôn ngữ**         | Java (OpenJDK / Temurin)                      | **21 LTS**           | Records, Pattern Matching, Switch Expressions, Sequenced Collections        |
-| **Framework**        | Spring Boot                                   | **3.4.3**            | Nền tảng ứng dụng máy chủ, IoC Container, Dependency Injection              |
+| **Framework**        | Spring Boot (Headless Non-Web Mode)           | **3.4.3**            | IoC Container, Dependency Injection, quản lý vòng đời TCP Worker            |
 | **Data Persistence** | Spring Data JPA + Hibernate ORM               | **6.6.8**            | Quản lý vòng đời thực thể, kết nối CSDL PostgreSQL qua HikariCP             |
-| **Cơ sở Dữ liệu**    | PostgreSQL Cloud (Supabase)                   | **14+ / 17**         | Lưu trữ quan hệ chuẩn 3NF, JSONB metadata, Network INET, Session Token Hash |
-| **Bảo mật**          | Spring Security                               | **6.4.3**            | Pipeline xác thực Session Token SHA-256, Stateless SecurityContext          |
-| **Mạng & Reactor**   | POSIX C11 Socket + Linux `epoll`              | **C11 / POSIX**      | Máy chủ HTTP/1.1 Non-blocking Doug Lea Classic Reactor ([server-c/](../server-c/README.md)) |
-| **Đồng bộ Phòng thi**| Stateless REST + Server Authoritative Clock   | **3.4.3 / C11**      | Đồng bộ trạng thái phòng thi & thời gian chuẩn (`serverNow`, `endsAt`)      |
-| **Validation**       | Jakarta Bean Validation (Hibernate Validator) | **3.1.3**            | Kiểm tra tính hợp lệ dữ liệu đầu vào DTO (`@NotNull`, `@Size`, v.v.)        |
-| **Tài liệu API**     | SpringDoc OpenAPI Starter WebMVC              | **2.8.5**            | Tự động sinh Swagger UI và đặc tả OpenAPI 3 tương tác trực tiếp             |
+| **Cơ sở Dữ liệu**    | PostgreSQL (`online_exam_db`)                 | **14+ / 18**         | Lưu trữ quan hệ chuẩn 3NF, JSONB metadata, Network INET, Session Token Hash |
+| **Mã hóa & Phiên**   | Spring Security Crypto + SHA-256 Session      | **6.4.3**            | Mã hóa mật khẩu `BCryptPasswordEncoder` và quản lý phiên theo `clientId`    |
+| **Cổng Mạng TCP**    | C Communication Engine (`server-c/`)          | **C11 / POSIX**      | Cổng Multiplexer `poll()` đơn luồng trên cổng `:9000` ([server-c/](../server-c/README.md)) |
+| **Validation**       | Jakarta Bean Validation (Hibernate Validator) | **3.1.3**            | Kiểm tra tính hợp lệ dữ liệu DTO (`@NotNull`, `@Size`, v.v.)                |
 | **Build Tool**       | Apache Maven Wrapper (`mvnw`)                 | **3.9.x**            | Quản lý vòng đời dự án, biên dịch, kiểm thử tự động                         |
 
 ---
 
-## 2. Yêu Cầu Môi Trường & Quản Trị Biến Môi Trường (.env)
+## 2. Quản Trị Cấu Hình & Biến Môi Trường
 
-### Yêu Cầu Tiên Quyết (Prerequisites)
+Thông số vận hành được nạp từ [src/main/resources/application.properties](src/main/resources/application.properties) qua biến môi trường:
 
-- **Java Development Kit (JDK):** Bắt buộc phiên bản **Java 21** trở lên ([Eclipse Temurin 21](https://adoptium.net/)).
-  ```bash
-  java -version
-  # Kết quả hợp lệ: openjdk version "21.x.x" hoặc "24.x.x"
-  ```
-- **Hệ điều hành:** Windows 10/11, macOS, hoặc Linux.
-
-### Danh Mục Biến Môi Trường
-
-Thông số vận hành được nạp từ [src/main/resources/application.properties](src/main/resources/application.properties) qua biến môi trường. Tệp mẫu cấu hình tại [.env.example](.env.example):
-
-| Tên Biến Môi trường | Giá trị Mặc định | Bắt buộc | Ý nghĩa Kỹ thuật |
-| :--- | :--- | :--- | :--- |
-| `SERVER_PORT` | `8080` | Không | Cổng dịch vụ HTTP REST API & Short Polling |
-| `DB_URL` | `jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require` | Không (đã có mặc định) | JDBC URL kết nối tới Transaction Pooler PostgreSQL của Supabase |
-| `DB_USERNAME` | `postgres.sijjqpfyxccrswiqthxn` | Không (đã có mặc định) | Tên người dùng CSDL Supabase |
-| `DB_PASSWORD` | `Nh8jXnH76qEI5WfC` | Không (đã có mặc định) | Mật khẩu truy cập CSDL Supabase |
+| Tên Biến Môi trường | Giá trị Mặc định | Ý nghĩa Kỹ thuật |
+| :--- | :--- | :--- |
+| `GATEWAY_HOST` | `127.0.0.1` | Địa chỉ IP của C Communication Engine (`c_gateway`) |
+| `GATEWAY_PORT` | `9000` | Cổng TCP của C Communication Engine |
+| `GATEWAY_ENABLED` | `true` | Bật/tắt kết nối tự động từ Java Worker vào C Gateway (`false` khi chạy test) |
+| `DB_URL` | `jdbc:postgresql://127.0.0.1:5433/online_exam_db` | JDBC URL kết nối tới cơ sở dữ liệu PostgreSQL |
+| `DB_USERNAME` | `postgres` | Tên người dùng CSDL PostgreSQL |
+| `DB_PASSWORD` | `admin` | Mật khẩu truy cập CSDL PostgreSQL |
 
 ---
 
 ## 3. Hướng Dẫn Khởi Chạy Từng Bước (Step-by-Step Run Guide)
 
-### Bước 1: Kiểm Tra Tiền Điều Kiện (Prerequisites)
-
-1. **Java Development Kit (JDK 21+):**
-   ```bash
-   java -version
-   # Kết quả yêu cầu: OpenJDK hoặc Temurin 21 trở lên
-   ```
-2. **Cơ sở dữ liệu PostgreSQL:**
-   - Dự án đã tích hợp sẵn kết nối cơ sở dữ liệu Supabase Cloud trong [src/main/resources/application.properties](src/main/resources/application.properties).
-   - Nếu cần sử dụng thông tin CSDL riêng, bạn có thể tạo tệp `.env` tại thư mục `server/` dựa trên [.env.example](.env.example).
-
-### Bước 2: Khởi Chạy Máy Chủ Backend
-
-#### Cách 1: Khởi chạy bằng Maven Wrapper (Khuyến nghị cho Dòng lệnh)
-Mở cửa sổ dòng lệnh và di chuyển vào thư mục `server/`:
+### Bước 1: Khởi Chạy C Communication Engine (`server-c/` — Cổng `:9000`)
+Đảm bảo máy chủ C Gateway đã được bật trên cổng `9000` (chi tiết tại [server-c/README.md](../server-c/README.md)):
 ```bash
-cd server
+cd server-c
+make run
 ```
 
-- **Trên Windows (PowerShell / Command Prompt):**
-  ```powershell
-  .\mvnw.cmd spring-boot:run
-  ```
-- **Trên Linux / macOS:**
-  ```bash
-  chmod +x ./mvnw
-  ./mvnw spring-boot:run
-  ```
+### Bước 2: Khởi Chạy Java TCP Worker (`server/`)
+Mở cửa sổ dòng lệnh và di chuyển vào thư mục `server/`:
+```powershell
+cd server
+.\mvnw.cmd spring-boot:run
+```
 
-#### Cách 2: Khởi chạy từ IDE (IntelliJ IDEA / VS Code / Eclipse)
-1. Mở thư mục `server/` như một dự án Maven độc lập.
-2. Thiết lập Project SDK / Language Level là **Java 21**.
-3. Mở tệp lớp chính: `src/main/java/com/example/server/ServerApplication.java`.
-4. Nhấn **Run** hoặc **Debug** hàm `main()`.
-
-### Bước 3: Xác Minh Khởi Động Thành Công
-
-Khi máy chủ khởi động thành công, cửa sổ console sẽ xuất hiện các dòng log thông báo cổng mạng HTTP/REST đã sẵn sàng:
+Khi khởi động thành công ở chế độ **Headless TCP Worker** (`spring.main.web-application-type=none`):
+- Ứng dụng **không mở cổng HTTP 8080** (loại bỏ hoàn toàn xung đột cổng Tomcat).
+- Tự động xác lập khóa độc quyền Single-Instance (`mooc-gateway-worker-9000.lock`) để ngăn chạy trùng hai tiến trình Worker.
+- Tự động kết nối tới `127.0.0.1:9000` và gửi gói tin `OP_SYS_HANDSHAKE (0x00)` định danh `{"role":"WORKER"}`.
 
 ```text
-Tomcat started on port 8080 (http) with context path '/'
-Started ServerApplication in X.XXX seconds
+[GATEWAY-WORKER] Acquired single-instance lock at ...\mooc-gateway-worker-9000.lock (PID: ...)
+[GATEWAY-WORKER] Connecting to C Gateway at 127.0.0.1:9000...
+[GATEWAY-WORKER] Connected and registered as WORKER to C Gateway successfully.
 ```
-
-- **Cổng 8080 (HTTP / Stateless REST):** Tiếp nhận RESTful API và Adaptive Short Polling với đồng hồ chuẩn `serverNow`.
-- **Phân hệ C11 Reactor (`server-c/`):** Xem hướng dẫn biên dịch và khởi chạy máy chủ C11 `epoll` Reactor tại [server-c/README.md](../server-c/README.md).
-- **Swagger UI Trực Quan:** Truy cập tại [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) để kiểm tra danh mục API.
-- **OpenAPI 3 JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
-
-### Bước 4: Kiểm Thử Đăng Nhập API Trực Tiếp
-
-Bạn có thể kiểm tra API xác thực tài khoản ngay lập tức bằng cURL hoặc PowerShell:
-
-- **Sử dụng cURL (Linux / macOS / Git Bash):**
-  ```bash
-  curl -X POST http://localhost:8080/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d "{\"usernameOrEmail\": \"teacher_le\", \"password\": \"password123\"}"
-  ```
-
-- **Sử dụng PowerShell (Windows):**
-  ```powershell
-  $body = @{
-    usernameOrEmail = "teacher_le"
-    password        = "password123"
-  } | ConvertTo-Json
-
-  Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" `
-    -Method Post `
-    -ContentType "application/json" `
-    -Body $body
-  ```
-
-- **Cấu trúc phản hồi thành công mẫu (`code: 1000`):**
-  ```json
-  {
-    "code": 1000,
-    "status": "SUCCESS",
-    "message": "Đăng nhập thành công",
-    "data": {
-      "token": "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
-      "userId": 2,
-      "username": "teacher_le",
-      "displayName": "Thầy Lê Văn Hướng",
-      "role": "TEACHER",
-      "expiresAt": "2026-11-03T07:15:00Z"
-    },
-    "errors": null,
-    "timestamp": "2026-10-27T07:15:00Z"
-  }
-  ```
-
-### Bảng Tra Cứu Lệnh Vận Hành Maven:
-
-| Câu Lệnh | Mục Đích Kỹ Thuật | Tình Huống Sử Dụng |
-| :--- | :--- | :--- |
-| `.\mvnw.cmd clean compile` | Dọn sạch thư mục `target/` và biên dịch 100% mã nguồn Java | Khi cập nhật DTO, Entity, hoặc cấu hình pom.xml |
-| `.\mvnw.cmd test` | Chạy toàn bộ bộ kiểm thử tự động Backend | Trước khi commit hoặc tạo Pull Request |
-| `.\mvnw.cmd clean package -DskipTests` | Đóng gói ứng dụng thành file JAR độc lập | Chuẩn bị triển khai môi trường Staging/Production |
-| `java -jar target/server-0.0.1-SNAPSHOT.jar` | Chạy ứng dụng từ tệp JAR độc lập | Kiểm tra hoạt động môi trường thực tế không qua Maven |
 
 ---
 
-## 4. Kiến Trúc Phân Tầng Thuần Khiết (Pure Layered Architecture)
-
-Mã nguồn `server/` tuân thủ nguyên tắc một chiều nghiêm ngặt:
+## 4. Kiến Trúc Điều Phối Thuần Khiết (Pure TCP Worker Layered Architecture)
 
 ```mermaid
 graph TD
-    Client["Client (React 19 SPA Web)"]
-    Client -->|"HTTP / REST + Short Polling (8080)"| Controller["Controller Layer (@RestController)"]
-
-    Controller -->|"DTO Records (serverNow, endsAt)"| Service["Service Layer (@Service)"]
-
+    Desktop["Electron Desktop Client (client/)"]
+    Desktop <-->|"Khung tin nhị phân TLV 16B (:9000)"| CGateway["C Communication Engine (server-c/)"]
+    CGateway <-->|"Persistent TCP Worker Socket"| Worker["GatewayWorkerClient & GatewayMessageDispatcher"]
+    Worker -->|"DTO Records"| Service["Service Layer (@Service)"]
     Service -->|"Entities"| Repository["Repository Layer (Spring Data JPA)"]
-    Repository -->|"SQL / JDBC Pooler"| Database[("Supabase PostgreSQL 14+")]
+    Repository -->|"SQL / HikariCP"| Database[("PostgreSQL 14+ (online_exam_db)")]
 ```
 
-> **Quy Tắc Bất Biến:**
->
-> - Luồng dữ liệu đi một chiều từ trên xuống dưới: `Controller -> Service -> Repository -> Database`.
-> - DTO (Java 21 Record) là cấu trúc duy nhất giao tiếp giữa Client và Controller/Service. Thực thể Entity tuyệt đối không được lộ ra ngoài API.
-> - Hướng dẫn chi tiết cách triển khai CRUD và Custom API xem tại [API_GENERATION_GUIDE.md](docs/ai-guides/API_GENERATION_GUIDE.md) và [CUSTOM_API_GUIDE.md](docs/ai-guides/CUSTOM_API_GUIDE.md).
-
 ---
 
-## 5. Tóm Lược Các Chuyên Đề Kiến Trúc
-
-### 5.1. Cơ Sở Dữ Liệu Chuẩn Hóa 3NF & Dynamic Views
-
-Hệ thống loại bỏ hoàn toàn dữ liệu phái sinh dư thừa, quản lý quan hệ thi cử qua 9 bảng cốt lõi và tính điểm tức thì qua 5 Khung nhìn nghiệp vụ (`v_attempt_results`, `v_room_list`, `v_room_results`, `v_user_statistics`, `v_user_topic_performance`).  
-👉 _Xem chi tiết:_ [docs/database-architecture.md](docs/database-architecture.md) | [online_exam_schema.sql](online_exam_schema.sql) | [online_exam_seed_data.sql](online_exam_seed_data.sql)
-
-### 5.2. Phân Hệ Mạng C11 Doug Lea Reactor & Đồng Bộ Phòng Thi Stateless REST
-
-Hệ thống triển khai kiến trúc mạng từ tầng Socket POSIX bằng C11 (`epoll` `EPOLLET | EPOLLONESHOT`, Incremental HTTP/1.1 FSM Parser 13 trạng thái, Worker ThreadPool, `pthread_rwlock_t`) tại [server-c/](../server-c/README.md) kết hợp cơ chế đồng bộ phòng thi trực tuyến qua HTTP Short Polling + Server Authoritative Timestamp (`serverNow`, `endsAt`, Lazy State Transition, Grace Period 2000ms).  
-👉 _Xem chi tiết:_ [docs/realtime-network-subsystem.md](docs/realtime-network-subsystem.md) | [server-c/CONVENTIONS.md](../server-c/CONVENTIONS.md) | [CONVENTIONS.md](CONVENTIONS.md)
-
-### 5.3. Bảo Mật Session Token SHA-256 & Chống Gian Lận Đề Thi
-
-Bảo mật máy chủ bằng Opaque Session Token (64 hex characters) lưu băm SHA-256 trong CSDL, ẩn cờ đáp án đúng `is_correct` trước khi nộp bài, ràng buộc khóa ngoại kép CSDL và khóa đóng băng bài thi tự động.  
-👉 _Xem chi tiết:_ [docs/security-architecture.md](docs/security-architecture.md)
-
-### 5.4. Quy Chuẩn RESTful API & Swagger UI
-
-100% API phản hồi qua khung bọc đồng nhất `ApiResponse<T>`, quản lý mã lỗi tập trung `ErrorCode` và tích hợp Swagger UI tương tác trực tiếp.
-
-- **Giao diện Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **OpenAPI 3 JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)  
-  👉 _Xem chi tiết:_ [docs/api-specification.md](docs/api-specification.md)
-
----
-
-## 6. Quy Chuẩn Code Java 21 & Bộ Lệnh Kiểm Tra Toàn Vẹn Tự Động
-
-### Cú Pháp Java 21 Hiện Đại (Modern Java 21 Idioms)
-
-- **100% Java Records cho DTO:** Sử dụng `public record XxxDto(...)` đảm bảo tính bất biến (Immutability).
-- **Tránh xa Lombok:** Viết getter, setter, constructor bằng Java thuần túy để tránh lỗi compiler bytecode.
-- **Pattern Matching & Switch Expressions:** Sử dụng cú pháp mũi tên (`->`) và pattern matching an toàn kiểu.
-
-### Bộ Ba Kiểm Tra Toàn Vẹn Bắt Buộc Trước Khi Commit:
+## 5. Bộ Ba Kiểm Tra Toàn Vẹn Bắt Buộc Trước Khi Commit
 
 ```bash
 # 1. Kiểm tra mã nguồn Java và thực thi test suites Backend

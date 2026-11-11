@@ -11,7 +11,15 @@ import org.springframework.stereotype.Component;
 import java.io.DataInputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * TCP Worker Client kết nối bền vững tới C Communication Engine (C Gateway).
@@ -38,6 +46,8 @@ public class GatewayWorkerClient {
     private DataInputStream inputStream;
     private volatile boolean running = false;
     private Thread workerThread;
+    private FileChannel lockChannel;
+    private FileLock instanceLock;
 
     @PostConstruct
     public void start() {
@@ -46,9 +56,12 @@ public class GatewayWorkerClient {
             return;
         }
 
+        acquireSingleInstanceLock();
+
         running = true;
         workerThread = new Thread(this::connectionLoop, "GatewayWorkerClientThread");
-        workerThread.setDaemon(true);
+        // Giữ JVM sống ở chế độ headless (spring.main.web-application-type=none)
+        workerThread.setDaemon(false);
         workerThread.start();
     }
 
@@ -59,7 +72,67 @@ public class GatewayWorkerClient {
         if (workerThread != null) {
             workerThread.interrupt();
         }
+        releaseSingleInstanceLock();
         log.info("[GATEWAY-WORKER] Worker client stopped.");
+    }
+
+    private void acquireSingleInstanceLock() {
+        Path lockPath = Paths.get(
+                System.getProperty("java.io.tmpdir"),
+                "mooc-gateway-worker-" + gatewayPort + ".lock"
+        );
+        try {
+            lockChannel = FileChannel.open(
+                    lockPath,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.READ,
+                    StandardOpenOption.WRITE
+            );
+            try {
+                instanceLock = lockChannel.tryLock();
+            } catch (OverlappingFileLockException ignored) {
+                instanceLock = null;
+            }
+
+            if (instanceLock == null) {
+                String existingPid = Files.exists(lockPath) ? Files.readString(lockPath).trim() : "unknown";
+                closeLockChannelQuietly();
+                throw new IllegalStateException(
+                        "[GATEWAY-WORKER] Không thể khởi động: Đã có một tiến trình Java Worker khác đang chạy trên cổng Gateway "
+                                + gatewayPort + " (PID: " + existingPid + "). Hãy dừng tiến trình cũ trước khi khởi chạy mới."
+                );
+            }
+
+            lockChannel.truncate(0);
+            String currentPid = String.valueOf(ProcessHandle.current().pid());
+            lockChannel.write(ByteBuffer.wrap(currentPid.getBytes(StandardCharsets.UTF_8)));
+            lockChannel.force(true);
+            log.info("[GATEWAY-WORKER] Acquired single-instance lock at {} (PID: {})", lockPath, currentPid);
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            closeLockChannelQuietly();
+            throw new IllegalStateException("[GATEWAY-WORKER] Lỗi khởi tạo Single-Instance Lock: " + e.getMessage(), e);
+        }
+    }
+
+    private void releaseSingleInstanceLock() {
+        try {
+            if (instanceLock != null && instanceLock.isValid()) {
+                instanceLock.release();
+            }
+        } catch (Exception ignored) {}
+        instanceLock = null;
+        closeLockChannelQuietly();
+    }
+
+    private void closeLockChannelQuietly() {
+        try {
+            if (lockChannel != null && lockChannel.isOpen()) {
+                lockChannel.close();
+            }
+        } catch (Exception ignored) {}
+        lockChannel = null;
     }
 
     private void connectionLoop() {
@@ -179,4 +252,3 @@ public class GatewayWorkerClient {
         inputStream = null;
     }
 }
-

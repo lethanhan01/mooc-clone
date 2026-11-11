@@ -1,21 +1,25 @@
 package com.example.server.security;
 
 import com.example.server.entity.UserEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
 public final class SecurityUtil {
 
+    private static final ThreadLocal<UserEntity> CURRENT_USER = new ThreadLocal<>();
+
     private SecurityUtil() {}
 
+    public static void setCurrentUser(UserEntity user) {
+        CURRENT_USER.set(user);
+    }
+
+    public static void clear() {
+        CURRENT_USER.remove();
+    }
+
     public static Optional<UserEntity> getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails) {
-            return Optional.of(userDetails.getUser());
-        }
-        return Optional.empty();
+        return Optional.ofNullable(CURRENT_USER.get());
     }
 
     public static Optional<Long> getCurrentUserId() {
